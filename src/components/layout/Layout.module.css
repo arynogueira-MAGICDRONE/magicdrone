@@ -1,0 +1,112 @@
+.wrap {
+  min-height: 100vh;
+  background: #000;
+  display: flex;
+  flex-direction: column;
+  max-width: 480px;
+  margin: 0 auto;
+  position: relative;
+}
+
+.topbar {
+  background: #000;
+  border-bottom: 1px solid #1a1a1a;
+  padding: 12px 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  height: 52px;
+}
+
+.logoArea {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.brand {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 18px;
+  letter-spacing: 4px;
+  color: #fff;
+}
+
+.masterBadge {
+  font-size: 7px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  border: 1px solid #fff;
+  padding: 2px 6px;
+  color: #fff;
+}
+
+.userArea {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.userName {
+  font-size: 10px;
+  letter-spacing: 2px;
+  color: #666;
+  text-transform: uppercase;
+}
+
+.avatar {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: #fff;
+  color: #000;
+  font-size: 10px;
+  font-weight: 700;
+  border: none;
+  cursor: pointer;
+  font-family: 'Space Mono', monospace;
+  transition: background 0.15s;
+}
+
+.avatar:hover { background: #ddd; }
+
+.main {
+  flex: 1;
+  overflow-y: auto;
+  padding-bottom: 60px;
+}
+
+.bottomNav {
+  position: fixed;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100%;
+  max-width: 480px;
+  background: #000;
+  border-top: 1px solid #1a1a1a;
+  display: flex;
+  z-index: 100;
+  height: 60px;
+}
+
+.navBtn {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  text-decoration: none;
+  color: #444;
+  transition: color 0.15s;
+  padding: 8px 2px;
+}
+
+.navBtn:hover { color: #888; }
+.navBtnActive { color: #fff !important; }
+
+.navIcon { font-size: 15px; line-height: 1; }
+.navLabel { font-size: 7px; letter-spacing: 2px; text-transform: uppercase; }
