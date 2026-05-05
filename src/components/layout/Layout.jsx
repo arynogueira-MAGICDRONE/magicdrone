@@ -4,12 +4,6 @@ import { useAuth } from '../../context/AuthContext';
 import { supabase } from '../../supabase';
 import styles from './Layout.module.css';
 
-const Logo = () => (
-  <svg width="28" height="20" viewBox="0 0 64 44">
-    <polyline points="2,38 18,8 32,26 46,8 62,38" fill="none" stroke="#fff" strokeWidth="5" strokeLinejoin="miter" strokeLinecap="square"/>
-  </svg>
-);
-
 const navItems = [
   { to: '/',            icon: '⬛', label: 'Painel',    module: null },
   { to: '/shows',       icon: '📅', label: 'Shows',     module: 'agenda' },
@@ -75,7 +69,7 @@ export default function Layout({ children }) {
     <div className={styles.wrap}>
       <header className={styles.topbar}>
         <div className={styles.logoArea}>
-          <Logo />
+          <img src="/icon-192.jpg" width="32" height="32" alt="MagicDrone" style={{ borderRadius: 6, objectFit: 'cover' }} />
           <span className={styles.brand}>MagicDrone</span>
           {isMaster() && <span className={styles.masterBadge}>Master</span>}
         </div>

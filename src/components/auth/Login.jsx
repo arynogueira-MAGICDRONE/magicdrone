@@ -22,18 +22,9 @@ export default function Login() {
 
       <div className={styles.card}>
         <div className={styles.logoWrap}>
-          <svg className={styles.logo} viewBox="0 0 64 44">
-            <polyline
-              points="2,38 18,8 32,26 46,8 62,38"
-              fill="none"
-              stroke="#fff"
-              strokeWidth="5"
-              strokeLinejoin="miter"
-              strokeLinecap="square"
-            />
-          </svg>
+          <img src="/icon-192.jpg" className={styles.logo} alt="MagicDrone" />
           <div className={styles.brand}>MagicDrone</div>
-          <div className={styles.tagline}>Drone Show Management</div>
+          <div className={styles.tagline}>Created by Ary Nogueira</div>
         </div>
 
         <form className={styles.form} onSubmit={handleSubmit}>
@@ -66,11 +57,6 @@ export default function Login() {
             {loading ? 'Aguarde...' : 'Entrar'}
           </button>
         </form>
-
-        <div className={styles.hint}>
-          <div>master@magicdrone.com / 123456</div>
-          <div>ricardo@magicdrone.com / 123456</div>
-        </div>
       </div>
     </div>
   );
