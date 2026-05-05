@@ -43,14 +43,14 @@ export function AppProvider({ children }) {
     const { data, error } = await supabase.from('shows').insert({
       data: show.date, status: show.status, cliente: show.client,
       drones: show.drones, cidade: show.city, estado: show.state,
-      data_teste: show.test, valor: show.valor || null
+      data_teste: show.test
     }).select().single();
-    if (error) { console.error('Erro ao salvar show:', error.message); return null; }
+    if (error) { console.error('Erro detalhado:', JSON.stringify(error, null, 2)); return null; }
     if (data) {
       const mapped = {
         id: data.id, date: data.data, status: data.status, client: data.cliente,
         drones: data.drones, city: data.cidade, state: data.estado,
-        test: data.data_teste, valor: data.valor || null
+        test: data.data_teste, valor: null
       };
       setShows(prev => [...prev, mapped]);
       return mapped;
