@@ -31,12 +31,14 @@ export default function Dashboard() {
   const fmtDate = (str) => { if (!str) return '—'; const [y, m, d] = str.split('-'); return `${d}/${m}/${y}`; };
   const fmt = (v) => 'R$ ' + v.toFixed(2).replace('.', ',').replace(/\B(?=(\d{3})+(?!\d))/g, '.');
 
-  const resumo = selectedShow !== '' ? shows.find(s => s.id === parseInt(selectedShow)) : null;
+  const resumo = selectedShow !== '' ? shows.find(s => String(s.id) === String(selectedShow)) : null;
 
   React.useEffect(() => {
-    if (resumo) {
-      loadBudget(resumo.id);
-      loadScaling(resumo.id);
+    if (!selectedShow) return;
+    const show = shows.find(s => String(s.id) === String(selectedShow));
+    if (show) {
+      loadBudget(show.id);
+      loadScaling(show.id);
     }
   }, [selectedShow]);
 

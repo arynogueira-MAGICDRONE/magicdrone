@@ -22,7 +22,9 @@ export default function Login() {
 
       <div className={styles.card}>
         <div className={styles.logoWrap}>
-          <img src="/icon-192.jpg" className={styles.logo} alt="MagicDrone" />
+          <svg width="80" height="56" viewBox="0 0 64 44" fill="none" xmlns="http://www.w3.org/2000/svg" className={styles.logo}>
+            <polyline points="2,38 18,8 32,26 46,8 62,38" fill="none" stroke="#ffffff" strokeWidth="5" strokeLinejoin="miter" strokeLinecap="square"/>
+          </svg>
           <div className={styles.brand}>MagicDrone</div>
           <div className={styles.tagline}>Created by Ary Nogueira</div>
         </div>

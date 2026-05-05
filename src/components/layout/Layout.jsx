@@ -69,7 +69,9 @@ export default function Layout({ children }) {
     <div className={styles.wrap}>
       <header className={styles.topbar}>
         <div className={styles.logoArea}>
-          <img src="/icon-192.jpg" width="32" height="32" alt="MagicDrone" style={{ borderRadius: 6, objectFit: 'cover' }} />
+          <svg width="32" height="22" viewBox="0 0 64 44" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <polyline points="2,38 18,8 32,26 46,8 62,38" fill="none" stroke="#ffffff" strokeWidth="5" strokeLinejoin="miter" strokeLinecap="square"/>
+          </svg>
           <span className={styles.brand}>MagicDrone</span>
           {isMaster() && <span className={styles.masterBadge}>Master</span>}
         </div>
