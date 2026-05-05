@@ -1,19 +1,23 @@
 import React, { useState, useRef } from 'react';
+import * as XLSX from 'xlsx';
 import { useApp } from '../context/AppContext';
 import { PageHeader, Btn, Input, Select, Modal, ModalBtns, Section, StatusPill, Empty } from '../components/layout/UI';
 
 function pad(n) { return n < 10 ? '0' + n : n; }
-function today() { const d = new Date(); return `${pad(d.getDate())}/${pad(d.getMonth()+1)}/${d.getFullYear()}`; }
 
 export default function Inventario() {
-  const { drones, addDrone, updateDroneStatus, importDrones, inventory, updateInventory, addSerialItem, deleteSerialItem } = useApp();
+  const { drones, addDrone, updateDroneStatus, importDrones, deleteDrone, inventory, updateInventory, addSerialItem, deleteSerialItem } = useApp();
 
   const [filter, setFilter] = useState('todos');
-  const [modal, setModal] = useState(null); // 'drone' | 'bat' | 'rtk' | 'ap' | 'srv' | 'pc' | 'qty-KEY'
+  const [search, setSearch] = useState('');
+  const [modal, setModal] = useState(null);
   const [form, setForm] = useState({});
   const fileRef = useRef();
 
-  const filtered = filter === 'todos' ? drones : drones.filter(d => d.status === filter);
+  const filtered = drones
+    .filter(d => filter === 'todos' || d.status === filter)
+    .filter(d => !search || d.serial.toLowerCase().includes(search.toLowerCase()));
+
   const okCount = drones.filter(d => d.status === 'ok').length;
   const badCount = drones.filter(d => d.status === 'bad').length;
   const mautCount = drones.filter(d => d.status === 'manut').length;
@@ -24,14 +28,33 @@ export default function Inventario() {
     updateDroneStatus(drone.id, next);
   };
 
-  const handleImport = (e) => {
+  const handleDelete = (drone) => {
+    if (window.confirm(`Deseja excluir o drone ${drone.serial}?`)) {
+      deleteDrone(drone.id);
+    }
+  };
+
+  const handleImport = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
-    // In production: parse XLSX with SheetJS
-    // Simulating import with fake serials
-    const fakeSerials = [`IMP-${Date.now()}-001`, `IMP-${Date.now()}-002`, `IMP-${Date.now()}-003`];
-    importDrones(fakeSerials);
-    alert(`Arquivo: ${file.name}\n${fakeSerials.length} drones importados.\nToque no status de cada drone para alterar.`);
+    try {
+      const buffer = await file.arrayBuffer();
+      const wb = XLSX.read(buffer);
+      const ws = wb.Sheets[wb.SheetNames[0]];
+      const rows = XLSX.utils.sheet_to_json(ws, { header: 1 });
+      const serials = rows
+        .map(row => String(row[0] || '').trim())
+        .filter(v => v && !/^(serial|número|number|sn|drone)$/i.test(v));
+      if (serials.length === 0) {
+        alert('Nenhum serial encontrado. Verifique se o arquivo tem os seriais na primeira coluna.');
+        e.target.value = '';
+        return;
+      }
+      await importDrones(serials);
+      alert(`${serials.length} drone(s) importado(s) com sucesso.`);
+    } catch (err) {
+      alert('Erro ao ler o arquivo. Certifique-se de que é um .xlsx ou .csv válido.');
+    }
     e.target.value = '';
   };
 
@@ -47,7 +70,7 @@ export default function Inventario() {
   };
 
   const saveSerial = (type) => {
-    const val = type === 'pc'
+    const val = type === 'computador'
       ? `${form.pcModel || 'HP'} — ${form.serial || ''}`
       : form.serial?.trim();
     if (!val) return;
@@ -62,22 +85,24 @@ export default function Inventario() {
   };
 
   const qtyItems = [
-    { key: 'rede',   label: 'Cabos de Rede' },
+    { key: 'rede',    label: 'Cabos de Rede' },
     { key: 'energia', label: 'Cabos de Energia' },
-    { key: 'radio',  label: 'Kit Rádio' },
-    { key: 'star',   label: 'Starlink' },
-    { key: 'tripes', label: 'Tripés' },
+    { key: 'radio',   label: 'Kit Rádio' },
+    { key: 'star',    label: 'Starlink' },
+    { key: 'tripes',  label: 'Tripés' },
   ];
 
   const serialItems = [
-    { key: 'rtk',      label: 'RTK' },
-    { key: 'ap',       label: 'AP (Access Point)' },
-    { key: 'servidor', label: 'Servidor' },
-    { key: 'computador', label: 'Computador' },
+    { key: 'rtk',       label: 'RTK' },
+    { key: 'ap',        label: 'AP (Access Point)' },
+    { key: 'servidor',  label: 'Servidor' },
+    { key: 'computador',label: 'Computador' },
   ];
 
-  const filterBtns = ['todos','ok','bad','manut'];
+  const filterBtns = ['todos', 'ok', 'bad', 'manut'];
   const filterLabels = { todos: 'Todos', ok: 'Bom', bad: 'Ruim', manut: 'Manut.' };
+
+  const INP = { background: '#000', border: '1px solid #222', color: '#fff', padding: '7px 10px', fontFamily: 'Space Mono,monospace', fontSize: 11, outline: 'none', width: '100%', boxSizing: 'border-box' };
 
   return (
     <div>
@@ -96,15 +121,23 @@ export default function Inventario() {
         </div>
 
         {/* Import */}
-        <div style={{ display: 'flex', gap: 6, marginBottom: 6 }}>
+        <div style={{ display: 'flex', gap: 6, marginBottom: 4 }}>
           <button onClick={() => fileRef.current.click()} style={{
             flex: 1, padding: '7px', fontFamily: 'Space Mono,monospace', fontSize: 9,
             letterSpacing: 2, textTransform: 'uppercase', cursor: 'pointer',
             border: '1px solid #fff', background: 'transparent', color: '#fff',
-          }}>↑ Importar Excel</button>
+          }}>↑ Importar Excel / CSV</button>
           <input ref={fileRef} type="file" accept=".xlsx,.xls,.csv" style={{ display: 'none' }} onChange={handleImport} />
         </div>
-        <div style={{ fontSize: 9, color: '#444', letterSpacing: 1, marginBottom: 8 }}>Coluna esperada: SERIAL — status definido aqui</div>
+        <div style={{ fontSize: 9, color: '#444', letterSpacing: 1, marginBottom: 8 }}>Seriais na primeira coluna (A) — sem cabeçalho obrigatório</div>
+
+        {/* Search */}
+        <input
+          value={search}
+          onChange={e => setSearch(e.target.value)}
+          placeholder="Buscar por serial..."
+          style={{ ...INP, marginBottom: 8 }}
+        />
 
         {/* Filters */}
         <div style={{ display: 'flex', gap: 5, marginBottom: 8 }}>
@@ -117,25 +150,26 @@ export default function Inventario() {
               color: filter === f ? '#fff' : '#666',
             }}>{filterLabels[f]}</button>
           ))}
+          <span style={{ fontSize: 8, color: '#444', letterSpacing: 1, alignSelf: 'center', marginLeft: 4 }}>
+            {filtered.length}/{drones.length}
+          </span>
         </div>
 
         {/* List */}
-        {filtered.length === 0 ? <Empty text="Nenhum drone" /> : filtered.slice(0, 8).map((d, i) => (
-          <div key={d.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: '#0a0a0a', border: '1px solid #1a1a1a', padding: '10px 12px', marginBottom: 4 }}>
-            <div>
+        {filtered.length === 0 ? <Empty text="Nenhum drone" /> : filtered.map((d, i) => (
+          <div key={d.id} style={{ display: 'flex', alignItems: 'center', gap: 8, background: '#0a0a0a', border: '1px solid #1a1a1a', padding: '10px 12px', marginBottom: 4 }}>
+            <div style={{ flex: 1 }}>
               <div style={{ fontSize: 12, fontWeight: 600, letterSpacing: 1 }}>{d.serial}</div>
-              <div style={{ fontSize: 10, color: '#555', marginTop: 1 }}>Drone #{i + 1}</div>
             </div>
             <div onClick={() => cycleStatus(d)} style={{ cursor: 'pointer' }}>
               <StatusPill status={d.status} />
             </div>
+            <button onClick={() => handleDelete(d)} style={{
+              background: 'transparent', border: 'none', color: '#555', cursor: 'pointer',
+              fontSize: 15, padding: '0 2px', lineHeight: 1,
+            }} title={`Excluir ${d.serial}`}>🗑️</button>
           </div>
         ))}
-        {filtered.length > 8 && (
-          <div style={{ fontSize: 10, color: '#444', textAlign: 'center', padding: '6px 0', letterSpacing: 2 }}>
-            + {filtered.length - 8} drones...
-          </div>
-        )}
       </Section>
 
       {/* Baterias */}

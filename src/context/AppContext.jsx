@@ -78,6 +78,11 @@ export function AppProvider({ children }) {
     setDrones(prev => prev.map(d => d.id === id ? { ...d, status } : d));
   };
 
+  const deleteDrone = async (id) => {
+    await supabase.from('drones').delete().eq('id', id);
+    setDrones(prev => prev.filter(d => d.id !== id));
+  };
+
   const importDrones = async (serials) => {
     const rows = serials.map(serial => ({ serial, status: 'ok' }));
     const { data } = await supabase.from('drones').insert(rows).select();
@@ -217,7 +222,7 @@ const deleteMember = async (id) => {
 
   return (
     <AppContext.Provider value={{
-      drones, addDrone, updateDroneStatus, importDrones,
+      drones, addDrone, updateDroneStatus, importDrones, deleteDrone,
       shows, addShow, updateShow, dronesUsedOnDate,
       members, addMember, updateMember, updateMemberPerms, deleteMember,
       scaling, scaleToShow, removeFromShow, isMemberBusy, loadScaling,
