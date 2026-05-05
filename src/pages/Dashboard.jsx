@@ -33,8 +33,10 @@ export default function Dashboard() {
 
   const resumo = selectedShow !== '' ? shows.find(s => String(s.id) === String(selectedShow)) : null;
 
+  const loadedRef = React.useRef(null);
   React.useEffect(() => {
-    if (!selectedShow) return;
+    if (!selectedShow || loadedRef.current === selectedShow) return;
+    loadedRef.current = selectedShow;
     const show = shows.find(s => String(s.id) === String(selectedShow));
     if (show) {
       loadBudget(show.id);
@@ -44,7 +46,8 @@ export default function Dashboard() {
 
   const totalPrev = resumo ? (budgets[resumo.id] || []).reduce((a, i) => a + i.prev, 0) : 0;
   const totalReal = resumo ? (budgets[resumo.id] || []).reduce((a, i) => a + i.real, 0) : 0;
-  const scaledTeam = resumo ? (scaling[resumo.id] || []) : [];
+  const rawTeam = resumo ? (scaling[resumo.id] || []) : [];
+  const scaledTeam = Array.from(new Map(rawTeam.map(sc => [sc.memberId, sc])).values());
 
   return (
     <div>
