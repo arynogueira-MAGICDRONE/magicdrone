@@ -23,6 +23,7 @@ function fmtTestDates(str) {
 const EMPTY_FORM = {
   client: '', date: '', drones: '', status: 'neg',
   testDates: [''],
+  valor: '',
   cep: '', rua: '', numero: '', complemento: '', bairro: '', city: '', state: '',
 };
 const EMPTY_BUDGET = {
@@ -206,21 +207,25 @@ export default function Shows() {
     const testStr = form.testDates.filter(Boolean).join(',');
     const showData = {
       client: form.client, date: form.date, drones: parseInt(form.drones),
-      status: form.status, city: form.city || '', state: form.state || '', test: testStr,
+      status: form.status, city: form.city || '', state: form.state || '',
+      test: testStr, valor: parseFloat(form.valor) || null,
     };
     if (editingId) {
       await updateShow(editingId, showData);
       for (const memberId of selectedMembers)
         await scaleToShow(editingId, memberId, memberRoles[memberId] || '');
+      closeModal();
     } else {
       const created = await addShow(showData);
       if (created?.id) {
         await saveBudgetItems(created.id);
         for (const memberId of selectedMembers)
           await scaleToShow(created.id, memberId, memberRoles[memberId] || '');
+        closeModal();
+      } else {
+        alert('Erro ao salvar o show. Verifique os dados e tente novamente.');
       }
     }
-    closeModal();
   };
 
   const openDetail = async (s) => {
@@ -407,6 +412,8 @@ export default function Shows() {
           {/* ── GRUPO 2: Opcionais ── */}
           <div style={HDIV}>
             <div style={SECTTITLE}>Opcional</div>
+
+            <Input label="Valor do Show (R$)" type="number" value={form.valor} onChange={e => setForm({ ...form, valor: e.target.value })} placeholder="0,00" />
 
             {/* CEP */}
             <div style={{ marginBottom: 10 }}>

@@ -6,10 +6,11 @@ import { PageHeader, Btn, Input, Select, Modal, ModalBtns, Section, StatusPill, 
 function pad(n) { return n < 10 ? '0' + n : n; }
 
 export default function Inventario() {
-  const { drones, addDrone, updateDroneStatus, importDrones, deleteDrone, inventory, updateInventory, addSerialItem, deleteSerialItem } = useApp();
+  const { drones, addDrone, updateDroneStatus, importDrones, deleteDrone, deleteDrones, inventory, updateInventory, addSerialItem, deleteSerialItem } = useApp();
 
   const [filter, setFilter] = useState('todos');
   const [search, setSearch] = useState('');
+  const [selected, setSelected] = useState(new Set());
   const [modal, setModal] = useState(null);
   const [form, setForm] = useState({});
   const fileRef = useRef();
@@ -31,7 +32,25 @@ export default function Inventario() {
   const handleDelete = (drone) => {
     if (window.confirm(`Deseja excluir o drone ${drone.serial}?`)) {
       deleteDrone(drone.id);
+      setSelected(prev => { const n = new Set(prev); n.delete(drone.id); return n; });
     }
+  };
+
+  const handleDeleteSelected = async () => {
+    if (selected.size === 0) return;
+    if (!window.confirm(`Deseja excluir ${selected.size} drone(s) selecionado(s)?`)) return;
+    const ids = Array.from(selected);
+    await deleteDrones(ids);
+    setSelected(new Set());
+  };
+
+  const allFilteredSelected = filtered.length > 0 && filtered.every(d => selected.has(d.id));
+  const toggleAll = (checked) => {
+    if (checked) setSelected(prev => new Set([...prev, ...filtered.map(d => d.id)]));
+    else setSelected(prev => { const n = new Set(prev); filtered.forEach(d => n.delete(d.id)); return n; });
+  };
+  const toggleOne = (id) => {
+    setSelected(prev => { const n = new Set(prev); if (n.has(id)) n.delete(id); else n.add(id); return n; });
   };
 
   const handleImport = async (e) => {
@@ -155,21 +174,41 @@ export default function Inventario() {
           </span>
         </div>
 
-        {/* List */}
-        {filtered.length === 0 ? <Empty text="Nenhum drone" /> : filtered.map((d, i) => (
-          <div key={d.id} style={{ display: 'flex', alignItems: 'center', gap: 8, background: '#0a0a0a', border: '1px solid #1a1a1a', padding: '10px 12px', marginBottom: 4 }}>
-            <div style={{ flex: 1 }}>
-              <div style={{ fontSize: 12, fontWeight: 600, letterSpacing: 1 }}>{d.serial}</div>
-            </div>
-            <div onClick={() => cycleStatus(d)} style={{ cursor: 'pointer' }}>
-              <StatusPill status={d.status} />
-            </div>
-            <button onClick={() => handleDelete(d)} style={{
-              background: 'transparent', border: 'none', color: '#555', cursor: 'pointer',
-              fontSize: 15, padding: '0 2px', lineHeight: 1,
-            }} title={`Excluir ${d.serial}`}>🗑️</button>
+        {/* Select all + bulk delete */}
+        {filtered.length > 0 && (
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
+            <input type="checkbox" checked={allFilteredSelected} onChange={e => toggleAll(e.target.checked)}
+              style={{ accentColor: '#fff', cursor: 'pointer' }} />
+            <span style={{ fontSize: 10, color: '#666' }}>Selecionar todos ({filtered.length})</span>
+            {selected.size > 0 && (
+              <button onClick={handleDeleteSelected} style={{
+                marginLeft: 'auto', fontSize: 8, letterSpacing: 2, padding: '4px 10px',
+                border: '1px solid #f44336', background: 'transparent', color: '#f44336',
+                fontFamily: 'Space Mono,monospace', cursor: 'pointer', textTransform: 'uppercase',
+              }}>Excluir {selected.size} selecionado(s)</button>
+            )}
           </div>
-        ))}
+        )}
+
+        {/* List */}
+        <div style={{ maxHeight: 300, overflowY: 'auto' }}>
+          {filtered.length === 0 ? <Empty text="Nenhum drone" /> : filtered.map(d => (
+            <div key={d.id} style={{ display: 'flex', alignItems: 'center', gap: 8, background: '#0a0a0a', border: '1px solid #1a1a1a', padding: '10px 12px', marginBottom: 4 }}>
+              <input type="checkbox" checked={selected.has(d.id)} onChange={() => toggleOne(d.id)}
+                style={{ accentColor: '#fff', cursor: 'pointer', flexShrink: 0 }} />
+              <div style={{ flex: 1 }}>
+                <div style={{ fontSize: 12, fontWeight: 600, letterSpacing: 1 }}>{d.serial}</div>
+              </div>
+              <div onClick={() => cycleStatus(d)} style={{ cursor: 'pointer' }}>
+                <StatusPill status={d.status} />
+              </div>
+              <button onClick={() => handleDelete(d)} style={{
+                background: 'transparent', border: 'none', color: '#555', cursor: 'pointer',
+                fontSize: 15, padding: '0 2px', lineHeight: 1,
+              }} title={`Excluir ${d.serial}`}>🗑️</button>
+            </div>
+          ))}
+        </div>
       </Section>
 
       {/* Baterias */}

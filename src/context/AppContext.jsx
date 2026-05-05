@@ -35,26 +35,34 @@ export function AppProvider({ children }) {
     const { data } = await supabase.from('shows').select('*').order('data');
     if (data) setShows(data.map(s => ({
       id: s.id, date: s.data, status: s.status, client: s.cliente,
-      drones: s.drones, city: s.cidade, state: s.estado, test: s.data_teste
+      drones: s.drones, city: s.cidade, state: s.estado, test: s.data_teste, valor: s.valor || null
     })));
   };
 
   const addShow = async (show) => {
-    const { data } = await supabase.from('shows').insert({
+    const { data, error } = await supabase.from('shows').insert({
       data: show.date, status: show.status, cliente: show.client,
-      drones: show.drones, cidade: show.city, estado: show.state, data_teste: show.test
+      drones: show.drones, cidade: show.city, estado: show.state,
+      data_teste: show.test, valor: show.valor || null
     }).select().single();
+    if (error) { console.error('Erro ao salvar show:', error.message); return null; }
     if (data) {
-      const mapped = { id: data.id, date: data.data, status: data.status, client: data.cliente, drones: data.drones, city: data.cidade, state: data.estado, test: data.data_teste };
+      const mapped = {
+        id: data.id, date: data.data, status: data.status, client: data.cliente,
+        drones: data.drones, city: data.cidade, state: data.estado,
+        test: data.data_teste, valor: data.valor || null
+      };
       setShows(prev => [...prev, mapped]);
       return mapped;
     }
+    return null;
   };
 
   const updateShow = async (id, show) => {
     await supabase.from('shows').update({
       data: show.date, status: show.status, cliente: show.client,
-      drones: show.drones, cidade: show.city, estado: show.state, data_teste: show.test
+      drones: show.drones, cidade: show.city, estado: show.state,
+      data_teste: show.test, valor: show.valor || null
     }).eq('id', id);
     setShows(prev => prev.map(s => s.id === id ? { ...s, ...show } : s));
   };
@@ -81,6 +89,11 @@ export function AppProvider({ children }) {
   const deleteDrone = async (id) => {
     await supabase.from('drones').delete().eq('id', id);
     setDrones(prev => prev.filter(d => d.id !== id));
+  };
+
+  const deleteDrones = async (ids) => {
+    await supabase.from('drones').delete().in('id', ids);
+    setDrones(prev => prev.filter(d => !ids.includes(d.id)));
   };
 
   const importDrones = async (serials) => {
@@ -222,7 +235,7 @@ const deleteMember = async (id) => {
 
   return (
     <AppContext.Provider value={{
-      drones, addDrone, updateDroneStatus, importDrones, deleteDrone,
+      drones, addDrone, updateDroneStatus, importDrones, deleteDrone, deleteDrones,
       shows, addShow, updateShow, dronesUsedOnDate,
       members, addMember, updateMember, updateMemberPerms, deleteMember,
       scaling, scaleToShow, removeFromShow, isMemberBusy, loadScaling,
