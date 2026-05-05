@@ -20,7 +20,7 @@ const EMPTY_FORM = { date: '', status: 'neg', client: '', drones: '', city: '', 
 
 export default function Shows() {
   const { isMaster } = useAuth();
-  const { shows, addShow, updateShow, dronesUsedOnDate, members, scaleToShow } = useApp();
+  const { shows, addShow, updateShow, dronesUsedOnDate, members, scaleToShow, scaling, loadScaling } = useApp();
   const TOTAL_DRONES = 125;
 
   const today = new Date();
@@ -30,6 +30,8 @@ export default function Shows() {
   const [showModal, setShowModal] = useState(false);
   const [editingId, setEditingId] = useState(null);
   const [detail, setDetail] = useState(null);
+  const [shareText, setShareText] = useState(null);
+  const [copied, setCopied] = useState(false);
   const [conflict, setConflict] = useState(null);
   const [form, setForm] = useState(EMPTY_FORM);
   const [selectedMembers, setSelectedMembers] = useState(new Set());
@@ -122,6 +124,33 @@ export default function Shows() {
     closeModal();
   };
 
+  const openDetail = async (s) => {
+    setDetail(s);
+    if (!scaling[s.id]) await loadScaling(s.id);
+  };
+
+  const generateShareText = (show) => {
+    const scaled = scaling[show.id] || [];
+    let text = `MAGICDRONE — Equipe Escalada\nShow: ${show.client}\nData: ${fmtDate(show.date)}\n─────────────────────\n`;
+    scaled.forEach((sc, i) => {
+      const m = members.find(m => m.id === sc.memberId);
+      if (!m) return;
+      text += `${i + 1}. ${m.name}${sc.role ? ` — ${sc.role}` : ''}\n`;
+      if (m.tel)  text += `   Tel: ${m.tel}\n`;
+      if (m.cpf)  text += `   CPF: ${m.cpf}\n`;
+      if (m.rg)   text += `   RG: ${m.rg}\n`;
+    });
+    setShareText(text.trim());
+    setCopied(false);
+  };
+
+  const copyText = () => {
+    navigator.clipboard.writeText(shareText).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    });
+  };
+
   const listShows = selectedDate
     ? visible.filter(s => s.date === selectedDate)
     : [...visible].sort((a, b) => a.date.localeCompare(b.date));
@@ -174,7 +203,7 @@ export default function Shows() {
         title={selectedDate ? `Shows em ${fmtDate(selectedDate)}` : 'Todos os Shows'}
         action={selectedDate && <Btn size="sm" variant="ghost" onClick={() => setSelectedDate(null)}>Ver todos</Btn>}>
         {listShows.length === 0 ? <Empty text="Nenhum show" /> : listShows.map(s => (
-          <div key={s.id} onClick={() => setDetail(s)} style={{
+          <div key={s.id} onClick={() => openDetail(s)} style={{
             background: '#0a0a0a', border: '1px solid #1a1a1a',
             borderLeft: `3px solid ${STATUS_COLOR[s.status] || '#888'}`,
             padding: '12px 14px', marginBottom: 6, cursor: 'pointer',
@@ -212,9 +241,32 @@ export default function Shows() {
               <StatusPill status={detail.status} />
             </div>
           </div>
+          {(scaling[detail.id]?.length > 0) && (
+            <button onClick={() => generateShareText(detail)} style={{
+              width: '100%', marginBottom: 8, background: 'transparent', border: '1px solid #333',
+              color: '#888', fontFamily: 'Space Mono, monospace', fontSize: 9, letterSpacing: 2,
+              textTransform: 'uppercase', padding: '8px 0', cursor: 'pointer',
+            }}>
+              Gerar Texto para Compartilhar
+            </button>
+          )}
           <div style={{ display: 'flex', gap: 8 }}>
             <Btn full variant="ghost" onClick={() => setDetail(null)}>Fechar</Btn>
             {isMaster() && <Btn full variant="outline" onClick={() => openEdit(detail)}>Editar</Btn>}
+          </div>
+        </Modal>
+      )}
+
+      {shareText !== null && (
+        <Modal title="Texto para Compartilhar" onClose={() => setShareText(null)}>
+          <div style={{ background: '#000', border: '1px solid #222', padding: 12, fontSize: 11, lineHeight: 1.9, whiteSpace: 'pre-wrap', color: '#ccc', maxHeight: 320, overflowY: 'auto', marginBottom: 12 }}>
+            {shareText}
+          </div>
+          <div style={{ display: 'flex', gap: 8 }}>
+            <Btn full variant="ghost" onClick={() => setShareText(null)}>Fechar</Btn>
+            <Btn full variant={copied ? 'success' : 'outline'} onClick={copyText}>
+              {copied ? 'Copiado!' : 'Copiar Texto'}
+            </Btn>
           </div>
         </Modal>
       )}
