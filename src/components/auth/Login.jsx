@@ -26,7 +26,6 @@ export default function Login() {
             <polyline points="2,38 18,8 32,26 46,8 62,38" fill="none" stroke="#ffffff" strokeWidth="5" strokeLinejoin="miter" strokeLinecap="square"/>
           </svg>
           <div className={styles.brand}>MagicDrone</div>
-          <div className={styles.tagline}>Created by Ary Nogueira</div>
         </div>
 
         <form className={styles.form} onSubmit={handleSubmit}>
@@ -59,6 +58,14 @@ export default function Login() {
             {loading ? 'Aguarde...' : 'Entrar'}
           </button>
         </form>
+      </div>
+
+      <div style={{
+        position: 'fixed', bottom: 16, left: 0, right: 0,
+        textAlign: 'center', fontSize: 9, letterSpacing: 3,
+        color: '#333', textTransform: 'uppercase', pointerEvents: 'none',
+      }}>
+        Created by Ary Nogueira
       </div>
     </div>
   );
