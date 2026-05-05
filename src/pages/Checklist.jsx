@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useApp } from '../context/AppContext';
+import { useAuth } from '../context/AuthContext';
 import { PageHeader, Section, Empty } from '../components/layout/UI';
 
 const TEMPLATES = {
@@ -38,6 +39,8 @@ function nowTime() { const d = new Date(); return `${pad(d.getHours())}:${pad(d.
 
 export default function Checklist() {
   const { shows } = useApp();
+  const { isMaster } = useAuth();
+  const visibleShows = isMaster() ? shows : shows.filter(s => s.status === 'conf');
   const [type, setType] = useState(110);
   const [selectedShow, setSelectedShow] = useState('');
   const [checklist, setChecklist] = useState(initChecklist(110));
@@ -104,7 +107,7 @@ export default function Checklist() {
         <select value={selectedShow} onChange={e => setSelectedShow(e.target.value)}
           style={{ width: '100%', background: '#000', border: '1px solid #333', color: '#fff', padding: '8px 10px', fontFamily: 'Space Mono,monospace', fontSize: 12, outline: 'none' }}>
           <option value="">Selecionar show...</option>
-          {shows.map(s => <option key={s.id} value={s.id}>{s.client}</option>)}
+          {visibleShows.map(s => <option key={s.id} value={s.id}>{s.client}</option>)}
         </select>
       </div>
 

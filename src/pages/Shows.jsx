@@ -37,7 +37,7 @@ export default function Shows() {
   const [selectedMembers, setSelectedMembers] = useState(new Set());
   const [memberRoles, setMemberRoles] = useState({});
 
-  const visible = isMaster() ? shows : shows.filter(s => s.status !== 'neg');
+  const visible = isMaster() ? shows : shows.filter(s => s.status === 'conf');
 
   const changeMonth = (dir) => {
     let m = calMonth + dir, y = calYear;
