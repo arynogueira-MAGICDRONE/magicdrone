@@ -40,22 +40,27 @@ export function AppProvider({ children }) {
   };
 
   const addShow = async (show) => {
-    const { data, error } = await supabase.from('shows').insert({
-      data: show.date, status: show.status, cliente: show.client,
-      drones: show.drones, cidade: show.city, estado: show.state,
-      data_teste: show.test
-    }).select().single();
-    if (error) { console.error('Erro detalhado:', JSON.stringify(error, null, 2)); return null; }
-    if (data) {
-      const mapped = {
-        id: data.id, date: data.data, status: data.status, client: data.cliente,
-        drones: data.drones, city: data.cidade, state: data.estado,
-        test: data.data_teste, valor: null
-      };
-      setShows(prev => [...prev, mapped]);
-      return mapped;
+    const insertData = {
+      data: show.date,
+      status: show.status,
+      cliente: show.client,
+      drones: parseInt(show.drones) || 0,
+      cidade: show.city || '',
+      estado: show.state || '',
+    };
+    console.log('Tentando inserir:', insertData);
+    const { data, error } = await supabase.from('shows').insert(insertData).select().single();
+    console.log('Resultado:', data, 'Erro:', error);
+    if (error) {
+      alert('Erro Supabase: ' + error.message + ' | Código: ' + error.code);
+      return;
     }
-    return null;
+    if (data) {
+      setShows(prev => [...prev, {
+        id: data.id, date: data.data, status: data.status, client: data.cliente,
+        drones: data.drones, city: data.cidade, state: data.estado, test: data.data_teste
+      }]);
+    }
   };
 
   const updateShow = async (id, show) => {
