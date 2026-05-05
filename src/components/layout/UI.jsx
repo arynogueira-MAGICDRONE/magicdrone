@@ -136,9 +136,10 @@ export function StatusPill({ status }) {
     ok:    { label: 'Bom',         color: '#4caf50' },
     bad:   { label: 'Ruim',        color: '#f44336' },
     manut: { label: 'Manutenção',  color: '#ff9800' },
-    conf:  { label: 'Confirmado',  color: '#4caf50' },
-    neg:   { label: 'Negociando',  color: '#ff9800' },
-    exec:  { label: 'Executado',   color: '#555' },
+    conf:      { label: 'Confirmado',  color: '#4caf50' },
+    neg:       { label: 'Negociando',  color: '#ff9800' },
+    exec:      { label: 'Executado',   color: '#555' },
+    cancelado: { label: 'Cancelado',   color: '#f44336' },
   };
   const s = map[status] || { label: status, color: '#888' };
   return (

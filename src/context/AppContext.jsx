@@ -44,10 +44,11 @@ export function AppProvider({ children }) {
       data: show.date, status: show.status, cliente: show.client,
       drones: show.drones, cidade: show.city, estado: show.state, data_teste: show.test
     }).select().single();
-    if (data) setShows(prev => [...prev, {
-      id: data.id, date: data.data, status: data.status, client: data.cliente,
-      drones: data.drones, city: data.cidade, state: data.estado, test: data.data_teste
-    }]);
+    if (data) {
+      const mapped = { id: data.id, date: data.data, status: data.status, client: data.cliente, drones: data.drones, city: data.cidade, state: data.estado, test: data.data_teste };
+      setShows(prev => [...prev, mapped]);
+      return mapped;
+    }
   };
 
   const updateShow = async (id, show) => {
