@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useApp } from '../context/AppContext';
+import { supabase } from '../supabase';
 import { PageHeader, Btn, Input, Modal, ModalBtns, Section, Toggle, Avatar, Empty } from '../components/layout/UI';
 
 const PERM_LABELS = {
@@ -15,11 +16,12 @@ const PERM_LABELS = {
 
 export default function Equipe() {
   const { isMaster } = useAuth();
-  const { members, addMember, updateMemberPerms, shows, scaling, scaleToShow, removeFromShow, isMemberBusy } = useApp();
+  const { members, addMember, updateMemberPerms, deleteMember, updateMember, shows, scaling, scaleToShow, removeFromShow, isMemberBusy } = useApp();
 
   const [tab, setTab] = useState('membros');
   const [modal, setModal] = useState(null);
   const [detail, setDetail] = useState(null);
+  const [editingId, setEditingId] = useState(null);
   const [selectedShow, setSelectedShow] = useState('');
   const [scaleModal, setScaleModal] = useState(null);
   const [form, setForm] = useState({});
@@ -31,11 +33,53 @@ export default function Equipe() {
     ...(isMaster() ? [{ key: 'permissoes', label: 'Permissões' }] : []),
   ];
 
-  const saveMember = () => {
+  const openEdit = (m) => {
+    setEditingId(m.id);
+    setForm({
+      name: m.name, cpf: m.cpf, rg: m.rg, email: m.email,
+      tel: m.tel, sarpas: m.sarpas, senha: '',
+      ...Object.fromEntries(Object.keys(PERM_LABELS).map(k => [`perm_${k}`, m.perms?.[k] || false]))
+    });
+    setDetail(null);
+    setModal('add');
+  };
+
+  const saveMember = async () => {
     if (!form.name?.trim()) return;
+    if (!form.email?.trim()) { alert('Informe o email.'); return; }
     const perms = Object.fromEntries(Object.keys(PERM_LABELS).map(k => [k, form[`perm_${k}`] || false]));
-    addMember({ name: form.name, cpf: form.cpf || '', rg: form.rg || '', email: form.email || '', tel: form.tel || '', sarpas: form.sarpas || '', perms });
-    setModal(null); setForm({});
+
+    if (editingId) {
+      // Editando membro existente
+      await supabase.from('membros').update({
+        nome: form.name, cpf: form.cpf, rg: form.rg,
+        email: form.email, telefone: form.tel, sarpas: form.sarpas, permissoes: perms
+      }).eq('id', editingId);
+
+      // Atualiza usuário também
+      const updateData = { nome: form.name, email: form.email, permissoes: perms };
+      if (form.senha?.trim()) updateData.senha = form.senha;
+      await supabase.from('usuarios').update(updateData).eq('email', form.email);
+
+      updateMember(editingId, { name: form.name, cpf: form.cpf, rg: form.rg, email: form.email, tel: form.tel, sarpas: form.sarpas, perms });
+    } else {
+      // Novo membro
+      if (!form.senha?.trim()) { alert('Informe a senha.'); return; }
+      await supabase.from('usuarios').insert({
+        nome: form.name, email: form.email, senha: form.senha,
+        perfil: 'secundario', permissoes: perms
+      });
+      addMember({ name: form.name, cpf: form.cpf||'', rg: form.rg||'', email: form.email||'', tel: form.tel||'', sarpas: form.sarpas||'', perms });
+    }
+
+    setModal(null); setForm({}); setEditingId(null);
+  };
+
+  const handleDeleteMember = async (m) => {
+    if (!window.confirm(`Remover ${m.name}?`)) return;
+    await supabase.from('usuarios').delete().eq('email', m.email);
+    deleteMember(m.id);
+    setDetail(null);
   };
 
   const confirmScale = () => {
@@ -45,11 +89,10 @@ export default function Equipe() {
   };
 
   const generateShareText = (showId) => {
-    const show = shows.find(s => s.id === parseInt(showId));
+    const show = shows.find(s => s.id === showId);
     const scaled = scaling[showId] || [];
     if (!show || !scaled.length) return;
-    let text = `MAGICDRONE — Equipe Escalada\nShow: ${show.client}\n`;
-    text += `─────────────────────\n`;
+    let text = `MAGICDRONE — Equipe Escalada\nShow: ${show.client}\n─────────────────────\n`;
     scaled.forEach((sc, i) => {
       const m = members.find(m => m.id === sc.memberId);
       if (!m) return;
@@ -59,16 +102,15 @@ export default function Equipe() {
     setShareText(text);
   };
 
-  const showId = selectedShow ? parseInt(selectedShow) : null;
+  const showId = selectedShow || null;
   const currentScaled = showId ? (scaling[showId] || []) : [];
   const availableMembers = showId ? members.filter(m => !currentScaled.some(sc => sc.memberId === m.id)) : [];
 
   return (
     <div>
       <PageHeader label="Módulo" title="Equipe"
-        action={isMaster() && <Btn onClick={() => { setForm({}); setModal('add'); }}>+ Membro</Btn>} />
+        action={isMaster() && <Btn onClick={() => { setForm({}); setEditingId(null); setModal('add'); }}>+ Membro</Btn>} />
 
-      {/* Tabs */}
       <div style={{ display: 'flex', borderBottom: '1px solid #222' }}>
         {tabs.map(t => (
           <button key={t.key} onClick={() => setTab(t.key)} style={{
@@ -76,21 +118,20 @@ export default function Equipe() {
             textAlign: 'center', cursor: 'pointer', fontFamily: 'Space Mono,monospace',
             color: tab === t.key ? '#fff' : '#555',
             borderBottom: `2px solid ${tab === t.key ? '#fff' : 'transparent'}`,
-            background: 'transparent', border: 'none', borderBottom: `2px solid ${tab === t.key ? '#fff' : 'transparent'}`,
+            background: 'transparent', border: 'none',
           }}>{t.label}</button>
         ))}
       </div>
 
-      {/* Members tab */}
       {tab === 'membros' && (
         <Section title={`${members.length} membro(s)`}>
           {members.length === 0 ? <Empty text="Nenhum membro" /> : members.map(m => (
             <div key={m.id} onClick={() => setDetail(m)} style={{ background: '#0a0a0a', border: '1px solid #1a1a1a', padding: 12, marginBottom: 6, cursor: 'pointer' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                 <Avatar name={m.name} />
-                <div>
+                <div style={{ flex: 1 }}>
                   <div style={{ fontSize: 13, fontWeight: 700 }}>{m.name}</div>
-                  <div style={{ fontSize: 10, color: '#666', marginTop: 1 }}>{m.tel}</div>
+                  <div style={{ fontSize: 10, color: '#666', marginTop: 1 }}>{m.email}</div>
                 </div>
               </div>
               {m.sarpas && (
@@ -105,7 +146,6 @@ export default function Equipe() {
         </Section>
       )}
 
-      {/* Scale tab */}
       {tab === 'escalar' && (
         <Section title="Escalar para Show">
           <select value={selectedShow} onChange={e => setSelectedShow(e.target.value)}
@@ -113,7 +153,6 @@ export default function Equipe() {
             <option value="">Selecionar show...</option>
             {shows.map(s => <option key={s.id} value={s.id}>{s.client}</option>)}
           </select>
-
           {showId && (
             <>
               <div style={{ background: '#0a0a0a', border: '1px solid #1a1a1a', padding: 12, marginBottom: 10 }}>
@@ -138,12 +177,7 @@ export default function Equipe() {
                   }}>Gerar Texto para Compartilhar</button>
                 )}
               </div>
-
               <div style={{ fontSize: 9, letterSpacing: 4, color: '#888', textTransform: 'uppercase', marginBottom: 8 }}>Adicionar à Equipe</div>
-              <div style={{ display: 'flex', gap: 12, marginBottom: 8, fontSize: 9, color: '#666' }}>
-                <span><span style={{ display: 'inline-block', width: 8, height: 8, borderRadius: '50%', background: '#4caf50', marginRight: 4 }}/>Disponível</span>
-                <span><span style={{ display: 'inline-block', width: 8, height: 8, borderRadius: '50%', background: '#f44336', marginRight: 4 }}/>Ocupado</span>
-              </div>
               {availableMembers.map(m => {
                 const busy = isMemberBusy(m.id, showId);
                 return (
@@ -163,7 +197,6 @@ export default function Equipe() {
         </Section>
       )}
 
-      {/* Permissions tab */}
       {tab === 'permissoes' && isMaster() && (
         <Section title="Permissões">
           {members.map(m => (
@@ -183,9 +216,8 @@ export default function Equipe() {
         </Section>
       )}
 
-      {/* Add member modal */}
       {modal === 'add' && (
-        <Modal title="Novo Membro" onClose={() => setModal(null)}>
+        <Modal title={editingId ? 'Editar Membro' : 'Novo Membro'} onClose={() => { setModal(null); setEditingId(null); }}>
           <Input label="Nome completo" value={form.name||''} onChange={e=>setForm({...form,name:e.target.value})} placeholder="Nome Sobrenome" />
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
             <Input label="CPF" value={form.cpf||''} onChange={e=>setForm({...form,cpf:e.target.value})} placeholder="000.000.000-00" />
@@ -194,6 +226,7 @@ export default function Equipe() {
           <Input label="Email" type="email" value={form.email||''} onChange={e=>setForm({...form,email:e.target.value})} placeholder="email@exemplo.com" />
           <Input label="Telefone" value={form.tel||''} onChange={e=>setForm({...form,tel:e.target.value})} placeholder="(00) 00000-0000" />
           <Input label="Código Sarpas (opcional)" value={form.sarpas||''} onChange={e=>setForm({...form,sarpas:e.target.value})} placeholder="BR-2024-XXX" />
+          <Input label={editingId ? 'Nova Senha (deixe vazio para manter)' : 'Senha de Acesso'} type="password" value={form.senha||''} onChange={e=>setForm({...form,senha:e.target.value})} placeholder="Senha para login" />
           <div style={{ marginTop: 8, paddingTop: 8, borderTop: '1px solid #222' }}>
             <div style={{ fontSize: 9, letterSpacing: 3, color: '#666', textTransform: 'uppercase', marginBottom: 8 }}>Permissões</div>
             {Object.keys(PERM_LABELS).map(k => (
@@ -203,11 +236,10 @@ export default function Equipe() {
               </div>
             ))}
           </div>
-          <ModalBtns onCancel={() => setModal(null)} onSave={saveMember} />
+          <ModalBtns onCancel={() => { setModal(null); setEditingId(null); }} onSave={saveMember} saveLabel={editingId ? 'Salvar' : 'Cadastrar'} />
         </Modal>
       )}
 
-      {/* Detail modal */}
       {detail && (
         <Modal title="Detalhes do Membro" onClose={() => setDetail(null)}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 14 }}>
@@ -222,11 +254,14 @@ export default function Equipe() {
               <span style={{ color: '#666' }}>{l}</span><span>{v || '—'}</span>
             </div>
           ))}
-          <ModalBtns onCancel={() => setDetail(null)} onSave={() => setDetail(null)} saveLabel="Fechar" />
+          <div style={{ marginTop: 14, display: 'flex', gap: 8 }}>
+            <Btn full variant="ghost" onClick={() => setDetail(null)}>Fechar</Btn>
+            {isMaster() && <Btn full variant="outline" onClick={() => openEdit(detail)}>Editar</Btn>}
+            {isMaster() && <Btn full variant="danger" onClick={() => handleDeleteMember(detail)}>Remover</Btn>}
+          </div>
         </Modal>
       )}
 
-      {/* Scale modal */}
       {scaleModal && (
         <Modal title="Escalar Membro" onClose={() => setScaleModal(null)}>
           <div style={{ fontSize: 13, fontWeight: 700, marginBottom: 4 }}>{members.find(m => m.id === scaleModal.memberId)?.name}</div>
@@ -236,7 +271,6 @@ export default function Equipe() {
         </Modal>
       )}
 
-      {/* Share text modal */}
       {shareText && (
         <Modal title="Texto para Compartilhar" onClose={() => setShareText(null)}>
           <div style={{ background: '#000', border: '1px solid #333', padding: 12, fontSize: 11, lineHeight: 1.8, whiteSpace: 'pre-wrap', marginBottom: 10, color: '#ccc', maxHeight: 300, overflowY: 'auto' }}>

@@ -103,10 +103,22 @@ export function AppProvider({ children }) {
     }]);
   };
 
+  const updateMember = async (id, member) => {
+    await supabase.from('membros').update({
+      nome: member.name, cpf: member.cpf, rg: member.rg,
+      email: member.email, telefone: member.tel, sarpas: member.sarpas, permissoes: member.perms
+    }).eq('id', id);
+    setMembers(prev => prev.map(m => m.id === id ? { ...m, ...member } : m));
+  };
+
   const updateMemberPerms = async (id, perms) => {
     await supabase.from('membros').update({ permissoes: perms }).eq('id', id);
     setMembers(prev => prev.map(m => m.id === id ? { ...m, perms } : m));
   };
+const deleteMember = async (id) => {
+  await supabase.from('membros').delete().eq('id', id);
+  setMembers(prev => prev.filter(m => m.id !== id));
+};
 
   // ─── SCALING ─────────────────────────────────────
   const loadScaling = async (showId) => {
@@ -206,7 +218,7 @@ export function AppProvider({ children }) {
     <AppContext.Provider value={{
       drones, addDrone, updateDroneStatus, importDrones,
       shows, addShow, updateShow, dronesUsedOnDate,
-      members, addMember, updateMemberPerms,
+      members, addMember, updateMember, updateMemberPerms, deleteMember,
       scaling, scaleToShow, removeFromShow, isMemberBusy, loadScaling,
       budgets, addBudgetItem, deleteBudgetItem, loadBudget,
       docs, addDoc, deleteDoc, loadDocs,
