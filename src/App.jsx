@@ -13,6 +13,7 @@ import Checklist from './pages/Checklist';
 import Documentacao from './pages/Documentacao';
 import Manual from './pages/Manual';
 import Relatorios from './pages/Relatorios';
+import CRM from './pages/CRM';
 
 function PrivateRoute({ children }) {
   const { user } = useAuth();
@@ -39,6 +40,7 @@ function AppRoutes() {
           <Route path="/documentacao" element={<Documentacao />} />
           <Route path="/manual"       element={<Manual />} />
           <Route path="/relatorios"   element={<Relatorios />} />
+          <Route path="/crm"          element={<CRM />} />
           <Route path="*"             element={<Navigate to="/" replace />} />
         </Routes>
       </Layout>

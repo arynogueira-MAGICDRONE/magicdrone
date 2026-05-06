@@ -1,13 +1,12 @@
+/* ─── Base / Mobile First ──────────────────────────── */
 .wrap {
   min-height: 100vh;
   background: #000;
   display: flex;
   flex-direction: column;
-  max-width: 480px;
-  margin: 0 auto;
-  position: relative;
 }
 
+/* TOPBAR — visible on mobile, hidden on desktop */
 .topbar {
   background: #000;
   border-bottom: 1px solid #1a1a1a;
@@ -69,22 +68,36 @@
   font-family: 'Space Mono', monospace;
   transition: background 0.15s;
 }
-
 .avatar:hover { background: #ddd; }
 
+/* MAIN */
 .main {
   flex: 1;
   overflow-y: auto;
-  padding-bottom: 60px;
+  padding-bottom: 60px; /* space for bottom nav on mobile */
 }
 
+/* SIDEBAR — hidden on mobile */
+.sidebar {
+  display: none;
+}
+
+/* Sidebar sub-elements (referenced by Layout.jsx inline styles, defined here for desktop) */
+.sidebarLogoArea {}
+.sidebarNav {}
+.sidebarFooter {}
+.sideNavBtn {}
+.sideNavBtnActive {}
+.sideNavIcon {}
+.sideNavLabel {}
+
+/* BOTTOM NAV — visible on mobile */
 .bottomNav {
   position: fixed;
   bottom: 0;
-  left: 50%;
-  transform: translateX(-50%);
+  left: 0;
+  right: 0;
   width: 100%;
-  max-width: 480px;
   background: #000;
   border-top: 1px solid #1a1a1a;
   display: flex;
@@ -103,10 +116,93 @@
   color: #444;
   transition: color 0.15s;
   padding: 8px 2px;
+  min-width: 0;
 }
+.navBtn:hover    { color: #888; }
+.navBtnActive    { color: #fff !important; }
+.navIcon         { font-size: 15px; line-height: 1; }
+.navLabel        { font-size: 7px; letter-spacing: 2px; text-transform: uppercase; }
 
-.navBtn:hover { color: #888; }
-.navBtnActive { color: #fff !important; }
+/* ─── Desktop (≥ 768px) ────────────────────────────── */
+@media (min-width: 768px) {
 
-.navIcon { font-size: 15px; line-height: 1; }
-.navLabel { font-size: 7px; letter-spacing: 2px; text-transform: uppercase; }
+  /* Hide mobile elements */
+  .topbar    { display: none; }
+  .bottomNav { display: none; }
+
+  /* Sidebar */
+  .sidebar {
+    display: flex;
+    flex-direction: column;
+    width: 220px;
+    min-height: 100vh;
+    background: #000;
+    border-right: 1px solid #1a1a1a;
+    position: fixed;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    z-index: 100;
+    overflow-y: auto;
+  }
+
+  .sidebarLogoArea {
+    padding: 20px 20px 16px;
+    border-bottom: 1px solid #1a1a1a;
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .sidebarNav {
+    flex: 1;
+    padding: 8px 0;
+  }
+
+  .sidebarFooter {
+    padding: 14px 16px;
+    border-top: 1px solid #1a1a1a;
+  }
+
+  .sideNavBtn {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 11px 20px;
+    text-decoration: none;
+    color: #444;
+    transition: color 0.15s, background 0.15s;
+    border-left: 2px solid transparent;
+  }
+  .sideNavBtn:hover {
+    color: #888;
+    background: #0a0a0a;
+  }
+  .sideNavBtnActive {
+    color: #fff !important;
+    background: #0d0d0d !important;
+    border-left-color: #fff !important;
+  }
+
+  .sideNavIcon {
+    font-size: 16px;
+    width: 22px;
+    text-align: center;
+    flex-shrink: 0;
+  }
+
+  .sideNavLabel {
+    font-size: 10px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+  }
+
+  /* Main — offset for sidebar, full remaining width */
+  .main {
+    margin-left: 220px;
+    padding-bottom: 0;
+    width: calc(100% - 220px);
+    min-height: 100vh;
+  }
+}

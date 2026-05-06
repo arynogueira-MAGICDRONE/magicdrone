@@ -5,13 +5,14 @@ import { supabase } from '../../supabase';
 import styles from './Layout.module.css';
 
 const navItems = [
-  { to: '/',            icon: '⬛', label: 'Painel',    module: null },
-  { to: '/shows',       icon: '📅', label: 'Shows',     module: 'agenda' },
-  { to: '/inventario',  icon: '📦', label: 'Inventário',module: 'inventario' },
-  { to: '/equipe',      icon: '👥', label: 'Equipe',    module: 'equipe' },
-  { to: '/orcamento',   icon: '💰', label: 'Budget',    module: 'orcamento' },
-  { to: '/checklist',   icon: '✅', label: 'Check',     module: 'checklist' },
-  { to: '/relatorios',  icon: '📊', label: 'Relat.',    module: null, masterOnly: true },
+  { to: '/',           icon: '⬛', label: 'Painel',     module: null },
+  { to: '/shows',      icon: '📅', label: 'Shows',      module: 'agenda' },
+  { to: '/inventario', icon: '📦', label: 'Inventário', module: 'inventario' },
+  { to: '/equipe',     icon: '👥', label: 'Equipe',     module: 'equipe' },
+  { to: '/orcamento',  icon: '💰', label: 'Budget',     module: 'orcamento' },
+  { to: '/checklist',  icon: '✅', label: 'Check',      module: 'checklist' },
+  { to: '/relatorios', icon: '📊', label: 'Relat.',     module: null, masterOnly: true },
+  { to: '/crm',        icon: '🤝', label: 'CRM',        module: null, masterOnly: true },
 ];
 
 const MODAL_STYLE = {
@@ -42,7 +43,7 @@ export default function Layout({ children }) {
   const { user, logout, isMaster } = useAuth();
   const [modal, setModal] = useState(null); // null | 'menu' | 'password'
   const [pwForm, setPwForm] = useState({ current: '', next: '', confirm: '' });
-  const [pwStatus, setPwStatus] = useState(null); // { ok, msg }
+  const [pwStatus, setPwStatus] = useState(null);
   const [pwLoading, setPwLoading] = useState(false);
 
   const initials = (name) => name?.split(' ').slice(0, 2).map(n => n[0]).join('') || 'MD';
@@ -66,8 +67,58 @@ export default function Layout({ children }) {
     setPwForm({ current: '', next: '', confirm: '' });
   };
 
+  const visibleItems = navItems.filter(item => !item.masterOnly || isMaster());
+  const displayName = user?.nome || user?.name || '';
+
   return (
     <div className={styles.wrap}>
+
+      {/* ─── SIDEBAR (desktop) ─────────────────────── */}
+      <aside className={styles.sidebar}>
+        {/* Logo */}
+        <div className={styles.sidebarLogoArea}>
+          <svg width="28" height="20" viewBox="0 0 64 44" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <polyline points="2,38 18,8 32,26 46,8 62,38" fill="none" stroke="#ffffff" strokeWidth="5" strokeLinejoin="miter" strokeLinecap="square"/>
+          </svg>
+          <span className={styles.brand}>MagicDrone</span>
+          {isMaster() && <span className={styles.masterBadge}>Master</span>}
+        </div>
+
+        {/* Nav items */}
+        <nav className={styles.sidebarNav}>
+          {visibleItems.map(item => (
+            <NavLink key={item.to} to={item.to} end={item.to === '/'}
+              className={({ isActive }) => `${styles.sideNavBtn} ${isActive ? styles.sideNavBtnActive : ''}`}>
+              <span className={styles.sideNavIcon}>{item.icon}</span>
+              <span className={styles.sideNavLabel}>{item.label}</span>
+            </NavLink>
+          ))}
+        </nav>
+
+        {/* User footer */}
+        <div className={styles.sidebarFooter}>
+          <div style={{ fontSize: 11, fontWeight: 700, color: '#ccc', marginBottom: 2, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+            {displayName.split(' ')[0]}
+          </div>
+          <div style={{ fontSize: 9, color: '#444', letterSpacing: 1, marginBottom: 10, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+            {user?.email}
+          </div>
+          <div style={{ display: 'flex', gap: 6 }}>
+            <button onClick={openPassword} style={{
+              flex: 1, fontSize: 8, letterSpacing: 1, padding: '6px 0', background: 'transparent',
+              border: '1px solid #333', color: '#666', fontFamily: 'Space Mono, monospace',
+              cursor: 'pointer', textTransform: 'uppercase',
+            }}>Senha</button>
+            <button onClick={logout} style={{
+              flex: 1, fontSize: 8, letterSpacing: 1, padding: '6px 0', background: 'transparent',
+              border: '1px solid #f44336', color: '#f44336', fontFamily: 'Space Mono, monospace',
+              cursor: 'pointer', textTransform: 'uppercase',
+            }}>Sair</button>
+          </div>
+        </div>
+      </aside>
+
+      {/* ─── TOPBAR (mobile) ───────────────────────── */}
       <header className={styles.topbar}>
         <div className={styles.logoArea}>
           <svg width="32" height="22" viewBox="0 0 64 44" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -77,22 +128,24 @@ export default function Layout({ children }) {
           {isMaster() && <span className={styles.masterBadge}>Master</span>}
         </div>
         <div className={styles.userArea}>
-          <span className={styles.userName}>{user?.name?.split(' ')[0]}</span>
+          <span className={styles.userName}>{displayName.split(' ')[0]}</span>
           <button className={styles.avatar} onClick={() => setModal('menu')} title="Minha Conta">
-            {initials(user?.name)}
+            {initials(displayName)}
           </button>
         </div>
       </header>
 
+      {/* ─── MAIN CONTENT ──────────────────────────── */}
       <main className={styles.main}>
         {children}
       </main>
 
+      {/* ─── ACCOUNT MODAL (mobile menu) ───────────── */}
       {modal === 'menu' && (
         <div style={MODAL_STYLE} onClick={() => setModal(null)}>
           <div style={PANEL_STYLE} onClick={e => e.stopPropagation()}>
             <div style={{ fontSize: 10, letterSpacing: 4, textTransform: 'uppercase', color: '#888', marginBottom: 6 }}>Minha Conta</div>
-            <div style={{ fontSize: 13, fontWeight: 700, marginBottom: 16 }}>{user?.nome || user?.name}</div>
+            <div style={{ fontSize: 13, fontWeight: 700, marginBottom: 16 }}>{displayName}</div>
             <div style={{ fontSize: 10, color: '#555', marginBottom: 16, marginTop: -12 }}>{user?.email}</div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
               <button style={{ ...BTN('ghost'), textAlign: 'left', padding: '10px 12px' }} onClick={openPassword}>
@@ -106,6 +159,7 @@ export default function Layout({ children }) {
         </div>
       )}
 
+      {/* ─── CHANGE PASSWORD MODAL ─────────────────── */}
       {modal === 'password' && (
         <div style={MODAL_STYLE} onClick={() => setModal(null)}>
           <div style={PANEL_STYLE} onClick={e => e.stopPropagation()}>
@@ -134,16 +188,11 @@ export default function Layout({ children }) {
         </div>
       )}
 
+      {/* ─── BOTTOM NAV (mobile) ───────────────────── */}
       <nav className={styles.bottomNav}>
-        {navItems.filter(item => !item.masterOnly || isMaster()).map(item => (
-          <NavLink
-            key={item.to}
-            to={item.to}
-            end={item.to === '/'}
-            className={({ isActive }) =>
-              `${styles.navBtn} ${isActive ? styles.navBtnActive : ''}`
-            }
-          >
+        {visibleItems.map(item => (
+          <NavLink key={item.to} to={item.to} end={item.to === '/'}
+            className={({ isActive }) => `${styles.navBtn} ${isActive ? styles.navBtnActive : ''}`}>
             <span className={styles.navIcon}>{item.icon}</span>
             <span className={styles.navLabel}>{item.label}</span>
           </NavLink>
