@@ -72,6 +72,10 @@ export function AuthProvider({ children }) {
       .eq('email', email)
       .single();
 
+    console.log('Usuario encontrado:', data);
+    console.log('Senha digitada:', password);
+    console.log('Senha no banco:', data?.senha);
+
     if (dbError || !data) {
       setError('Email ou senha incorretos.');
       setLoading(false);
@@ -81,11 +85,15 @@ export function AuthProvider({ children }) {
     // Tenta bcrypt primeiro, fallback para texto puro (compatibilidade)
     let match = false;
     try {
+      console.log('Tentando bcrypt.compare...');
       match = await bcrypt.compare(password, data.senha);
     } catch {
       match = false;
     }
-    if (!match) match = (data.senha === password);
+    if (!match) {
+      console.log('Tentando comparação direta...');
+      match = (data.senha === password);
+    }
 
     if (!match) {
       setError('Email ou senha incorretos.');
