@@ -4,7 +4,8 @@ import { useApp } from '../context/AppContext';
 import { useAuth } from '../context/AuthContext';
 import { PageHeader, Section, Input, Select, Modal, ModalBtns, Empty, Btn } from '../components/layout/UI';
 
-const CATS = ['Hotel','Combustível','Pedágio','Alimentação','Outros'];
+const CATS = ['Hotel','Combustível','Pedágio','Fogos de Artifício','Alimentação','Diárias','Café da manhã','Almoço','Jantar','Design','Autorizações','Imposto','Comissão','Outros'];
+const SECONDARY_CATS = ['Combustível', 'Pedágio', 'Hotel', 'Fogos de Artifício'];
 const DISTANCES = [
   { km: '165 km', tempo: '1h 45min' },
   { km: '348 km', tempo: '4h 10min' },
@@ -111,11 +112,13 @@ export function Orcamento() {
         </div>
       );
     }
-    if (grouped.length === 0) {
+    const displayedGroups = isSecondary ? grouped.filter(g => SECONDARY_CATS.includes(g.cat)) : grouped;
+
+    if (displayedGroups.length === 0) {
       return <Empty text="Nenhuma despesa cadastrada para este show" />;
     }
 
-    return grouped.map(({ cat, items: catItems }) => {
+    return displayedGroups.map(({ cat, items: catItems }) => {
       const groupPrev = catItems.reduce((a, i) => a + (i.prev || 0), 0);
       const groupReal = catItems.reduce((a, i) => a + (i.real || 0), 0);
       const groupOver = groupReal > groupPrev && groupPrev > 0;
