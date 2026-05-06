@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+﻿import React, { useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import styles from './Login.module.css';
 
@@ -22,9 +22,7 @@ export default function Login() {
 
       <div className={styles.card}>
         <div className={styles.logoWrap}>
-          <svg width="80" height="56" viewBox="0 0 64 44" fill="none" xmlns="http://www.w3.org/2000/svg" className={styles.logo}>
-            <polyline points="2,38 18,8 32,26 46,8 62,38" fill="none" stroke="#ffffff" strokeWidth="5" strokeLinejoin="miter" strokeLinecap="square"/>
-          </svg>
+          <img src="/logo.png" style={{ width: '120px', height: 'auto' }} alt="MagicDrone" />
           <div className={styles.brand}>MagicDrone</div>
         </div>
 
@@ -62,7 +60,7 @@ export default function Login() {
 
       <div style={{
         position: 'fixed', bottom: 16, left: 0, right: 0,
-        textAlign: 'center', fontSize: 9, letterSpacing: 3,
+        textAlign: 'center', fontSize: 11, letterSpacing: 3,
         color: '#333', textTransform: 'uppercase', pointerEvents: 'none',
       }}>
         Created by Ary Nogueira

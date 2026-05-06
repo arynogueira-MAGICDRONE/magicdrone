@@ -65,9 +65,9 @@
 }
 
 .tagline {
-  font-size: 9px;
+  font-size: 11px;
   letter-spacing: 4px;
-  color: #555;
+  color: #aaa;
   text-transform: uppercase;
 }
 
@@ -84,18 +84,18 @@
 }
 
 .label {
-  font-size: 9px;
+  font-size: 11px;
   letter-spacing: 3px;
-  color: #555;
+  color: #aaa;
   text-transform: uppercase;
 }
 
 .input {
   background: #0a0a0a;
-  border: 1px solid #222;
+  border: 1px solid #333;
   color: #fff;
-  padding: 12px 14px;
-  font-size: 13px;
+  padding: 13px 14px;
+  font-size: 15px;
   outline: none;
   transition: border-color 0.2s;
   font-family: 'Inter', 'Roboto', sans-serif;
@@ -106,24 +106,24 @@
 }
 
 .input::placeholder {
-  color: #333;
+  color: #555;
 }
 
 .error {
   background: #1a0a0a;
   border: 1px solid #f44336;
   color: #f44336;
-  font-size: 10px;
+  font-size: 12px;
   letter-spacing: 1px;
-  padding: 8px 12px;
+  padding: 10px 12px;
 }
 
 .btn {
   background: #fff;
   color: #000;
   border: none;
-  padding: 14px;
-  font-size: 11px;
+  padding: 15px;
+  font-size: 13px;
   font-weight: 700;
   letter-spacing: 4px;
   text-transform: uppercase;
@@ -139,8 +139,8 @@
 .hint {
   margin-top: 28px;
   text-align: center;
-  font-size: 9px;
-  color: #333;
+  font-size: 11px;
+  color: #555;
   letter-spacing: 1px;
   display: flex;
   flex-direction: column;

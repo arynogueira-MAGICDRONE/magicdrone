@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../supabase';
 import { useApp } from '../context/AppContext';
@@ -25,10 +25,10 @@ const STATUS_LABEL = {
 
 const FIELD = {
   background: '#000', border: '1px solid #333', color: '#fff',
-  padding: '8px 10px', fontFamily: 'Space Mono, monospace', fontSize: 12,
+  padding: '8px 10px', fontFamily: 'Space Mono, monospace', fontSize: 14,
   outline: 'none', width: '100%', boxSizing: 'border-box',
 };
-const LABEL = { fontSize: 9, letterSpacing: 3, color: '#666', textTransform: 'uppercase' };
+const LABEL = { fontSize: 11, letterSpacing: 3, color: '#aaa', textTransform: 'uppercase' };
 
 function Textarea({ label, value, onChange, placeholder }) {
   return (
@@ -230,7 +230,7 @@ export default function CRM() {
       <PageHeader label="Módulo" title="CRM" action={<Btn onClick={openAdd}>+ Novo Orçamento</Btn>} />
 
       {loading ? (
-        <div style={{ textAlign: 'center', padding: '32px 0', color: '#555', fontSize: 10, letterSpacing: 3, textTransform: 'uppercase' }}>
+        <div style={{ textAlign: 'center', padding: '32px 0', color: '#aaa', fontSize: 12, letterSpacing: 3, textTransform: 'uppercase' }}>
           Carregando...
         </div>
       ) : entries.length === 0 ? (
@@ -251,14 +251,14 @@ export default function CRM() {
                     {STATUS_LABEL[entry.status] || entry.status}
                   </span>
                 </div>
-                <div style={{ fontSize: 10, color: '#888', marginBottom: 6 }}>{entry.evento}</div>
+                <div style={{ fontSize: 12, color: '#888', marginBottom: 6 }}>{entry.evento}</div>
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10 }}>
-                  <span style={{ fontSize: 9, color: '#555' }}>{fmtDate(entry.data_evento)}</span>
+                  <span style={{ fontSize: 11, color: '#aaa' }}>{fmtDate(entry.data_evento)}</span>
                   {(entry.cidade || entry.local) && (
-                    <span style={{ fontSize: 9, color: '#555' }}>{entry.cidade || entry.local}</span>
+                    <span style={{ fontSize: 11, color: '#aaa' }}>{entry.cidade || entry.local}</span>
                   )}
-                  {entry.drones > 0 && <span style={{ fontSize: 9, color: '#555' }}>{entry.drones} drones</span>}
-                  {entry.valor  > 0 && <span style={{ fontSize: 9, color: '#555' }}>{fmtVal(entry.valor)}</span>}
+                  {entry.drones > 0 && <span style={{ fontSize: 11, color: '#aaa' }}>{entry.drones} drones</span>}
+                  {entry.valor  > 0 && <span style={{ fontSize: 11, color: '#aaa' }}>{fmtVal(entry.valor)}</span>}
                 </div>
               </div>
             );
@@ -270,7 +270,7 @@ export default function CRM() {
       {modal === 'add' && (
         <Modal title={editingId ? 'Editar Orçamento' : 'Novo Orçamento'} onClose={closeAdd}>
 
-          <div style={{ fontSize: 9, letterSpacing: 3, color: '#555', textTransform: 'uppercase', marginBottom: 8, paddingBottom: 6, borderBottom: '1px solid #1a1a1a' }}>
+          <div style={{ fontSize: 11, letterSpacing: 3, color: '#aaa', textTransform: 'uppercase', marginBottom: 8, paddingBottom: 6, borderBottom: '1px solid #1a1a1a' }}>
             Dados do Cliente
           </div>
           <Input label="Nome da Empresa *" value={form.empresa}
@@ -280,7 +280,7 @@ export default function CRM() {
           <Input label="Nome do Contato" value={form.contato}
             onChange={e => setForm({...form, contato: e.target.value})} placeholder="João Silva" />
 
-          <div style={{ fontSize: 9, letterSpacing: 3, color: '#555', textTransform: 'uppercase', marginBottom: 8, marginTop: 6, paddingBottom: 6, borderBottom: '1px solid #1a1a1a' }}>
+          <div style={{ fontSize: 11, letterSpacing: 3, color: '#aaa', textTransform: 'uppercase', marginBottom: 8, marginTop: 6, paddingBottom: 6, borderBottom: '1px solid #1a1a1a' }}>
             Dados do Evento
           </div>
           <Input label="Nome do Evento *" value={form.evento}
@@ -290,7 +290,7 @@ export default function CRM() {
           <Input label="Nome do Local / Espaço" value={form.local}
             onChange={e => setForm({...form, local: e.target.value})} placeholder="Ex: Buffet Estrela, Arena XYZ" />
 
-          <div style={{ fontSize: 9, letterSpacing: 3, color: '#555', textTransform: 'uppercase', marginBottom: 8, marginTop: 6, paddingBottom: 6, borderBottom: '1px solid #1a1a1a' }}>
+          <div style={{ fontSize: 11, letterSpacing: 3, color: '#aaa', textTransform: 'uppercase', marginBottom: 8, marginTop: 6, paddingBottom: 6, borderBottom: '1px solid #1a1a1a' }}>
             Endereço
           </div>
           {/* CEP com botão buscar */}
@@ -307,7 +307,7 @@ export default function CRM() {
               <button onClick={buscarCep} disabled={cepLoading} style={{
                 padding: '0 14px', background: 'transparent', border: '1px solid #fff',
                 color: cepLoading ? '#666' : '#fff', fontFamily: 'Space Mono, monospace',
-                fontSize: 9, letterSpacing: 1, textTransform: 'uppercase',
+                fontSize: 11, letterSpacing: 1, textTransform: 'uppercase',
                 cursor: cepLoading ? 'not-allowed' : 'pointer', whiteSpace: 'nowrap',
               }}>
                 {cepLoading ? '...' : 'Buscar'}
@@ -331,7 +331,7 @@ export default function CRM() {
               onChange={e => setForm({...form, estado: e.target.value})} placeholder="SP" />
           </div>
 
-          <div style={{ fontSize: 9, letterSpacing: 3, color: '#555', textTransform: 'uppercase', marginBottom: 8, marginTop: 6, paddingBottom: 6, borderBottom: '1px solid #1a1a1a' }}>
+          <div style={{ fontSize: 11, letterSpacing: 3, color: '#aaa', textTransform: 'uppercase', marginBottom: 8, marginTop: 6, paddingBottom: 6, borderBottom: '1px solid #1a1a1a' }}>
             Negociação
           </div>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
@@ -372,21 +372,21 @@ export default function CRM() {
               ['Valor',    fmtVal(detail.valor)],
             ].map(([l, v]) => (
               <div key={l} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', padding: '7px 0', borderBottom: '1px solid #111', gap: 10 }}>
-                <span style={{ color: '#666', fontSize: 10, flexShrink: 0 }}>{l}</span>
-                <span style={{ fontSize: 12, textAlign: 'right', wordBreak: 'break-word' }}>{v}</span>
+                <span style={{ color: '#aaa', fontSize: 12, flexShrink: 0 }}>{l}</span>
+                <span style={{ fontSize: 14, textAlign: 'right', wordBreak: 'break-word' }}>{v}</span>
               </div>
             ))}
 
             {detail.observacao && (
               <div style={{ padding: '10px 0', borderBottom: '1px solid #111' }}>
-                <div style={{ color: '#666', fontSize: 10, marginBottom: 5, letterSpacing: 1, textTransform: 'uppercase' }}>Observações</div>
-                <div style={{ fontSize: 11, color: '#ccc', lineHeight: 1.7, whiteSpace: 'pre-wrap' }}>{detail.observacao}</div>
+                <div style={{ color: '#aaa', fontSize: 12, marginBottom: 5, letterSpacing: 1, textTransform: 'uppercase' }}>Observações</div>
+                <div style={{ fontSize: 13, color: '#ccc', lineHeight: 1.7, whiteSpace: 'pre-wrap' }}>{detail.observacao}</div>
               </div>
             )}
 
             <button onClick={() => convertToShow(detail)} disabled={converting} style={{
               width: '100%', marginTop: 14, padding: '10px 0',
-              fontFamily: 'Space Mono, monospace', fontSize: 9, letterSpacing: 2, textTransform: 'uppercase',
+              fontFamily: 'Space Mono, monospace', fontSize: 11, letterSpacing: 2, textTransform: 'uppercase',
               cursor: converting ? 'not-allowed' : 'pointer',
               border: '1px solid #4caf50', background: 'transparent', color: '#4caf50',
               opacity: converting ? 0.6 : 1,

@@ -1,4 +1,4 @@
-import React from 'react';
+﻿import React from 'react';
 
 // ─── Button ─────────────────────────────────────────
 export function Btn({ children, variant = 'primary', size = 'md', onClick, disabled, type = 'button', full }) {
@@ -35,13 +35,13 @@ export function Btn({ children, variant = 'primary', size = 'md', onClick, disab
 export function Input({ label, value, onChange, placeholder, type = 'text', maxLength, required }) {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 4, marginBottom: 10 }}>
-      {label && <label style={{ fontSize: 9, letterSpacing: 3, color: '#666', textTransform: 'uppercase' }}>{label}</label>}
+      {label && <label style={{ fontSize: 11, letterSpacing: 3, color: '#aaa', textTransform: 'uppercase' }}>{label}</label>}
       <input
         type={type} value={value} onChange={onChange} placeholder={placeholder}
         maxLength={maxLength} required={required}
         style={{
           background: '#000', border: '1px solid #333', color: '#fff',
-          padding: '8px 10px', fontFamily: 'Space Mono, monospace', fontSize: 12,
+          padding: '8px 10px', fontFamily: 'Space Mono, monospace', fontSize: 14,
           outline: 'none', width: '100%',
         }}
         onFocus={e => e.target.style.borderColor = '#fff'}
@@ -55,11 +55,11 @@ export function Input({ label, value, onChange, placeholder, type = 'text', maxL
 export function Select({ label, value, onChange, options }) {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 4, marginBottom: 10 }}>
-      {label && <label style={{ fontSize: 9, letterSpacing: 3, color: '#666', textTransform: 'uppercase' }}>{label}</label>}
+      {label && <label style={{ fontSize: 11, letterSpacing: 3, color: '#aaa', textTransform: 'uppercase' }}>{label}</label>}
       <select value={value} onChange={onChange}
         style={{
           background: '#000', border: '1px solid #333', color: '#fff',
-          padding: '8px 10px', fontFamily: 'Space Mono, monospace', fontSize: 12, outline: 'none', width: '100%',
+          padding: '8px 10px', fontFamily: 'Space Mono, monospace', fontSize: 14, outline: 'none', width: '100%',
         }}>
         {options.map(o => (
           <option key={o.value ?? o} value={o.value ?? o} style={{ background: '#111' }}>
@@ -83,7 +83,7 @@ export function Modal({ title, onClose, children }) {
         background: '#111', border: '1px solid #333', padding: 16,
         width: '100%', maxWidth: 400, marginTop: 60, animation: 'slideUp 0.25s ease',
       }}>
-        <div style={{ fontSize: 10, letterSpacing: 4, textTransform: 'uppercase', color: '#888', marginBottom: 14 }}>{title}</div>
+        <div style={{ fontSize: 12, letterSpacing: 4, textTransform: 'uppercase', color: '#888', marginBottom: 14 }}>{title}</div>
         {children}
         <style>{`@keyframes slideUp { from{opacity:0;transform:translateY(16px)} to{opacity:1;transform:translateY(0)} }`}</style>
       </div>
@@ -109,7 +109,7 @@ export function PageHeader({ label, title, action }) {
       display: 'flex', alignItems: 'center', justifyContent: 'space-between',
     }}>
       <div>
-        <div style={{ fontSize: 9, letterSpacing: 4, color: '#666', textTransform: 'uppercase', marginBottom: 3 }}>{label}</div>
+        <div style={{ fontSize: 11, letterSpacing: 4, color: '#aaa', textTransform: 'uppercase', marginBottom: 3 }}>{label}</div>
         <div style={{ fontSize: 18, fontWeight: 700, fontFamily: 'Bebas Neue, sans-serif', letterSpacing: 2 }}>{title}</div>
       </div>
       {action}
@@ -122,7 +122,7 @@ export function Section({ title, children, action }) {
   return (
     <div style={{ padding: '14px 16px 0' }}>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8, paddingBottom: 6, borderBottom: '1px solid #111' }}>
-        <div style={{ fontSize: 9, letterSpacing: 4, color: '#888', textTransform: 'uppercase' }}>{title}</div>
+        <div style={{ fontSize: 11, letterSpacing: 4, color: '#888', textTransform: 'uppercase' }}>{title}</div>
         {action}
       </div>
       {children}
@@ -138,7 +138,7 @@ export function StatusPill({ status }) {
     manut: { label: 'Manutenção',  color: '#ff9800' },
     conf:      { label: 'Confirmado',  color: '#4caf50' },
     neg:       { label: 'Negociando',  color: '#ff9800' },
-    exec:      { label: 'Executado',   color: '#555' },
+    exec:      { label: 'Executado',   color: '#aaa' },
     cancelado: { label: 'Cancelado',   color: '#f44336' },
   };
   const s = map[status] || { label: status, color: '#888' };
@@ -168,7 +168,7 @@ export function Toggle({ on, onClick }) {
 // ─── Empty ──────────────────────────────────────────
 export function Empty({ text = 'Nenhum item' }) {
   return (
-    <div style={{ textAlign: 'center', padding: '24px 0', color: '#333', fontSize: 10, letterSpacing: 3, textTransform: 'uppercase' }}>
+    <div style={{ textAlign: 'center', padding: '24px 0', color: '#333', fontSize: 12, letterSpacing: 3, textTransform: 'uppercase' }}>
       {text}
     </div>
   );

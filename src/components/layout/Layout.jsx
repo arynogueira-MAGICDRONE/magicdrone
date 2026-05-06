@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+﻿import React, { useState } from 'react';
 import { NavLink } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { supabase } from '../../supabase';
@@ -26,13 +26,13 @@ const PANEL_STYLE = {
 };
 const FIELD_STYLE = {
   background: '#000', border: '1px solid #333', color: '#fff',
-  padding: '8px 10px', fontFamily: 'Space Mono, monospace', fontSize: 12,
+  padding: '8px 10px', fontFamily: 'Space Mono, monospace', fontSize: 14,
   outline: 'none', width: '100%', marginTop: 4, marginBottom: 10, boxSizing: 'border-box',
 };
-const LABEL_STYLE = { fontSize: 9, letterSpacing: 3, color: '#666', textTransform: 'uppercase' };
+const LABEL_STYLE = { fontSize: 11, letterSpacing: 3, color: '#aaa', textTransform: 'uppercase' };
 const BTN = (variant = 'ghost') => ({
   flex: 1, fontFamily: 'Space Mono, monospace', letterSpacing: 2, textTransform: 'uppercase',
-  fontSize: 9, padding: '8px 0', cursor: 'pointer', border: '1px solid',
+  fontSize: 11, padding: '8px 0', cursor: 'pointer', border: '1px solid',
   background: 'transparent',
   ...(variant === 'primary' ? { color: '#fff',     borderColor: '#fff' } :
       variant === 'danger'  ? { color: '#f44336', borderColor: '#f44336' } :
@@ -77,10 +77,7 @@ export default function Layout({ children }) {
       <aside className={styles.sidebar}>
         {/* Logo */}
         <div className={styles.sidebarLogoArea}>
-          <svg width="28" height="20" viewBox="0 0 64 44" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <polyline points="2,38 18,8 32,26 46,8 62,38" fill="none" stroke="#ffffff" strokeWidth="5" strokeLinejoin="miter" strokeLinecap="square"/>
-          </svg>
-          <span className={styles.brand}>MagicDrone</span>
+          <img src="/logo.png" style={{ width: '80px', height: 'auto' }} alt="MagicDrone" />
           {isMaster() && <span className={styles.masterBadge}>Master</span>}
         </div>
 
@@ -97,16 +94,16 @@ export default function Layout({ children }) {
 
         {/* User footer */}
         <div className={styles.sidebarFooter}>
-          <div style={{ fontSize: 11, fontWeight: 700, color: '#ccc', marginBottom: 2, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+          <div style={{ fontSize: 13, fontWeight: 700, color: '#ccc', marginBottom: 2, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
             {displayName.split(' ')[0]}
           </div>
-          <div style={{ fontSize: 9, color: '#444', letterSpacing: 1, marginBottom: 10, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+          <div style={{ fontSize: 11, color: '#888', letterSpacing: 1, marginBottom: 10, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
             {user?.email}
           </div>
           <div style={{ display: 'flex', gap: 6 }}>
             <button onClick={openPassword} style={{
               flex: 1, fontSize: 8, letterSpacing: 1, padding: '6px 0', background: 'transparent',
-              border: '1px solid #333', color: '#666', fontFamily: 'Space Mono, monospace',
+              border: '1px solid #333', color: '#aaa', fontFamily: 'Space Mono, monospace',
               cursor: 'pointer', textTransform: 'uppercase',
             }}>Senha</button>
             <button onClick={logout} style={{
@@ -121,9 +118,7 @@ export default function Layout({ children }) {
       {/* ─── TOPBAR (mobile) ───────────────────────── */}
       <header className={styles.topbar}>
         <div className={styles.logoArea}>
-          <svg width="32" height="22" viewBox="0 0 64 44" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <polyline points="2,38 18,8 32,26 46,8 62,38" fill="none" stroke="#ffffff" strokeWidth="5" strokeLinejoin="miter" strokeLinecap="square"/>
-          </svg>
+          <img src="/logo.png" style={{ width: '40px', height: 'auto' }} alt="MagicDrone" />
           <span className={styles.brand}>MagicDrone</span>
           {isMaster() && <span className={styles.masterBadge}>Master</span>}
         </div>
@@ -144,9 +139,9 @@ export default function Layout({ children }) {
       {modal === 'menu' && (
         <div style={MODAL_STYLE} onClick={() => setModal(null)}>
           <div style={PANEL_STYLE} onClick={e => e.stopPropagation()}>
-            <div style={{ fontSize: 10, letterSpacing: 4, textTransform: 'uppercase', color: '#888', marginBottom: 6 }}>Minha Conta</div>
+            <div style={{ fontSize: 12, letterSpacing: 4, textTransform: 'uppercase', color: '#888', marginBottom: 6 }}>Minha Conta</div>
             <div style={{ fontSize: 13, fontWeight: 700, marginBottom: 16 }}>{displayName}</div>
-            <div style={{ fontSize: 10, color: '#555', marginBottom: 16, marginTop: -12 }}>{user?.email}</div>
+            <div style={{ fontSize: 12, color: '#aaa', marginBottom: 16, marginTop: -12 }}>{user?.email}</div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
               <button style={{ ...BTN('ghost'), textAlign: 'left', padding: '10px 12px' }} onClick={openPassword}>
                 Alterar Senha
@@ -163,7 +158,7 @@ export default function Layout({ children }) {
       {modal === 'password' && (
         <div style={MODAL_STYLE} onClick={() => setModal(null)}>
           <div style={PANEL_STYLE} onClick={e => e.stopPropagation()}>
-            <div style={{ fontSize: 10, letterSpacing: 4, textTransform: 'uppercase', color: '#888', marginBottom: 14 }}>Alterar Senha</div>
+            <div style={{ fontSize: 12, letterSpacing: 4, textTransform: 'uppercase', color: '#888', marginBottom: 14 }}>Alterar Senha</div>
             <label style={LABEL_STYLE}>Senha Atual</label>
             <input type="password" value={pwForm.current} onChange={e => setPwForm({ ...pwForm, current: e.target.value })}
               style={FIELD_STYLE} onFocus={e => e.target.style.borderColor='#fff'} onBlur={e => e.target.style.borderColor='#333'} />
@@ -174,7 +169,7 @@ export default function Layout({ children }) {
             <input type="password" value={pwForm.confirm} onChange={e => setPwForm({ ...pwForm, confirm: e.target.value })}
               style={FIELD_STYLE} onFocus={e => e.target.style.borderColor='#fff'} onBlur={e => e.target.style.borderColor='#333'} />
             {pwStatus && (
-              <div style={{ fontSize: 11, marginBottom: 10, color: pwStatus.ok ? '#4caf50' : '#f44336' }}>
+              <div style={{ fontSize: 13, marginBottom: 10, color: pwStatus.ok ? '#4caf50' : '#f44336' }}>
                 {pwStatus.msg}
               </div>
             )}

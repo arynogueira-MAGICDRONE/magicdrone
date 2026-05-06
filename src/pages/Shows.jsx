@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+﻿import React, { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useApp } from '../context/AppContext';
 import { PageHeader, Btn, Input, Select, StatusPill, Modal, ModalBtns, Empty, Section } from '../components/layout/UI';
@@ -37,15 +37,15 @@ const EMPTY_BUDGET = {
 };
 
 // Mini-componentes para o formulário de orçamento
-const INP = { background: '#000', border: '1px solid #222', color: '#fff', padding: '7px 8px', fontFamily: 'Space Mono,monospace', fontSize: 11, outline: 'none', boxSizing: 'border-box' };
-const LBL = { fontSize: 9, letterSpacing: 3, color: '#666', textTransform: 'uppercase', display: 'block', marginBottom: 3 };
+const INP = { background: '#000', border: '1px solid #222', color: '#fff', padding: '7px 8px', fontFamily: 'Space Mono,monospace', fontSize: 13, outline: 'none', boxSizing: 'border-box' };
+const LBL = { fontSize: 11, letterSpacing: 3, color: '#aaa', textTransform: 'uppercase', display: 'block', marginBottom: 3 };
 const HDIV = { marginTop: 12, paddingTop: 10, borderTop: '1px solid #1a1a1a' };
-const SECTTITLE = { fontSize: 9, letterSpacing: 3, color: '#888', textTransform: 'uppercase', marginBottom: 10 };
+const SECTTITLE = { fontSize: 11, letterSpacing: 3, color: '#888', textTransform: 'uppercase', marginBottom: 10 };
 
 function BField({ label, value, onChange }) {
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
-      <span style={{ fontSize: 10, color: '#666', flex: 1 }}>{label}</span>
+      <span style={{ fontSize: 12, color: '#aaa', flex: 1 }}>{label}</span>
       <input type="number" value={value} onChange={e => onChange(e.target.value)} placeholder="0"
         style={{ ...INP, width: 100, textAlign: 'right' }} />
     </div>
@@ -55,10 +55,10 @@ function BField({ label, value, onChange }) {
 function QVField({ label, qty, val, onQty, onVal }) {
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 5 }}>
-      <span style={{ fontSize: 10, color: '#666', flex: 1 }}>{label}</span>
+      <span style={{ fontSize: 12, color: '#aaa', flex: 1 }}>{label}</span>
       <input type="number" value={qty} onChange={e => onQty(e.target.value)} placeholder="Qtd"
         style={{ ...INP, width: 52 }} />
-      <span style={{ fontSize: 10, color: '#555' }}>×</span>
+      <span style={{ fontSize: 12, color: '#aaa' }}>×</span>
       <input type="number" value={val} onChange={e => onVal(e.target.value)} placeholder="R$"
         style={{ ...INP, width: 80, textAlign: 'right' }} />
     </div>
@@ -310,7 +310,7 @@ export default function Shows() {
     ? visible.filter(s => s.date === selectedDate)
     : [...visible].sort((a, b) => a.date.localeCompare(b.date));
 
-  const ADDBTN = { fontSize: 9, letterSpacing: 2, padding: '4px 10px', border: '1px solid #444', background: 'transparent', color: '#aaa', fontFamily: 'Space Mono,monospace', cursor: 'pointer', textTransform: 'uppercase' };
+  const ADDBTN = { fontSize: 11, letterSpacing: 2, padding: '4px 10px', border: '1px solid #444', background: 'transparent', color: '#aaa', fontFamily: 'Space Mono,monospace', cursor: 'pointer', textTransform: 'uppercase' };
 
   return (
     <div>
@@ -324,18 +324,18 @@ export default function Shows() {
       <div style={{ padding: '14px 16px 0' }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
           <button onClick={() => changeMonth(-1)} style={{ background: 'transparent', border: '1px solid #333', color: '#fff', padding: '4px 10px', cursor: 'pointer', fontFamily: 'Space Mono, monospace' }}>←</button>
-          <span style={{ fontSize: 11, letterSpacing: 4, textTransform: 'uppercase', fontWeight: 700 }}>{MONTHS[calMonth]} {calYear}</span>
+          <span style={{ fontSize: 13, letterSpacing: 4, textTransform: 'uppercase', fontWeight: 700 }}>{MONTHS[calMonth]} {calYear}</span>
           <button onClick={() => changeMonth(1)} style={{ background: 'transparent', border: '1px solid #333', color: '#fff', padding: '4px 10px', cursor: 'pointer', fontFamily: 'Space Mono, monospace' }}>→</button>
         </div>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 2, marginBottom: 2 }}>
-          {DAYS.map(d => <div key={d} style={{ fontSize: 8, letterSpacing: 1, color: '#555', textAlign: 'center', padding: '4px 0', textTransform: 'uppercase' }}>{d}</div>)}
+          {DAYS.map(d => <div key={d} style={{ fontSize: 8, letterSpacing: 1, color: '#aaa', textAlign: 'center', padding: '4px 0', textTransform: 'uppercase' }}>{d}</div>)}
         </div>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 2 }}>
           {renderCal().map((cell, i) => (
             <div key={i} onClick={() => cell.date && setSelectedDate(selectedDate === cell.date ? null : cell.date)}
               style={{
                 aspectRatio: '1', display: 'flex', flexDirection: 'column', alignItems: 'center',
-                justifyContent: 'center', fontSize: 11, cursor: cell.date ? 'pointer' : 'default',
+                justifyContent: 'center', fontSize: 13, cursor: cell.date ? 'pointer' : 'default',
                 border: `1px solid ${selectedDate === cell.date ? '#fff' : cell.isToday ? '#555' : cell.show ? '#222' : 'transparent'}`,
                 background: cell.show ? '#0a0a0a' : 'transparent',
                 color: cell.cur ? '#fff' : '#333',
@@ -357,11 +357,11 @@ export default function Shows() {
             borderLeft: `3px solid ${STATUS_COLOR[s.status] || '#888'}`,
             padding: '12px 14px', marginBottom: 6, cursor: 'pointer',
           }}>
-            <div style={{ fontSize: 9, letterSpacing: 2, color: '#666', marginBottom: 3 }}>
+            <div style={{ fontSize: 11, letterSpacing: 2, color: '#aaa', marginBottom: 3 }}>
               {fmtDate(s.date)} {s.test ? `· Teste: ${fmtTestDates(s.test)}` : ''}
             </div>
             <div style={{ fontSize: 14, fontWeight: 700, marginBottom: 2 }}>{s.client}</div>
-            {(s.city || s.state) && <div style={{ fontSize: 10, color: '#888' }}>{[s.city, s.state].filter(Boolean).join(', ')}</div>}
+            {(s.city || s.state) && <div style={{ fontSize: 12, color: '#888' }}>{[s.city, s.state].filter(Boolean).join(', ')}</div>}
             <div style={{ display: 'flex', gap: 6, marginTop: 6 }}>
               <StatusPill status={s.status} />
               <span style={{ fontSize: 8, letterSpacing: 2, padding: '2px 8px', border: '1px solid #444', color: '#aaa', textTransform: 'uppercase' }}>{s.drones} drones</span>
@@ -381,20 +381,20 @@ export default function Shows() {
               ['Local', [detail.city, detail.state].filter(Boolean).join(', ') || '—'],
               ['Drones', detail.drones],
             ].map(([l, v]) => (
-              <div key={l} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11, borderBottom: '1px solid #1a1a1a', padding: '8px 0' }}>
-                <span style={{ color: '#666' }}>{l}</span>
+              <div key={l} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, borderBottom: '1px solid #1a1a1a', padding: '8px 0' }}>
+                <span style={{ color: '#aaa' }}>{l}</span>
                 <span>{v || '—'}</span>
               </div>
             ))}
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: 11, padding: '8px 0' }}>
-              <span style={{ color: '#666' }}>Status</span>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: 13, padding: '8px 0' }}>
+              <span style={{ color: '#aaa' }}>Status</span>
               <StatusPill status={detail.status} />
             </div>
           </div>
           {(scaling[detail.id]?.length > 0) && (
             <button onClick={() => generateShareText(detail)} style={{
               width: '100%', marginBottom: 8, background: 'transparent', border: '1px solid #333',
-              color: '#888', fontFamily: 'Space Mono, monospace', fontSize: 9, letterSpacing: 2,
+              color: '#888', fontFamily: 'Space Mono, monospace', fontSize: 11, letterSpacing: 2,
               textTransform: 'uppercase', padding: '8px 0', cursor: 'pointer',
             }}>Gerar Texto para Compartilhar</button>
           )}
@@ -413,7 +413,7 @@ export default function Shows() {
       {/* Modal Compartilhar */}
       {shareText !== null && (
         <Modal title="Texto para Compartilhar" onClose={() => setShareText(null)}>
-          <div style={{ background: '#000', border: '1px solid #222', padding: 12, fontSize: 11, lineHeight: 1.9, whiteSpace: 'pre-wrap', color: '#ccc', maxHeight: 320, overflowY: 'auto', marginBottom: 12 }}>
+          <div style={{ background: '#000', border: '1px solid #222', padding: 12, fontSize: 13, lineHeight: 1.9, whiteSpace: 'pre-wrap', color: '#ccc', maxHeight: 320, overflowY: 'auto', marginBottom: 12 }}>
             {shareText}
           </div>
           <div style={{ display: 'flex', gap: 8 }}>
@@ -428,8 +428,8 @@ export default function Shows() {
         <Modal title={editingId ? 'Editar Show' : 'Novo Show'} onClose={closeModal}>
           {conflict && (
             <div style={{ background: '#1a0f00', border: '1px solid #ff9800', padding: '10px 12px', marginBottom: 12 }}>
-              <div style={{ fontSize: 9, letterSpacing: 2, color: '#ff9800', textTransform: 'uppercase', marginBottom: 4 }}>Conflito de Data</div>
-              <div style={{ fontSize: 11, color: '#ffb74d' }}>Já há {conflict.used} drones agendados. Disponíveis: {conflict.available} de {TOTAL_DRONES}.</div>
+              <div style={{ fontSize: 11, letterSpacing: 2, color: '#ff9800', textTransform: 'uppercase', marginBottom: 4 }}>Conflito de Data</div>
+              <div style={{ fontSize: 13, color: '#ffb74d' }}>Já há {conflict.used} drones agendados. Disponíveis: {conflict.available} de {TOTAL_DRONES}.</div>
             </div>
           )}
 
@@ -449,7 +449,7 @@ export default function Shows() {
                   onFocus={e => e.target.style.borderColor='#fff'} onBlur={e => e.target.style.borderColor='#222'} />
                 {form.testDates.length > 1 && (
                   <button onClick={() => setForm({ ...form, testDates: form.testDates.filter((_, j) => j !== i) })}
-                    style={{ background: 'transparent', border: '1px solid #333', color: '#f44336', padding: '0 10px', cursor: 'pointer', fontSize: 12 }}>✕</button>
+                    style={{ background: 'transparent', border: '1px solid #333', color: '#f44336', padding: '0 10px', cursor: 'pointer', fontSize: 14 }}>✕</button>
                 )}
               </div>
             ))}
@@ -473,7 +473,7 @@ export default function Shows() {
                   style={{ ...INP, flex: 1 }}
                   onFocus={e => e.target.style.borderColor='#fff'} onBlur={e => e.target.style.borderColor='#222'} />
                 <button onClick={buscarCep} disabled={cepLoading}
-                  style={{ padding: '7px 14px', border: '1px solid #555', background: 'transparent', color: '#aaa', fontFamily: 'Space Mono,monospace', fontSize: 9, letterSpacing: 2, cursor: cepLoading ? 'wait' : 'pointer', textTransform: 'uppercase', whiteSpace: 'nowrap' }}>
+                  style={{ padding: '7px 14px', border: '1px solid #555', background: 'transparent', color: '#aaa', fontFamily: 'Space Mono,monospace', fontSize: 11, letterSpacing: 2, cursor: cepLoading ? 'wait' : 'pointer', textTransform: 'uppercase', whiteSpace: 'nowrap' }}>
                   {cepLoading ? '...' : 'Buscar'}
                 </button>
               </div>
@@ -566,7 +566,7 @@ export default function Shows() {
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: selectedMembers.has(m.id) ? 4 : 0 }}>
                     <input type="checkbox" checked={selectedMembers.has(m.id)} onChange={() => toggleMember(m.id)}
                       style={{ accentColor: '#fff', cursor: 'pointer', flexShrink: 0 }} />
-                    <span style={{ fontSize: 12 }}>{m.name}</span>
+                    <span style={{ fontSize: 14 }}>{m.name}</span>
                   </div>
                   {selectedMembers.has(m.id) && (
                     <input value={memberRoles[m.id] || ''} onChange={e => setMemberRoles(prev => ({ ...prev, [m.id]: e.target.value }))}

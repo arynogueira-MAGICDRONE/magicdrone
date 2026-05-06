@@ -36,6 +36,12 @@ html, body, #root {
   background: var(--black);
   color: var(--white);
   font-family: var(--font-mono);
+  font-size: 14px;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+* {
   -webkit-font-smoothing: antialiased;
 }
 

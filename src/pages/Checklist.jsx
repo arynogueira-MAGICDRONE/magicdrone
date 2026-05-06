@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+﻿import React, { useState } from 'react';
 import { useApp } from '../context/AppContext';
 import { useAuth } from '../context/AuthContext';
 import { PageHeader, Section, Empty } from '../components/layout/UI';
@@ -93,7 +93,7 @@ export default function Checklist() {
   const updateExtra = (id, field, val) => setExtras(prev => prev.map(e => e.id === id ? { ...e, [field]: val } : e));
   const delExtra = (id) => setExtras(prev => prev.filter(e => e.id !== id));
 
-  const inputStyle = { background: '#000', border: '1px solid #222', color: '#fff', padding: '6px 8px', fontFamily: 'Space Mono,monospace', fontSize: 11, outline: 'none', width: '100%' };
+  const inputStyle = { background: '#000', border: '1px solid #222', color: '#fff', padding: '6px 8px', fontFamily: 'Space Mono,monospace', fontSize: 13, outline: 'none', width: '100%' };
 
   return (
     <div>
@@ -103,7 +103,7 @@ export default function Checklist() {
       <div style={{ display: 'flex', gap: 6, padding: '12px 16px 0' }}>
         {[110, 200, 300].map(t => (
           <button key={t} onClick={() => changeType(t)} style={{
-            flex: 1, padding: '8px 4px', fontFamily: 'Space Mono,monospace', fontSize: 9,
+            flex: 1, padding: '8px 4px', fontFamily: 'Space Mono,monospace', fontSize: 11,
             letterSpacing: 2, textTransform: 'uppercase', cursor: 'pointer',
             border: `1px solid ${type === t ? '#fff' : '#333'}`,
             background: type === t ? '#111' : 'transparent',
@@ -115,7 +115,7 @@ export default function Checklist() {
       {/* Show selector */}
       <div style={{ padding: '10px 16px 0' }}>
         <select value={selectedShow} onChange={e => handleShowSelect(e.target.value)}
-          style={{ width: '100%', background: '#000', border: '1px solid #333', color: '#fff', padding: '8px 10px', fontFamily: 'Space Mono,monospace', fontSize: 12, outline: 'none' }}>
+          style={{ width: '100%', background: '#000', border: '1px solid #333', color: '#fff', padding: '8px 10px', fontFamily: 'Space Mono,monospace', fontSize: 14, outline: 'none' }}>
           <option value="">Selecionar show...</option>
           {visibleShows.map(s => <option key={s.id} value={s.id}>{s.client}</option>)}
         </select>
@@ -126,7 +126,7 @@ export default function Checklist() {
         <div style={{ background: '#111', height: 3 }}>
           <div style={{ height: 3, background: '#fff', width: `${pct}%`, transition: 'width 0.3s' }} />
         </div>
-        <div style={{ fontSize: 9, color: '#555', letterSpacing: 2, marginTop: 4, textAlign: 'right' }}>
+        <div style={{ fontSize: 11, color: '#aaa', letterSpacing: 2, marginTop: 4, textAlign: 'right' }}>
           {done} / {keys.length} itens conferidos
         </div>
       </div>
@@ -142,14 +142,14 @@ export default function Checklist() {
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', cursor: 'pointer' }}
                 onClick={() => setOpen(prev => ({ ...prev, [key]: !prev[key] }))}>
                 <div>
-                  <div style={{ fontSize: 12, fontWeight: 600 }}>{ITEM_LABELS[key]}</div>
-                  <div style={{ fontSize: 9, color: '#555', marginTop: 1 }}>{targetTxt}</div>
+                  <div style={{ fontSize: 14, fontWeight: 600 }}>{ITEM_LABELS[key]}</div>
+                  <div style={{ fontSize: 11, color: '#aaa', marginTop: 1 }}>{targetTxt}</div>
                   {item.done && <div style={{ fontSize: 8, color: '#4caf50', marginTop: 2, letterSpacing: 1 }}>✓ Por {item.who} às {item.time}</div>}
                 </div>
                 <div style={{
                   width: 20, height: 20, border: `1px solid ${item.done ? '#fff' : '#444'}`,
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  fontSize: 11, background: item.done ? '#fff' : 'transparent', color: item.done ? '#000' : 'transparent',
+                  fontSize: 13, background: item.done ? '#fff' : 'transparent', color: item.done ? '#000' : 'transparent',
                 }}>✓</div>
               </div>
 
@@ -157,11 +157,11 @@ export default function Checklist() {
                 <div style={{ paddingTop: 10, borderTop: '1px solid #111', marginTop: 8 }}>
                   {item.isStarlink ? (
                     <div>
-                      <div style={{ fontSize: 9, letterSpacing: 2, color: '#555', textTransform: 'uppercase', marginBottom: 6 }}>Vai usar Starlink?</div>
+                      <div style={{ fontSize: 11, letterSpacing: 2, color: '#aaa', textTransform: 'uppercase', marginBottom: 6 }}>Vai usar Starlink?</div>
                       <div style={{ display: 'flex', gap: 8 }}>
                         {['sim','nao'].map(v => (
                           <button key={v} onClick={() => update(key, 'val', v)} style={{
-                            flex: 1, padding: 7, fontFamily: 'Space Mono,monospace', fontSize: 9, letterSpacing: 2, textTransform: 'uppercase', cursor: 'pointer',
+                            flex: 1, padding: 7, fontFamily: 'Space Mono,monospace', fontSize: 11, letterSpacing: 2, textTransform: 'uppercase', cursor: 'pointer',
                             border: `1px solid ${item.val===v ? (v==='sim'?'#4caf50':'#f44336') : '#333'}`,
                             background: item.val===v ? (v==='sim'?'#0a1a0a':'#1a0a0a') : 'transparent',
                             color: item.val===v ? (v==='sim'?'#4caf50':'#f44336') : '#555',
@@ -171,25 +171,25 @@ export default function Checklist() {
                     </div>
                   ) : (
                     <div style={{ marginBottom: 8 }}>
-                      <div style={{ fontSize: 9, letterSpacing: 2, color: '#555', textTransform: 'uppercase', marginBottom: 4 }}>Quantidade pega</div>
+                      <div style={{ fontSize: 11, letterSpacing: 2, color: '#aaa', textTransform: 'uppercase', marginBottom: 4 }}>Quantidade pega</div>
                       <input value={item.qty} onChange={e => update(key, 'qty', e.target.value)} type="number" placeholder="0" style={inputStyle} />
                     </div>
                   )}
 
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginTop: 8 }}>
                     <div>
-                      <div style={{ fontSize: 9, letterSpacing: 2, color: '#555', textTransform: 'uppercase', marginBottom: 4 }}>Conferido por</div>
+                      <div style={{ fontSize: 11, letterSpacing: 2, color: '#aaa', textTransform: 'uppercase', marginBottom: 4 }}>Conferido por</div>
                       <input value={item.who} onChange={e => update(key, 'who', e.target.value)} placeholder="Nome" style={inputStyle} />
                     </div>
                     <div>
-                      <div style={{ fontSize: 9, letterSpacing: 2, color: '#555', textTransform: 'uppercase', marginBottom: 4 }}>Horário</div>
+                      <div style={{ fontSize: 11, letterSpacing: 2, color: '#aaa', textTransform: 'uppercase', marginBottom: 4 }}>Horário</div>
                       <input value={item.time} onChange={e => update(key, 'time', e.target.value)} type="time" style={inputStyle} />
                     </div>
                   </div>
 
                   <button onClick={() => confirm(key)} style={{
                     width: '100%', padding: 8, marginTop: 8, fontFamily: 'Space Mono,monospace',
-                    fontSize: 9, letterSpacing: 2, textTransform: 'uppercase', cursor: 'pointer',
+                    fontSize: 11, letterSpacing: 2, textTransform: 'uppercase', cursor: 'pointer',
                     border: '1px solid #fff', background: 'transparent', color: '#fff',
                   }}>Confirmar Item</button>
                 </div>
@@ -199,12 +199,12 @@ export default function Checklist() {
         })}
       </Section>
 
-      <Section title="Itens Extras" action={<button onClick={addExtra} style={{ fontSize: 9, letterSpacing: 2, padding: '4px 10px', border: '1px solid #444', background: 'transparent', color: '#aaa', fontFamily: 'Space Mono,monospace', cursor: 'pointer', textTransform: 'uppercase' }}>+ Add</button>}>
+      <Section title="Itens Extras" action={<button onClick={addExtra} style={{ fontSize: 11, letterSpacing: 2, padding: '4px 10px', border: '1px solid #444', background: 'transparent', color: '#aaa', fontFamily: 'Space Mono,monospace', cursor: 'pointer', textTransform: 'uppercase' }}>+ Add</button>}>
         {extras.length === 0 ? <Empty text="Nenhum item extra" /> : extras.map(e => (
           <div key={e.id} style={{ display: 'flex', gap: 6, marginBottom: 4, alignItems: 'center' }}>
             <input value={e.name} onChange={ev => updateExtra(e.id, 'name', ev.target.value)} placeholder="Item extra..." style={{ ...inputStyle, flex: 1 }} />
             <input value={e.qty} onChange={ev => updateExtra(e.id, 'qty', ev.target.value)} type="number" placeholder="Qtd" style={{ ...inputStyle, width: 60, flex: 'none' }} />
-            <button onClick={() => delExtra(e.id)} style={{ background: 'transparent', border: '1px solid #333', color: '#f44336', padding: '6px 10px', cursor: 'pointer', fontSize: 12 }}>✕</button>
+            <button onClick={() => delExtra(e.id)} style={{ background: 'transparent', border: '1px solid #333', color: '#f44336', padding: '6px 10px', cursor: 'pointer', fontSize: 14 }}>✕</button>
           </div>
         ))}
       </Section>

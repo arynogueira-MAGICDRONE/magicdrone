@@ -17,7 +17,7 @@
   position: sticky;
   top: 0;
   z-index: 100;
-  height: 52px;
+  height: 56px;
 }
 
 .logoArea {
@@ -28,13 +28,13 @@
 
 .brand {
   font-family: 'Bebas Neue', sans-serif;
-  font-size: 18px;
+  font-size: 20px;
   letter-spacing: 4px;
   color: #fff;
 }
 
 .masterBadge {
-  font-size: 7px;
+  font-size: 9px;
   letter-spacing: 2px;
   text-transform: uppercase;
   border: 1px solid #fff;
@@ -49,19 +49,19 @@
 }
 
 .userName {
-  font-size: 10px;
+  font-size: 12px;
   letter-spacing: 2px;
-  color: #666;
+  color: #aaa;
   text-transform: uppercase;
 }
 
 .avatar {
-  width: 30px;
-  height: 30px;
+  width: 32px;
+  height: 32px;
   border-radius: 50%;
   background: #fff;
   color: #000;
-  font-size: 10px;
+  font-size: 12px;
   font-weight: 700;
   border: none;
   cursor: pointer;
@@ -74,7 +74,7 @@
 .main {
   flex: 1;
   overflow-y: auto;
-  padding-bottom: 60px; /* space for bottom nav on mobile */
+  padding-bottom: 64px; /* space for bottom nav on mobile */
 }
 
 /* SIDEBAR — hidden on mobile */
@@ -102,7 +102,7 @@
   border-top: 1px solid #1a1a1a;
   display: flex;
   z-index: 100;
-  height: 60px;
+  height: 64px;
 }
 
 .navBtn {
@@ -111,17 +111,17 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 3px;
+  gap: 4px;
   text-decoration: none;
-  color: #444;
+  color: #888;
   transition: color 0.15s;
   padding: 8px 2px;
   min-width: 0;
 }
-.navBtn:hover    { color: #888; }
+.navBtn:hover    { color: #bbb; }
 .navBtnActive    { color: #fff !important; }
-.navIcon         { font-size: 15px; line-height: 1; }
-.navLabel        { font-size: 7px; letter-spacing: 2px; text-transform: uppercase; }
+.navIcon         { font-size: 18px; line-height: 1; }
+.navLabel        { font-size: 9px; letter-spacing: 2px; text-transform: uppercase; }
 
 /* ─── Desktop (≥ 768px) ────────────────────────────── */
 @media (min-width: 768px) {
@@ -134,7 +134,7 @@
   .sidebar {
     display: flex;
     flex-direction: column;
-    width: 220px;
+    width: 230px;
     min-height: 100vh;
     background: #000;
     border-right: 1px solid #1a1a1a;
@@ -147,7 +147,7 @@
   }
 
   .sidebarLogoArea {
-    padding: 20px 20px 16px;
+    padding: 22px 20px 18px;
     border-bottom: 1px solid #1a1a1a;
     display: flex;
     align-items: center;
@@ -161,7 +161,7 @@
   }
 
   .sidebarFooter {
-    padding: 14px 16px;
+    padding: 16px 16px;
     border-top: 1px solid #1a1a1a;
   }
 
@@ -169,14 +169,14 @@
     display: flex;
     align-items: center;
     gap: 12px;
-    padding: 11px 20px;
+    padding: 12px 20px;
     text-decoration: none;
-    color: #444;
+    color: #888;
     transition: color 0.15s, background 0.15s;
     border-left: 2px solid transparent;
   }
   .sideNavBtn:hover {
-    color: #888;
+    color: #ccc;
     background: #0a0a0a;
   }
   .sideNavBtnActive {
@@ -186,23 +186,23 @@
   }
 
   .sideNavIcon {
-    font-size: 16px;
-    width: 22px;
+    font-size: 18px;
+    width: 24px;
     text-align: center;
     flex-shrink: 0;
   }
 
   .sideNavLabel {
-    font-size: 10px;
+    font-size: 12px;
     letter-spacing: 2px;
     text-transform: uppercase;
   }
 
   /* Main — offset for sidebar, full remaining width */
   .main {
-    margin-left: 220px;
+    margin-left: 230px;
     padding-bottom: 0;
-    width: calc(100% - 220px);
+    width: calc(100% - 230px);
     min-height: 100vh;
   }
 }

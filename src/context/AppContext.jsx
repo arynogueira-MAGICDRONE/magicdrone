@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+﻿import React, { createContext, useContext, useState, useEffect } from 'react';
 import { supabase } from '../supabase';
 
 const AppContext = createContext(null);
@@ -368,7 +368,7 @@ const deleteMember = async (id) => {
   };
 
   if (loading) return (
-    <div style={{ background: '#000', color: '#fff', minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'Space Mono, monospace', fontSize: 11, letterSpacing: 3 }}>
+    <div style={{ background: '#000', color: '#fff', minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'Space Mono, monospace', fontSize: 13, letterSpacing: 3 }}>
       CARREGANDO...
     </div>
   );

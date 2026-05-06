@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+﻿import React, { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useApp } from '../context/AppContext';
 import { supabase } from '../supabase';
@@ -118,7 +118,7 @@ export default function Equipe() {
       <div style={{ display: 'flex', borderBottom: '1px solid #222' }}>
         {tabs.map(t => (
           <button key={t.key} onClick={() => setTab(t.key)} style={{
-            flex: 1, padding: '10px 4px', fontSize: 9, letterSpacing: 2, textTransform: 'uppercase',
+            flex: 1, padding: '10px 4px', fontSize: 11, letterSpacing: 2, textTransform: 'uppercase',
             textAlign: 'center', cursor: 'pointer', fontFamily: 'Space Mono,monospace',
             color: tab === t.key ? '#fff' : '#555',
             borderBottom: `2px solid ${tab === t.key ? '#fff' : 'transparent'}`,
@@ -135,7 +135,7 @@ export default function Equipe() {
                 <Avatar name={m.name} />
                 <div style={{ flex: 1 }}>
                   <div style={{ fontSize: 13, fontWeight: 700 }}>{m.name}</div>
-                  <div style={{ fontSize: 10, color: '#666', marginTop: 1 }}>{m.email}</div>
+                  <div style={{ fontSize: 12, color: '#aaa', marginTop: 1 }}>{m.email}</div>
                 </div>
               </div>
               {m.sarpas && (
@@ -153,35 +153,35 @@ export default function Equipe() {
       {tab === 'escalar' && (
         <Section title="Escalar para Show">
           <select value={selectedShow} onChange={e => setSelectedShow(e.target.value)}
-            style={{ width: '100%', background: '#000', border: '1px solid #333', color: '#fff', padding: '8px 10px', fontFamily: 'Space Mono,monospace', fontSize: 12, outline: 'none', marginBottom: 14 }}>
+            style={{ width: '100%', background: '#000', border: '1px solid #333', color: '#fff', padding: '8px 10px', fontFamily: 'Space Mono,monospace', fontSize: 14, outline: 'none', marginBottom: 14 }}>
             <option value="">Selecionar show...</option>
             {shows.map(s => <option key={s.id} value={s.id}>{s.client}</option>)}
           </select>
           {showId && (
             <>
               <div style={{ background: '#0a0a0a', border: '1px solid #1a1a1a', padding: 12, marginBottom: 10 }}>
-                <div style={{ fontSize: 11, fontWeight: 700, marginBottom: 6 }}>Equipe Escalada</div>
-                {currentScaled.length === 0 ? <div style={{ fontSize: 10, color: '#555' }}>Nenhum membro escalado</div> : currentScaled.map((sc, i) => {
+                <div style={{ fontSize: 13, fontWeight: 700, marginBottom: 6 }}>Equipe Escalada</div>
+                {currentScaled.length === 0 ? <div style={{ fontSize: 12, color: '#aaa' }}>Nenhum membro escalado</div> : currentScaled.map((sc, i) => {
                   const m = members.find(m => m.id === sc.memberId);
                   return (
                     <div key={i} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '5px 8px', background: '#111', border: '1px solid #222', marginBottom: 3 }}>
                       <div>
-                        <div style={{ fontSize: 11, fontWeight: 600 }}>{m?.name}</div>
-                        <div style={{ fontSize: 10, color: '#888', fontStyle: 'italic' }}>{sc.role}</div>
+                        <div style={{ fontSize: 13, fontWeight: 600 }}>{m?.name}</div>
+                        <div style={{ fontSize: 12, color: '#888', fontStyle: 'italic' }}>{sc.role}</div>
                       </div>
-                      <span onClick={() => removeFromShow(showId, i)} style={{ fontSize: 10, color: '#f44336', cursor: 'pointer', padding: '0 4px' }}>✕</span>
+                      <span onClick={() => removeFromShow(showId, i)} style={{ fontSize: 12, color: '#f44336', cursor: 'pointer', padding: '0 4px' }}>✕</span>
                     </div>
                   );
                 })}
                 {currentScaled.length > 0 && (
                   <button onClick={() => generateShareText(showId)} style={{
                     width: '100%', padding: 8, marginTop: 8, fontFamily: 'Space Mono,monospace',
-                    fontSize: 9, letterSpacing: 2, textTransform: 'uppercase', cursor: 'pointer',
+                    fontSize: 11, letterSpacing: 2, textTransform: 'uppercase', cursor: 'pointer',
                     border: '1px solid #4caf50', background: 'transparent', color: '#4caf50',
                   }}>Gerar Texto para Compartilhar</button>
                 )}
               </div>
-              <div style={{ fontSize: 9, letterSpacing: 4, color: '#888', textTransform: 'uppercase', marginBottom: 8 }}>Adicionar à Equipe</div>
+              <div style={{ fontSize: 11, letterSpacing: 4, color: '#888', textTransform: 'uppercase', marginBottom: 8 }}>Adicionar à Equipe</div>
               {availableMembers.map(m => {
                 const busy = isMemberBusy(m.id, showId);
                 return (
@@ -190,8 +190,8 @@ export default function Equipe() {
                     <div style={{ width: 8, height: 8, borderRadius: '50%', flexShrink: 0, background: busy ? '#f44336' : '#4caf50' }} />
                     <Avatar name={m.name} size={28} />
                     <div>
-                      <div style={{ fontSize: 12, fontWeight: 600 }}>{m.name}</div>
-                      <div style={{ fontSize: 9, color: busy ? '#f44336' : '#4caf50', letterSpacing: 1 }}>{busy ? 'Ocupado em outro show' : 'Disponível'}</div>
+                      <div style={{ fontSize: 14, fontWeight: 600 }}>{m.name}</div>
+                      <div style={{ fontSize: 11, color: busy ? '#f44336' : '#4caf50', letterSpacing: 1 }}>{busy ? 'Ocupado em outro show' : 'Disponível'}</div>
                     </div>
                   </div>
                 );
@@ -207,11 +207,11 @@ export default function Equipe() {
             <div key={m.id} style={{ background: '#0a0a0a', border: '1px solid #1a1a1a', padding: 12, marginBottom: 8 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
                 <Avatar name={m.name} size={28} />
-                <div style={{ fontSize: 12, fontWeight: 700 }}>{m.name}</div>
+                <div style={{ fontSize: 14, fontWeight: 700 }}>{m.name}</div>
               </div>
               {Object.keys(PERM_LABELS).map(k => (
                 <div key={k} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '5px 0' }}>
-                  <div style={{ fontSize: 10, color: '#888' }}>{PERM_LABELS[k]}</div>
+                  <div style={{ fontSize: 12, color: '#888' }}>{PERM_LABELS[k]}</div>
                   <Toggle on={m.perms?.[k]} onClick={() => updateMemberPerms(m.id, { ...m.perms, [k]: !m.perms?.[k] })} />
                 </div>
               ))}
@@ -232,19 +232,19 @@ export default function Equipe() {
           <Input label="Código Sarpas (opcional)" value={form.sarpas||''} onChange={e=>setForm({...form,sarpas:e.target.value})} placeholder="BR-2024-XXX" />
           <Input label={editingId ? 'Nova Senha (deixe vazio para manter)' : 'Senha de Acesso'} type="password" value={form.senha||''} onChange={e=>setForm({...form,senha:e.target.value})} placeholder="Senha para login" />
           <div style={{ marginBottom: 10 }}>
-            <label style={{ fontSize: 9, letterSpacing: 3, color: '#666', textTransform: 'uppercase', display: 'block', marginBottom: 4 }}>Grupo de Acesso</label>
+            <label style={{ fontSize: 11, letterSpacing: 3, color: '#aaa', textTransform: 'uppercase', display: 'block', marginBottom: 4 }}>Grupo de Acesso</label>
             <select value={form.grupo || 'secundario'} onChange={e => setForm({...form, grupo: e.target.value})}
-              style={{ width: '100%', background: '#000', border: '1px solid #333', color: '#fff', padding: '8px 10px', fontFamily: 'Space Mono,monospace', fontSize: 12, outline: 'none' }}>
+              style={{ width: '100%', background: '#000', border: '1px solid #333', color: '#fff', padding: '8px 10px', fontFamily: 'Space Mono,monospace', fontSize: 14, outline: 'none' }}>
               <option value="secundario">Secundário</option>
               <option value="administrativo">Administrativo</option>
               <option value="master">Master</option>
             </select>
           </div>
           <div style={{ marginTop: 8, paddingTop: 8, borderTop: '1px solid #222' }}>
-            <div style={{ fontSize: 9, letterSpacing: 3, color: '#666', textTransform: 'uppercase', marginBottom: 8 }}>Permissões</div>
+            <div style={{ fontSize: 11, letterSpacing: 3, color: '#aaa', textTransform: 'uppercase', marginBottom: 8 }}>Permissões</div>
             {Object.keys(PERM_LABELS).map(k => (
               <div key={k} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '5px 0' }}>
-                <div style={{ fontSize: 10, color: '#888' }}>{PERM_LABELS[k]}</div>
+                <div style={{ fontSize: 12, color: '#888' }}>{PERM_LABELS[k]}</div>
                 <Toggle on={form[`perm_${k}`]} onClick={() => setForm(f => ({...f, [`perm_${k}`]: !f[`perm_${k}`]}))} />
               </div>
             ))}
@@ -259,12 +259,12 @@ export default function Equipe() {
             <Avatar name={detail.name} size={44} />
             <div>
               <div style={{ fontSize: 15, fontWeight: 700 }}>{detail.name}</div>
-              {detail.sarpas && <div style={{ fontSize: 10, color: '#4caf50' }}>Sarpas: {detail.sarpas}</div>}
+              {detail.sarpas && <div style={{ fontSize: 12, color: '#4caf50' }}>Sarpas: {detail.sarpas}</div>}
             </div>
           </div>
           {[['CPF', detail.cpf], ['RG', detail.rg], ['Email', detail.email], ['Telefone', detail.tel]].map(([l, v]) => (
-            <div key={l} style={{ display: 'flex', justifyContent: 'space-between', padding: '7px 0', borderBottom: '1px solid #111', fontSize: 12 }}>
-              <span style={{ color: '#666' }}>{l}</span><span>{v || '—'}</span>
+            <div key={l} style={{ display: 'flex', justifyContent: 'space-between', padding: '7px 0', borderBottom: '1px solid #111', fontSize: 14 }}>
+              <span style={{ color: '#aaa' }}>{l}</span><span>{v || '—'}</span>
             </div>
           ))}
           <div style={{ marginTop: 14, display: 'flex', gap: 8 }}>
@@ -278,7 +278,7 @@ export default function Equipe() {
       {scaleModal && (
         <Modal title="Escalar Membro" onClose={() => setScaleModal(null)}>
           <div style={{ fontSize: 13, fontWeight: 700, marginBottom: 4 }}>{members.find(m => m.id === scaleModal.memberId)?.name}</div>
-          <div style={{ fontSize: 10, color: '#888', marginBottom: 12 }}>{shows.find(s => s.id === scaleModal.showId)?.client}</div>
+          <div style={{ fontSize: 12, color: '#888', marginBottom: 12 }}>{shows.find(s => s.id === scaleModal.showId)?.client}</div>
           <Input label="Função no Show" value={scaleModal.role} onChange={e => setScaleModal({...scaleModal, role: e.target.value})} placeholder="Ex: Piloto, Técnico, Segurança..." />
           <ModalBtns onCancel={() => setScaleModal(null)} onSave={confirmScale} saveLabel="Escalar" />
         </Modal>
@@ -286,11 +286,11 @@ export default function Equipe() {
 
       {shareText && (
         <Modal title="Texto para Compartilhar" onClose={() => setShareText(null)}>
-          <div style={{ background: '#000', border: '1px solid #333', padding: 12, fontSize: 11, lineHeight: 1.8, whiteSpace: 'pre-wrap', marginBottom: 10, color: '#ccc', maxHeight: 300, overflowY: 'auto' }}>
+          <div style={{ background: '#000', border: '1px solid #333', padding: 12, fontSize: 13, lineHeight: 1.8, whiteSpace: 'pre-wrap', marginBottom: 10, color: '#ccc', maxHeight: 300, overflowY: 'auto' }}>
             {shareText}
           </div>
           <button onClick={() => { navigator.clipboard?.writeText(shareText); alert('Copiado!'); }}
-            style={{ width: '100%', padding: 9, fontFamily: 'Space Mono,monospace', fontSize: 9, letterSpacing: 2, textTransform: 'uppercase', cursor: 'pointer', border: '1px solid #fff', background: '#fff', color: '#000' }}>
+            style={{ width: '100%', padding: 9, fontFamily: 'Space Mono,monospace', fontSize: 11, letterSpacing: 2, textTransform: 'uppercase', cursor: 'pointer', border: '1px solid #fff', background: '#fff', color: '#000' }}>
             Copiar Texto
           </button>
           <div style={{ marginTop: 8 }}>
