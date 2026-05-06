@@ -28,7 +28,7 @@ export function Orcamento() {
   const [realEdits, setRealEdits] = useState({});
   const [loadingBudget, setLoadingBudget] = useState(false);
 
-  const show = sel ? shows.find(s => s.id === parseInt(sel)) : null;
+  const show = sel ? shows.find(s => String(s.id) === sel) : null;
   const items = show ? (budgets[show.id] || []) : [];
   const totalPrev = items.reduce((a, i) => a + (i.prev || 0), 0);
   const totalReal = items.reduce((a, i) => a + (i.real || 0), 0);
@@ -37,7 +37,7 @@ export function Orcamento() {
   // Carrega orçamento sempre que o show selecionado mudar
   useEffect(() => {
     if (!sel) return;
-    const showId = parseInt(sel);
+    const showId = sel;
     console.log('Show selecionado ID:', showId);
     console.log('Budgets no estado:', budgets);
     console.log('Items do show:', budgets[showId]);
@@ -54,7 +54,7 @@ export function Orcamento() {
   const calcDist = () => {
     setLoadingDist(true);
     setTimeout(() => {
-      const idx = shows.findIndex(s => s.id === parseInt(sel));
+      const idx = shows.findIndex(s => String(s.id) === sel);
       setDist(DISTANCES[idx] || { km: '—', tempo: '—' });
       setLoadingDist(false);
     }, 1200);

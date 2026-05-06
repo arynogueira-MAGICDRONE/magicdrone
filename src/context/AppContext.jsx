@@ -176,7 +176,7 @@ const deleteMember = async (id) => {
 
   const isMemberBusy = (memberId, excludeShowId) =>
     Object.entries(scaling).some(([showId, scaled]) =>
-      parseInt(showId) !== excludeShowId && scaled.some(s => s.memberId === memberId));
+      showId !== String(excludeShowId) && scaled.some(s => s.memberId === memberId));
 
   // ─── BUDGET ──────────────────────────────────────
   const loadBudget = async (showId) => {

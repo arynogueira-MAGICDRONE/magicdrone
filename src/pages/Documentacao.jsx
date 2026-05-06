@@ -24,7 +24,7 @@ export default function Documentacao() {
   const [selFile, setSelFile] = useState(null);
   const fileRef = useRef();
 
-  const show = sel ? shows.find(s => s.id === parseInt(sel)) : null;
+  const show = sel ? shows.find(s => String(s.id) === sel) : null;
   const list = show ? (docs[show.id] || []) : [];
   const statusColors = { conf: '#4caf50', neg: '#ff9800', exec: '#555' };
 
