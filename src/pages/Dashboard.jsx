@@ -33,6 +33,15 @@ export default function Dashboard() {
 
   const resumo = selectedShow !== '' ? shows.find(s => String(s.id) === String(selectedShow)) : null;
 
+  // Carrega budget do próximo show para o card
+  const nextShowLoadedRef = React.useRef(null);
+  React.useEffect(() => {
+    if (nextShow && nextShowLoadedRef.current !== nextShow.id) {
+      nextShowLoadedRef.current = nextShow.id;
+      loadBudget(nextShow.id);
+    }
+  }, [nextShow?.id]);
+
   const loadedRef = React.useRef(null);
   React.useEffect(() => {
     if (!selectedShow || loadedRef.current === selectedShow) return;
@@ -96,7 +105,7 @@ export default function Dashboard() {
             { icon: '📦', label: 'Equipamentos', val: drones.length, sub: `${dronesOk} bons · ${dronesBad} ruins`, to: '/inventario' },
             { icon: '📅', label: 'Shows',        val: visibleShows.filter(s => s.status === 'conf').length, sub: 'confirmados', to: '/shows' },
             { icon: '👥', label: 'Equipe',       val: members.length, sub: 'membros ativos', to: '/equipe' },
-            { icon: '💰', label: 'Orçamento',    val: nextShow ? fmt((budgets[nextShow.id] || []).reduce((a, i) => a + i.prev, 0)) : '—', sub: 'próximo show', to: '/orcamento' },
+            { icon: '💰', label: 'Orçamento',    val: nextShow && budgets[nextShow.id]?.length ? fmt((budgets[nextShow.id]).reduce((a, i) => a + i.prev, 0)) : '—', sub: 'próximo show', to: '/orcamento' },
           ].map(card => (
             <div key={card.label} onClick={() => navigate(card.to)} style={{ background: '#0a0a0a', border: '1px solid #1a1a1a', padding: 12, cursor: 'pointer' }}>
               <div style={{ fontSize: 16, marginBottom: 6 }}>{card.icon}</div>

@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useApp } from '../context/AppContext';
 import { supabase } from '../supabase';
+import bcrypt from 'bcryptjs';
 import { PageHeader, Btn, Input, Modal, ModalBtns, Section, Toggle, Avatar, Empty } from '../components/layout/UI';
 
 const PERM_LABELS = {
@@ -60,15 +61,16 @@ export default function Equipe() {
 
       // Atualiza usuário também
       const updateData = { nome: form.name, email: form.email, permissoes: perms, perfil: form.grupo || 'secundario' };
-      if (form.senha?.trim()) updateData.senha = form.senha;
+      if (form.senha?.trim()) updateData.senha = await bcrypt.hash(form.senha.trim(), 10);
       await supabase.from('usuarios').update(updateData).eq('email', form.email);
 
       updateMember(editingId, { name: form.name, cpf: form.cpf, rg: form.rg, email: form.email, tel: form.tel, sarpas: form.sarpas, perms });
     } else {
       // Novo membro
       if (!form.senha?.trim()) { alert('Informe a senha.'); return; }
+      const hashedSenha = await bcrypt.hash(form.senha.trim(), 10);
       await supabase.from('usuarios').insert({
-        nome: form.name, email: form.email, senha: form.senha,
+        nome: form.name, email: form.email, senha: hashedSenha,
         perfil: form.grupo || 'secundario', permissoes: perms
       });
       addMember({ name: form.name, cpf: form.cpf||'', rg: form.rg||'', email: form.email||'', tel: form.tel||'', sarpas: form.sarpas||'', perms });
