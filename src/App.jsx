@@ -12,6 +12,7 @@ import Orcamento from './pages/Orcamento';
 import Checklist from './pages/Checklist';
 import Documentacao from './pages/Documentacao';
 import Manual from './pages/Manual';
+import Relatorios from './pages/Relatorios';
 
 function PrivateRoute({ children }) {
   const { user } = useAuth();
@@ -37,6 +38,7 @@ function AppRoutes() {
           <Route path="/checklist"    element={<Checklist />} />
           <Route path="/documentacao" element={<Documentacao />} />
           <Route path="/manual"       element={<Manual />} />
+          <Route path="/relatorios"   element={<Relatorios />} />
           <Route path="*"             element={<Navigate to="/" replace />} />
         </Routes>
       </Layout>

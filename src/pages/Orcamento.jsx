@@ -96,11 +96,11 @@ export function Orcamento() {
     for (const item of catItems) await deleteBudgetItem(show.id, item.id);
   };
 
-  const handleComprovante = async (itemId, file) => {
+  const handleComprovante = async (item, file) => {
     if (!file) return;
-    setUploadingFor(prev => ({ ...prev, [itemId]: true }));
-    await addComprovante(itemId, file);
-    setUploadingFor(prev => ({ ...prev, [itemId]: false }));
+    setUploadingFor(prev => ({ ...prev, [item.id]: true }));
+    await addComprovante(item.id, file, show.id, item.cat);
+    setUploadingFor(prev => ({ ...prev, [item.id]: false }));
   };
 
   const renderDespesas = () => {
@@ -170,7 +170,7 @@ export function Orcamento() {
                         accept="image/*,application/pdf"
                         capture="environment"
                         style={{ display: 'none' }}
-                        onChange={e => handleComprovante(item.id, e.target.files[0])}
+                        onChange={e => handleComprovante(item, e.target.files[0])}
                       />
                       <span style={{
                         fontSize: 8, letterSpacing: 1, padding: '5px 7px', border: '1px solid #444',

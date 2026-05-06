@@ -3,6 +3,23 @@ import { supabase } from '../supabase';
 
 const AppContext = createContext(null);
 
+function getFileType(name) {
+  const ext = (name || '').split('.').pop().toLowerCase();
+  if (ext === 'pdf') return 'pdf';
+  if (['jpg','jpeg','png','gif','webp'].includes(ext)) return 'img';
+  if (['doc','docx'].includes(ext)) return 'word';
+  if (['xls','xlsx'].includes(ext)) return 'excel';
+  return 'other';
+}
+function formatFileSize(bytes) {
+  return bytes > 1048576 ? (bytes / 1048576).toFixed(1) + ' MB' : (bytes / 1024).toFixed(0) + ' KB';
+}
+function todayFmt() {
+  const d = new Date();
+  const p = n => n < 10 ? '0' + n : n;
+  return `${p(d.getDate())}/${p(d.getMonth()+1)}/${d.getFullYear()}`;
+}
+
 export function AppProvider({ children }) {
   const [drones, setDrones] = useState([]);
   const [shows, setShows] = useState([]);
@@ -11,6 +28,7 @@ export function AppProvider({ children }) {
   const [budgets, setBudgets] = useState({});
   const [comprovantes, setComprovantes] = useState({});
   const [docs, setDocs] = useState({});
+  const [adminDocs, setAdminDocs] = useState([]);
   const [inventory, setInventory] = useState({
     batSean: 0, batMagic: 0, rtk: [], ap: [], servidor: [], computador: [],
     quantities: { rede: 0, energia: 0, radio: 0, star: 0, tripes: 0 }
@@ -27,6 +45,7 @@ export function AppProvider({ children }) {
       loadDrones(),
       loadMembers(),
       loadManuals(),
+      loadAdminDocs(),
     ]);
     setLoading(false);
   };
@@ -199,7 +218,8 @@ const deleteMember = async (id) => {
     }
   };
 
-  const addComprovante = async (orcamentoId, file) => {
+  // showId e categoriaNome são opcionais — quando passados, sincroniza com a tabela documentacao
+  const addComprovante = async (orcamentoId, file, showId, categoriaNome) => {
     const fileName = `${Date.now()}_${file.name}`;
     const { error: uploadError } = await supabase.storage.from('comprovantes').upload(fileName, file);
     if (uploadError) { alert('Erro no upload: ' + uploadError.message); return null; }
@@ -208,9 +228,43 @@ const deleteMember = async (id) => {
     if (error) { alert('Erro ao salvar comprovante: ' + error.message); return null; }
     if (data) {
       setComprovantes(prev => ({ ...prev, [orcamentoId]: [...(prev[orcamentoId] || []), { id: data.id, url: publicUrl, fileName }] }));
+      // Sincroniza automaticamente com a tabela documentacao
+      if (showId && categoriaNome) {
+        const docName = `Comprovante - ${categoriaNome}`;
+        const docRow = { show_id: showId, nome: docName, arquivo: publicUrl, tipo: getFileType(file.name), tamanho: formatFileSize(file.size), data: todayFmt() };
+        const { data: docData } = await supabase.from('documentacao').insert(docRow).select().single();
+        if (docData) {
+          const mapped = { id: docData.id, name: docData.nome, file: docData.arquivo, type: docData.tipo, size: docData.tamanho, date: docData.data };
+          setDocs(prev => ({ ...prev, [showId]: [...(prev[showId] || []), mapped] }));
+        }
+      }
       return data;
     }
     return null;
+  };
+
+  const loadAllBudgets = async () => {
+    const { data } = await supabase.from('orcamento').select('*');
+    if (data) {
+      const byShow = {};
+      data.forEach(i => {
+        if (!byShow[i.show_id]) byShow[i.show_id] = [];
+        byShow[i.show_id].push({ id: i.id, cat: i.categoria, prev: i.previsto, real: i.realizado });
+      });
+      setBudgets(prev => ({ ...prev, ...byShow }));
+    }
+  };
+
+  const loadAllScaling = async () => {
+    const { data } = await supabase.from('escalacao').select('*');
+    if (data) {
+      const byShow = {};
+      data.forEach(s => {
+        if (!byShow[s.show_id]) byShow[s.show_id] = [];
+        byShow[s.show_id].push({ id: s.id, memberId: s.membro_id, role: s.funcao });
+      });
+      setScaling(prev => ({ ...prev, ...byShow }));
+    }
   };
 
   const clearBudgetForShow = async (showId) => {
@@ -240,19 +294,42 @@ const deleteMember = async (id) => {
   };
 
   // ─── DOCS ────────────────────────────────────────
+  const loadAdminDocs = async () => {
+    const { data } = await supabase.from('documentacao').select('*').is('show_id', null);
+    if (data) setAdminDocs(data.map(d => ({ id: d.id, name: d.nome, file: d.arquivo, type: d.tipo, size: d.tamanho, date: d.data })));
+  };
+
   const loadDocs = async (showId) => {
     const { data } = await supabase.from('documentacao').select('*').eq('show_id', showId);
     if (data) setDocs(prev => ({ ...prev, [showId]: data.map(d => ({ id: d.id, name: d.nome, file: d.arquivo, type: d.tipo, size: d.tamanho, date: d.data })) }));
   };
 
-  const addDoc = async (showId, doc) => {
-    const { data } = await supabase.from('documentacao').insert({ show_id: showId, nome: doc.name, arquivo: doc.file, tipo: doc.type, tamanho: doc.size, data: doc.date }).select().single();
-    if (data) setDocs(prev => ({ ...prev, [showId]: [...(prev[showId] || []), { id: data.id, name: data.nome, file: data.arquivo, type: data.tipo, size: data.tamanho, date: data.data }] }));
+  // showId = null para documentos administrativos; file (File object) opcional para upload ao Storage
+  const addDoc = async (showId, doc, file) => {
+    let fileUrl = doc.file || '';
+    if (file) {
+      const storageFileName = `${Date.now()}_${file.name}`;
+      const { error: upErr } = await supabase.storage.from('comprovantes').upload(storageFileName, file);
+      if (upErr) { alert('Erro no upload: ' + upErr.message); return null; }
+      const { data: { publicUrl } } = supabase.storage.from('comprovantes').getPublicUrl(storageFileName);
+      fileUrl = publicUrl;
+    }
+    const row = { nome: doc.name, arquivo: fileUrl, tipo: doc.type, tamanho: doc.size, data: doc.date };
+    if (showId) row.show_id = showId;
+    const { data } = await supabase.from('documentacao').insert(row).select().single();
+    if (data) {
+      const mapped = { id: data.id, name: data.nome, file: data.arquivo, type: data.tipo, size: data.tamanho, date: data.data };
+      if (showId) setDocs(prev => ({ ...prev, [showId]: [...(prev[showId] || []), mapped] }));
+      else setAdminDocs(prev => [...prev, mapped]);
+      return data;
+    }
+    return null;
   };
 
   const deleteDoc = async (showId, docId) => {
     await supabase.from('documentacao').delete().eq('id', docId);
-    setDocs(prev => ({ ...prev, [showId]: prev[showId].filter(d => d.id !== docId) }));
+    if (showId) setDocs(prev => ({ ...prev, [showId]: prev[showId].filter(d => d.id !== docId) }));
+    else setAdminDocs(prev => prev.filter(d => d.id !== docId));
   };
 
   // ─── INVENTORY ───────────────────────────────────
@@ -304,7 +381,9 @@ const deleteMember = async (id) => {
       scaling, scaleToShow, removeFromShow, isMemberBusy, loadScaling, clearScalingForShow,
       budgets, addBudgetItem, updateBudgetItem, deleteBudgetItem, loadBudget, clearBudgetForShow,
       comprovantes, addComprovante, loadComprovantesForShow,
-      docs, addDoc, deleteDoc, loadDocs,
+      adminDocs, loadAdminDocs,
+      loadAllBudgets, loadAllScaling,
+      docs, adminDocs, addDoc, deleteDoc, loadDocs, loadAdminDocs,
       inventory, updateInventory, addSerialItem, deleteSerialItem,
       manuals, addManualTopic, addManualFile, deleteManualFile,
     }}>

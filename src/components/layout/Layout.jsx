@@ -11,6 +11,7 @@ const navItems = [
   { to: '/equipe',      icon: '👥', label: 'Equipe',    module: 'equipe' },
   { to: '/orcamento',   icon: '💰', label: 'Budget',    module: 'orcamento' },
   { to: '/checklist',   icon: '✅', label: 'Check',     module: 'checklist' },
+  { to: '/relatorios',  icon: '📊', label: 'Relat.',    module: null, masterOnly: true },
 ];
 
 const MODAL_STYLE = {
@@ -134,7 +135,7 @@ export default function Layout({ children }) {
       )}
 
       <nav className={styles.bottomNav}>
-        {navItems.map(item => (
+        {navItems.filter(item => !item.masterOnly || isMaster()).map(item => (
           <NavLink
             key={item.to}
             to={item.to}
