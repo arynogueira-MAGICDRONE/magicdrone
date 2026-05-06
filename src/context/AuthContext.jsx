@@ -116,6 +116,7 @@ export function AuthProvider({ children }) {
 
   const isMaster = () => user?.perfil === 'master';
   const isAdmin = () => user?.perfil === 'administrativo';
+  const isSecondary = () => user?.perfil === 'secundario';
   const hasPermission = (module) => {
     if (!user) return false;
     if (user.perfil === 'master') return true;
@@ -124,7 +125,7 @@ export function AuthProvider({ children }) {
   };
 
   return (
-    <AuthContext.Provider value={{ user, login, logout, isMaster, isAdmin, hasPermission, error, loading }}>
+    <AuthContext.Provider value={{ user, login, logout, isMaster, isAdmin, isSecondary, hasPermission, error, loading }}>
       {children}
     </AuthContext.Provider>
   );
