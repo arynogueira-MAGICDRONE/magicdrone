@@ -49,6 +49,16 @@ export default function Checklist() {
 
   const changeType = (t) => { setType(t); setChecklist(initChecklist(t)); setOpen({}); };
 
+  const handleShowSelect = (id) => {
+    setSelectedShow(id);
+    if (!id) return;
+    const show = visibleShows.find(s => String(s.id) === id);
+    if (!show) return;
+    const n = parseInt(show.drones) || 0;
+    const newType = n <= 110 ? 110 : n <= 200 ? 200 : 300;
+    changeType(newType);
+  };
+
   const keys = Object.keys(checklist);
   const done = keys.filter(k => checklist[k].done).length;
   const pct = Math.round(done / keys.length * 100);
@@ -104,7 +114,7 @@ export default function Checklist() {
 
       {/* Show selector */}
       <div style={{ padding: '10px 16px 0' }}>
-        <select value={selectedShow} onChange={e => setSelectedShow(e.target.value)}
+        <select value={selectedShow} onChange={e => handleShowSelect(e.target.value)}
           style={{ width: '100%', background: '#000', border: '1px solid #333', color: '#fff', padding: '8px 10px', fontFamily: 'Space Mono,monospace', fontSize: 12, outline: 'none' }}>
           <option value="">Selecionar show...</option>
           {visibleShows.map(s => <option key={s.id} value={s.id}>{s.client}</option>)}

@@ -13,6 +13,7 @@ export default function Inventario() {
   const [selected, setSelected] = useState(new Set());
   const [modal, setModal] = useState(null);
   const [form, setForm] = useState({});
+  const [droneNotes, setDroneNotes] = useState({});
   const fileRef = useRef();
 
   const filtered = drones
@@ -27,7 +28,11 @@ export default function Inventario() {
     const order = ['ok', 'manut', 'bad'];
     const next = order[(order.indexOf(drone.status) + 1) % 3];
     updateDroneStatus(drone.id, next);
+    if (next === 'ok') setDroneNotes(prev => { const n = {...prev}; delete n[drone.id]; return n; });
   };
+
+  const setDroneNote = (id, field, val) =>
+    setDroneNotes(prev => ({ ...prev, [id]: { ...(prev[id] || {}), [field]: val } }));
 
   const handleDelete = (drone) => {
     if (window.confirm(`Deseja excluir o drone ${drone.serial}?`)) {
@@ -193,19 +198,47 @@ export default function Inventario() {
         {/* List */}
         <div style={{ maxHeight: 300, overflowY: 'auto' }}>
           {filtered.length === 0 ? <Empty text="Nenhum drone" /> : filtered.map(d => (
-            <div key={d.id} style={{ display: 'flex', alignItems: 'center', gap: 8, background: '#0a0a0a', border: '1px solid #1a1a1a', padding: '10px 12px', marginBottom: 4 }}>
-              <input type="checkbox" checked={selected.has(d.id)} onChange={() => toggleOne(d.id)}
-                style={{ accentColor: '#fff', cursor: 'pointer', flexShrink: 0 }} />
-              <div style={{ flex: 1 }}>
-                <div style={{ fontSize: 12, fontWeight: 600, letterSpacing: 1 }}>{d.serial}</div>
+            <div key={d.id} style={{ background: '#0a0a0a', border: '1px solid #1a1a1a', padding: '10px 12px', marginBottom: 4 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <input type="checkbox" checked={selected.has(d.id)} onChange={() => toggleOne(d.id)}
+                  style={{ accentColor: '#fff', cursor: 'pointer', flexShrink: 0 }} />
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontSize: 12, fontWeight: 600, letterSpacing: 1 }}>{d.serial}</div>
+                </div>
+                <div onClick={() => cycleStatus(d)} style={{ cursor: 'pointer' }}>
+                  <StatusPill status={d.status} />
+                </div>
+                <button onClick={() => handleDelete(d)} style={{
+                  background: 'transparent', border: 'none', color: '#555', cursor: 'pointer',
+                  fontSize: 15, padding: '0 2px', lineHeight: 1,
+                }} title={`Excluir ${d.serial}`}>🗑️</button>
               </div>
-              <div onClick={() => cycleStatus(d)} style={{ cursor: 'pointer' }}>
-                <StatusPill status={d.status} />
-              </div>
-              <button onClick={() => handleDelete(d)} style={{
-                background: 'transparent', border: 'none', color: '#555', cursor: 'pointer',
-                fontSize: 15, padding: '0 2px', lineHeight: 1,
-              }} title={`Excluir ${d.serial}`}>🗑️</button>
+              {(d.status === 'bad' || d.status === 'manut') && (
+                <div style={{ marginTop: 8, paddingTop: 8, borderTop: '1px solid #1a1a1a' }}>
+                  <textarea
+                    value={droneNotes[d.id]?.obs || ''}
+                    onChange={e => setDroneNote(d.id, 'obs', e.target.value)}
+                    placeholder="Observação (problema, dano, etc.)..."
+                    rows={2}
+                    style={{ width: '100%', background: '#000', border: '1px solid #222', color: '#fff', padding: '6px 8px', fontFamily: 'Space Mono,monospace', fontSize: 10, outline: 'none', resize: 'none', boxSizing: 'border-box', marginBottom: 6 }}
+                  />
+                  <label style={{ display: 'inline-flex', alignItems: 'center', gap: 6, cursor: 'pointer' }}>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      capture="environment"
+                      style={{ display: 'none' }}
+                      onChange={e => { const f = e.target.files[0]; if (f) setDroneNote(d.id, 'photoName', f.name); }}
+                    />
+                    <span style={{ fontSize: 8, letterSpacing: 2, padding: '4px 10px', border: '1px solid #444', color: '#aaa', textTransform: 'uppercase', fontFamily: 'Space Mono,monospace' }}>
+                      Foto
+                    </span>
+                    {droneNotes[d.id]?.photoName && (
+                      <span style={{ fontSize: 9, color: '#4caf50' }}>{droneNotes[d.id].photoName}</span>
+                    )}
+                  </label>
+                </div>
+              )}
             </div>
           ))}
         </div>

@@ -1,6 +1,7 @@
 // ─── ORÇAMENTO ───────────────────────────────────────────────────────────────
 import React, { useState } from 'react';
 import { useApp } from '../context/AppContext';
+import { useAuth } from '../context/AuthContext';
 import { PageHeader, Section, Input, Select, Modal, ModalBtns, Empty, Btn } from '../components/layout/UI';
 
 const CATS = ['Hotel','Combustível','Pedágio','Alimentação','Outros'];
@@ -13,19 +14,31 @@ const DISTANCES = [
 function fmt(v) { return 'R$ ' + (v||0).toFixed(2).replace('.', ',').replace(/\B(?=(\d{3})+(?!\d))/g, '.'); }
 
 export function Orcamento() {
-  const { shows, budgets, addBudgetItem, deleteBudgetItem } = useApp();
+  const { shows, budgets, addBudgetItem, updateBudgetItem, deleteBudgetItem, loadBudget } = useApp();
+  const { isMaster, isAdmin, user } = useAuth();
+  const isSecondary = user?.perfil === 'secundario';
+
   const [sel, setSel] = useState('');
   const [modal, setModal] = useState(false);
   const [form, setForm] = useState({ cat: 'Hotel', prev: '', real: '', nova: '' });
   const [dist, setDist] = useState(null);
   const [loadingDist, setLoadingDist] = useState(false);
   const [dias, setDias] = useState(3);
+  const [comprovantes, setComprovantes] = useState({});
+  const [realEdits, setRealEdits] = useState({});
 
   const show = sel ? shows.find(s => s.id === parseInt(sel)) : null;
   const items = show ? (budgets[show.id] || []) : [];
-  const totalPrev = items.reduce((a, i) => a + i.prev, 0);
-  const totalReal = items.reduce((a, i) => a + i.real, 0);
+  const totalPrev = items.reduce((a, i) => a + (i.prev || 0), 0);
+  const totalReal = items.reduce((a, i) => a + (i.real || 0), 0);
   const diff = totalReal - totalPrev;
+
+  const handleShowSelect = async (id) => {
+    setSel(id);
+    setDist(null);
+    setRealEdits({});
+    if (id) await loadBudget(parseInt(id));
+  };
 
   const calcDist = () => {
     setLoadingDist(true);
@@ -43,11 +56,20 @@ export function Orcamento() {
     setModal(false); setForm({ cat: 'Hotel', prev: '', real: '', nova: '' });
   };
 
+  const handleRealChange = (itemId, val) =>
+    setRealEdits(prev => ({ ...prev, [itemId]: val }));
+
+  const saveReal = async (item) => {
+    const val = parseFloat(realEdits[item.id]) || 0;
+    await updateBudgetItem(show.id, item.id, { prev: item.prev, real: val });
+    setRealEdits(prev => { const n = {...prev}; delete n[item.id]; return n; });
+  };
+
   return (
     <div>
       <PageHeader label="Módulo" title="Orçamento" />
       <Section title="Selecionar Show">
-        <select value={sel} onChange={e => { setSel(e.target.value); setDist(null); }}
+        <select value={sel} onChange={e => handleShowSelect(e.target.value)}
           style={{ width: '100%', background: '#000', border: '1px solid #333', color: '#fff', padding: '10px', fontFamily: 'Space Mono,monospace', fontSize: 12, outline: 'none' }}>
           <option value="">Selecione um show...</option>
           {shows.map(s => <option key={s.id} value={s.id}>{s.client}</option>)}
@@ -87,23 +109,49 @@ export function Orcamento() {
           </div>
         </Section>
 
-        <Section title="Despesas" action={<Btn size="sm" onClick={() => setModal(true)}>+ Add</Btn>}>
+        <Section title="Despesas" action={!isSecondary && <Btn size="sm" onClick={() => setModal(true)}>+ Add</Btn>}>
           {items.length === 0 ? <Empty text="Nenhuma despesa" /> : items.map(item => {
-            const over = item.real > item.prev && item.real > 0;
+            const realVal = realEdits[item.id] !== undefined ? realEdits[item.id] : String(item.real || 0);
+            const currentReal = realEdits[item.id] !== undefined ? parseFloat(realEdits[item.id]) || 0 : (item.real || 0);
+            const over = currentReal > (item.prev || 0) && currentReal > 0;
+            const comp = comprovantes[item.id];
             return (
               <div key={item.id} style={{ background: '#0a0a0a', border: '1px solid #1a1a1a', padding: 12, marginBottom: 5 }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
                   <div style={{ fontSize: 10, letterSpacing: 2, textTransform: 'uppercase', color: '#888' }}>{item.cat}</div>
-                  <span onClick={() => deleteBudgetItem(show.id, item.id)} style={{ fontSize: 10, color: '#f44336', cursor: 'pointer' }}>✕</span>
+                  {!isSecondary && <span onClick={() => deleteBudgetItem(show.id, item.id)} style={{ fontSize: 10, color: '#f44336', cursor: 'pointer' }}>✕</span>}
                 </div>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
-                  {[['Previsto', item.prev, '#fff'], ['Realizado', item.real, over ? '#f44336' : '#4caf50']].map(([l, v, c]) => (
-                    <div key={l} style={{ background: '#111', border: '1px solid #1a1a1a', padding: '8px 10px' }}>
-                      <div style={{ fontSize: 8, letterSpacing: 2, color: '#555', textTransform: 'uppercase', marginBottom: 3 }}>{l}</div>
-                      <div style={{ fontSize: 14, fontWeight: 700, color: c }}>{fmt(v)}</div>
+                <div style={{ display: 'grid', gridTemplateColumns: isSecondary ? '1fr' : '1fr 1fr', gap: 8, marginBottom: 8 }}>
+                  {!isSecondary && (
+                    <div style={{ background: '#111', border: '1px solid #1a1a1a', padding: '8px 10px' }}>
+                      <div style={{ fontSize: 8, letterSpacing: 2, color: '#555', textTransform: 'uppercase', marginBottom: 3 }}>Previsto</div>
+                      <div style={{ fontSize: 14, fontWeight: 700, color: '#fff' }}>{fmt(item.prev)}</div>
                     </div>
-                  ))}
+                  )}
+                  <div style={{ background: '#111', border: '1px solid #1a1a1a', padding: '8px 10px' }}>
+                    <div style={{ fontSize: 8, letterSpacing: 2, color: '#555', textTransform: 'uppercase', marginBottom: 5 }}>Realizado</div>
+                    <input
+                      type="number"
+                      value={realVal}
+                      onChange={e => handleRealChange(item.id, e.target.value)}
+                      onBlur={() => saveReal(item)}
+                      style={{ background: 'transparent', border: 'none', borderBottom: '1px solid #333', color: over ? '#f44336' : '#4caf50', padding: '2px 0', fontFamily: 'Space Mono,monospace', fontSize: 14, fontWeight: 700, outline: 'none', width: '100%' }}
+                    />
+                  </div>
                 </div>
+                <label style={{ display: 'inline-flex', alignItems: 'center', gap: 6, cursor: 'pointer' }}>
+                  <input
+                    type="file"
+                    accept="image/*,application/pdf"
+                    capture="environment"
+                    style={{ display: 'none' }}
+                    onChange={e => { const f = e.target.files[0]; if (f) setComprovantes(prev => ({ ...prev, [item.id]: f.name })); }}
+                  />
+                  <span style={{ fontSize: 8, letterSpacing: 2, padding: '3px 8px', border: '1px solid #444', color: '#aaa', textTransform: 'uppercase', fontFamily: 'Space Mono,monospace' }}>
+                    Anexar Comprovante
+                  </span>
+                  {comp && <span style={{ fontSize: 9, color: '#4caf50', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: 150 }}>{comp}</span>}
+                </label>
               </div>
             );
           })}
@@ -111,23 +159,27 @@ export function Orcamento() {
 
         {items.length > 0 && (
           <div style={{ background: '#fff', color: '#000', padding: '14px 16px', margin: '14px 16px 0' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
-              <div style={{ fontSize: 9, letterSpacing: 3, textTransform: 'uppercase', fontWeight: 700 }}>Total Previsto</div>
-              <div style={{ fontSize: 18, fontWeight: 700 }}>{fmt(totalPrev)}</div>
-            </div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
+            {!isSecondary && (
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
+                <div style={{ fontSize: 9, letterSpacing: 3, textTransform: 'uppercase', fontWeight: 700 }}>Total Previsto</div>
+                <div style={{ fontSize: 18, fontWeight: 700 }}>{fmt(totalPrev)}</div>
+              </div>
+            )}
+            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: isSecondary ? 0 : 6 }}>
               <div style={{ fontSize: 9, letterSpacing: 3, textTransform: 'uppercase', fontWeight: 700 }}>Total Realizado</div>
               <div style={{ fontSize: 18, fontWeight: 700 }}>{fmt(totalReal)}</div>
             </div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 10, color: '#555', paddingTop: 6, borderTop: '1px solid #ddd' }}>
-              <span>Diferença</span>
-              <span style={{ color: diff > 0 ? '#c62828' : '#2e7d32', fontWeight: 700 }}>{diff >= 0 ? '+' : ''}{fmt(diff)}</span>
-            </div>
+            {!isSecondary && (
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 10, color: '#555', paddingTop: 6, borderTop: '1px solid #ddd' }}>
+                <span>Diferença</span>
+                <span style={{ color: diff > 0 ? '#c62828' : '#2e7d32', fontWeight: 700 }}>{diff >= 0 ? '+' : ''}{fmt(diff)}</span>
+              </div>
+            )}
           </div>
         )}
       </>}
 
-      {modal && (
+      {modal && !isSecondary && (
         <Modal title="Nova Despesa" onClose={() => setModal(false)}>
           <Select label="Categoria" value={form.cat} onChange={e => setForm({...form, cat: e.target.value})}
             options={[...CATS.map(c => ({value:c,label:c})), {value:'nova',label:'+ Nova categoria...'}]} />

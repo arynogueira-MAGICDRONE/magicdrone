@@ -33,14 +33,16 @@ export function AuthProvider({ children }) {
 
   const logout = () => setUser(null);
   const isMaster = () => user?.perfil === 'master';
+  const isAdmin = () => user?.perfil === 'administrativo';
   const hasPermission = (module) => {
     if (!user) return false;
     if (user.perfil === 'master') return true;
+    if (user.perfil === 'administrativo') return true;
     return user.permissoes?.[module] === true;
   };
 
   return (
-    <AuthContext.Provider value={{ user, login, logout, isMaster, hasPermission, error, loading }}>
+    <AuthContext.Provider value={{ user, login, logout, isMaster, isAdmin, hasPermission, error, loading }}>
       {children}
     </AuthContext.Provider>
   );

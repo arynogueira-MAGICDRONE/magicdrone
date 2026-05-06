@@ -195,6 +195,17 @@ const deleteMember = async (id) => {
     if (data) setBudgets(prev => ({ ...prev, [showId]: [...(prev[showId] || []), { id: data.id, cat: data.categoria, prev: data.previsto, real: data.realizado }] }));
   };
 
+  const updateBudgetItem = async (showId, itemId, updates) => {
+    const fields = {};
+    if (updates.prev !== undefined) fields.previsto = updates.prev;
+    if (updates.real !== undefined) fields.realizado = updates.real;
+    await supabase.from('orcamento').update(fields).eq('id', itemId);
+    setBudgets(prev => ({
+      ...prev,
+      [showId]: (prev[showId] || []).map(i => i.id === itemId ? { ...i, ...updates } : i)
+    }));
+  };
+
   const deleteBudgetItem = async (showId, itemId) => {
     await supabase.from('orcamento').delete().eq('id', itemId);
     setBudgets(prev => ({ ...prev, [showId]: prev[showId].filter(i => i.id !== itemId) }));
@@ -263,7 +274,7 @@ const deleteMember = async (id) => {
       shows, addShow, updateShow, deleteShow, dronesUsedOnDate,
       members, addMember, updateMember, updateMemberPerms, deleteMember,
       scaling, scaleToShow, removeFromShow, isMemberBusy, loadScaling, clearScalingForShow,
-      budgets, addBudgetItem, deleteBudgetItem, loadBudget, clearBudgetForShow,
+      budgets, addBudgetItem, updateBudgetItem, deleteBudgetItem, loadBudget, clearBudgetForShow,
       docs, addDoc, deleteDoc, loadDocs,
       inventory, updateInventory, addSerialItem, deleteSerialItem,
       manuals, addManualTopic, addManualFile, deleteManualFile,

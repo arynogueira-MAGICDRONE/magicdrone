@@ -33,11 +33,13 @@ export default function Equipe() {
     ...(isMaster() ? [{ key: 'permissoes', label: 'Permissões' }] : []),
   ];
 
-  const openEdit = (m) => {
+  const openEdit = async (m) => {
     setEditingId(m.id);
+    const { data: usr } = await supabase.from('usuarios').select('perfil').eq('email', m.email).single();
     setForm({
       name: m.name, cpf: m.cpf, rg: m.rg, email: m.email,
       tel: m.tel, sarpas: m.sarpas, senha: '',
+      grupo: usr?.perfil || 'secundario',
       ...Object.fromEntries(Object.keys(PERM_LABELS).map(k => [`perm_${k}`, m.perms?.[k] || false]))
     });
     setDetail(null);
@@ -57,7 +59,7 @@ export default function Equipe() {
       }).eq('id', editingId);
 
       // Atualiza usuário também
-      const updateData = { nome: form.name, email: form.email, permissoes: perms };
+      const updateData = { nome: form.name, email: form.email, permissoes: perms, perfil: form.grupo || 'secundario' };
       if (form.senha?.trim()) updateData.senha = form.senha;
       await supabase.from('usuarios').update(updateData).eq('email', form.email);
 
@@ -67,7 +69,7 @@ export default function Equipe() {
       if (!form.senha?.trim()) { alert('Informe a senha.'); return; }
       await supabase.from('usuarios').insert({
         nome: form.name, email: form.email, senha: form.senha,
-        perfil: 'secundario', permissoes: perms
+        perfil: form.grupo || 'secundario', permissoes: perms
       });
       addMember({ name: form.name, cpf: form.cpf||'', rg: form.rg||'', email: form.email||'', tel: form.tel||'', sarpas: form.sarpas||'', perms });
     }
@@ -227,6 +229,15 @@ export default function Equipe() {
           <Input label="Telefone" value={form.tel||''} onChange={e=>setForm({...form,tel:e.target.value})} placeholder="(00) 00000-0000" />
           <Input label="Código Sarpas (opcional)" value={form.sarpas||''} onChange={e=>setForm({...form,sarpas:e.target.value})} placeholder="BR-2024-XXX" />
           <Input label={editingId ? 'Nova Senha (deixe vazio para manter)' : 'Senha de Acesso'} type="password" value={form.senha||''} onChange={e=>setForm({...form,senha:e.target.value})} placeholder="Senha para login" />
+          <div style={{ marginBottom: 10 }}>
+            <label style={{ fontSize: 9, letterSpacing: 3, color: '#666', textTransform: 'uppercase', display: 'block', marginBottom: 4 }}>Grupo de Acesso</label>
+            <select value={form.grupo || 'secundario'} onChange={e => setForm({...form, grupo: e.target.value})}
+              style={{ width: '100%', background: '#000', border: '1px solid #333', color: '#fff', padding: '8px 10px', fontFamily: 'Space Mono,monospace', fontSize: 12, outline: 'none' }}>
+              <option value="secundario">Secundário</option>
+              <option value="administrativo">Administrativo</option>
+              <option value="master">Master</option>
+            </select>
+          </div>
           <div style={{ marginTop: 8, paddingTop: 8, borderTop: '1px solid #222' }}>
             <div style={{ fontSize: 9, letterSpacing: 3, color: '#666', textTransform: 'uppercase', marginBottom: 8 }}>Permissões</div>
             {Object.keys(PERM_LABELS).map(k => (
