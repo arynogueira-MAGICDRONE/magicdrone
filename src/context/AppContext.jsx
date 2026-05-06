@@ -47,20 +47,27 @@ export function AppProvider({ children }) {
       drones: parseInt(show.drones) || 0,
       cidade: show.city || '',
       estado: show.state || '',
+      data_teste: show.test || null,
+      valor: show.valor || null,
     };
-    console.log('Tentando inserir:', insertData);
     const { data, error } = await supabase.from('shows').insert(insertData).select().single();
-    console.log('Resultado:', data, 'Erro:', error);
     if (error) {
       alert('Erro Supabase: ' + error.message + ' | Código: ' + error.code);
-      return;
+      return null;
     }
     if (data) {
       setShows(prev => [...prev, {
         id: data.id, date: data.data, status: data.status, client: data.cliente,
-        drones: data.drones, city: data.cidade, state: data.estado, test: data.data_teste
+        drones: data.drones, city: data.cidade, state: data.estado, test: data.data_teste, valor: data.valor
       }]);
+      return data;
     }
+    return null;
+  };
+
+  const deleteShow = async (id) => {
+    await supabase.from('shows').delete().eq('id', id);
+    setShows(prev => prev.filter(s => s.id !== id));
   };
 
   const updateShow = async (id, show) => {
@@ -148,6 +155,12 @@ const deleteMember = async (id) => {
   const loadScaling = async (showId) => {
     const { data } = await supabase.from('escalacao').select('*').eq('show_id', showId);
     if (data) setScaling(prev => ({ ...prev, [showId]: data.map(s => ({ id: s.id, memberId: s.membro_id, role: s.funcao })) }));
+    return data || [];
+  };
+
+  const clearScalingForShow = async (showId) => {
+    await supabase.from('escalacao').delete().eq('show_id', showId);
+    setScaling(prev => ({ ...prev, [showId]: [] }));
   };
 
   const scaleToShow = async (showId, memberId, role) => {
@@ -169,6 +182,12 @@ const deleteMember = async (id) => {
   const loadBudget = async (showId) => {
     const { data } = await supabase.from('orcamento').select('*').eq('show_id', showId);
     if (data) setBudgets(prev => ({ ...prev, [showId]: data.map(i => ({ id: i.id, cat: i.categoria, prev: i.previsto, real: i.realizado })) }));
+    return data || [];
+  };
+
+  const clearBudgetForShow = async (showId) => {
+    await supabase.from('orcamento').delete().eq('show_id', showId);
+    setBudgets(prev => ({ ...prev, [showId]: [] }));
   };
 
   const addBudgetItem = async (showId, item) => {
@@ -241,10 +260,10 @@ const deleteMember = async (id) => {
   return (
     <AppContext.Provider value={{
       drones, addDrone, updateDroneStatus, importDrones, deleteDrone, deleteDrones,
-      shows, addShow, updateShow, dronesUsedOnDate,
+      shows, addShow, updateShow, deleteShow, dronesUsedOnDate,
       members, addMember, updateMember, updateMemberPerms, deleteMember,
-      scaling, scaleToShow, removeFromShow, isMemberBusy, loadScaling,
-      budgets, addBudgetItem, deleteBudgetItem, loadBudget,
+      scaling, scaleToShow, removeFromShow, isMemberBusy, loadScaling, clearScalingForShow,
+      budgets, addBudgetItem, deleteBudgetItem, loadBudget, clearBudgetForShow,
       docs, addDoc, deleteDoc, loadDocs,
       inventory, updateInventory, addSerialItem, deleteSerialItem,
       manuals, addManualTopic, addManualFile, deleteManualFile,

@@ -67,7 +67,7 @@ function QVField({ label, qty, val, onQty, onVal }) {
 
 export default function Shows() {
   const { isMaster } = useAuth();
-  const { shows, addShow, updateShow, dronesUsedOnDate, members, scaleToShow, scaling, loadScaling, addBudgetItem } = useApp();
+  const { shows, addShow, updateShow, deleteShow, dronesUsedOnDate, members, scaleToShow, scaling, loadScaling, clearScalingForShow, addBudgetItem, loadBudget, clearBudgetForShow } = useApp();
   const TOTAL_DRONES = 125;
 
   const today = new Date();
@@ -168,20 +168,56 @@ export default function Shows() {
     setShowModal(true);
   };
 
-  const openEdit = (show) => {
+  const openEdit = async (show) => {
     const testDates = show.test ? show.test.split(',').map(d => d.trim()).filter(Boolean) : [''];
     setEditingId(show.id);
     setForm({
       client: show.client, date: show.date, drones: show.drones, status: show.status,
       testDates: testDates.length ? testDates : [''],
+      valor: show.valor || '',
       cep: '', rua: '', numero: '', complemento: '', bairro: '',
       city: show.city || '', state: show.state || '',
     });
-    setBudget(EMPTY_BUDGET);
-    setSelectedMembers(new Set());
-    setMemberRoles({});
     setConflict(null);
     setDetail(null);
+
+    const budgetItems = await loadBudget(show.id);
+    if (budgetItems.length > 0) {
+      const nb = { ...EMPTY_BUDGET };
+      const hotels = [];
+      for (const item of budgetItems) {
+        const cat = item.categoria;
+        const val = item.previsto;
+        if (cat === 'Combustível') nb.combustivel = val;
+        else if (cat === 'Pedágio') nb.pedagio = val;
+        else if (cat.startsWith('Hotel: ')) hotels.push({ nome: cat.slice(7), valor: val });
+        else if (cat === 'Equipe: Diárias') { nb.diarias_qtd = 1; nb.diarias_val = val; }
+        else if (cat === 'Equipe: Café da Manhã') { nb.cafe_qtd = 1; nb.cafe_val = val; }
+        else if (cat === 'Equipe: Almoço') { nb.almoco_qtd = 1; nb.almoco_val = val; }
+        else if (cat === 'Equipe: Jantar') { nb.jantar_qtd = 1; nb.jantar_val = val; }
+        else if (cat === 'Fogos de Artifício') nb.fogos = val;
+        else if (cat === 'Imposto') nb.imposto = val;
+        else if (cat === 'Comissão') nb.comissao = val;
+        else if (cat === 'Design') nb.design = val;
+        else if (cat === 'Autorizações') nb.autorizacoes = val;
+      }
+      nb.hotels = hotels.length ? hotels : [{ nome: '', valor: '' }];
+      setBudget(nb);
+    } else {
+      setBudget(EMPTY_BUDGET);
+    }
+
+    const scalingItems = await loadScaling(show.id);
+    if (scalingItems.length > 0) {
+      setSelectedMembers(new Set(scalingItems.map(s => s.membro_id)));
+      const roles = {};
+      scalingItems.forEach(s => { roles[s.membro_id] = s.funcao || ''; });
+      setMemberRoles(roles);
+    } else {
+      setSelectedMembers(new Set());
+      setMemberRoles({});
+    }
+
     setShowModal(true);
   };
 
@@ -212,6 +248,9 @@ export default function Shows() {
     };
     if (editingId) {
       await updateShow(editingId, showData);
+      await clearBudgetForShow(editingId);
+      await saveBudgetItems(editingId);
+      await clearScalingForShow(editingId);
       for (const memberId of selectedMembers)
         await scaleToShow(editingId, memberId, memberRoles[memberId] || '');
       closeModal();
@@ -226,6 +265,12 @@ export default function Shows() {
         alert('Erro ao salvar o show. Verifique os dados e tente novamente.');
       }
     }
+  };
+
+  const handleDeleteShow = async (show) => {
+    if (!window.confirm(`Deseja excluir o show ${show.client}? Esta ação não pode ser desfeita.`)) return;
+    await deleteShow(show.id);
+    setDetail(null);
   };
 
   const openDetail = async (s) => {
@@ -357,6 +402,11 @@ export default function Shows() {
             <Btn full variant="ghost" onClick={() => setDetail(null)}>Fechar</Btn>
             {isMaster() && <Btn full variant="outline" onClick={() => openEdit(detail)}>Editar</Btn>}
           </div>
+          {isMaster() && (
+            <div style={{ marginTop: 8 }}>
+              <Btn full variant="danger" onClick={() => handleDeleteShow(detail)}>Excluir Show</Btn>
+            </div>
+          )}
         </Modal>
       )}
 
@@ -464,9 +514,8 @@ export default function Shows() {
             </div>
           </div>
 
-          {/* ── GRUPO 3: Orçamento (apenas novo show) ── */}
-          {!editingId && (
-            <div style={HDIV}>
+          {/* ── GRUPO 3: Orçamento ── */}
+          <div style={HDIV}>
               <div style={SECTTITLE}>Orçamento de Despesas</div>
 
               <BField label="Combustível (R$)" value={budget.combustivel} onChange={v => setBudget({ ...budget, combustivel: v })} />
@@ -507,7 +556,6 @@ export default function Shows() {
               <BField label="Design (R$)" value={budget.design} onChange={v => setBudget({ ...budget, design: v })} />
               <BField label="Autorizações (R$)" value={budget.autorizacoes} onChange={v => setBudget({ ...budget, autorizacoes: v })} />
             </div>
-          )}
 
           {/* Escalar Equipe */}
           {members.length > 0 && (
