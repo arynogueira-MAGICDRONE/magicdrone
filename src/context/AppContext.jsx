@@ -9,6 +9,7 @@ export function AppProvider({ children }) {
   const [members, setMembers] = useState([]);
   const [scaling, setScaling] = useState({});
   const [budgets, setBudgets] = useState({});
+  const [comprovantes, setComprovantes] = useState({});
   const [docs, setDocs] = useState({});
   const [inventory, setInventory] = useState({
     batSean: 0, batMagic: 0, rtk: [], ap: [], servidor: [], computador: [],
@@ -180,11 +181,36 @@ const deleteMember = async (id) => {
 
   // ─── BUDGET ──────────────────────────────────────
   const loadBudget = async (showId) => {
-    console.log('loadBudget chamado com ID:', showId);
-    const { data, error } = await supabase.from('orcamento').select('*').eq('show_id', showId);
-    console.log('Dados retornados:', data, 'Erro:', error);
+    const { data } = await supabase.from('orcamento').select('*').eq('show_id', showId);
     if (data) setBudgets(prev => ({ ...prev, [showId]: data.map(i => ({ id: i.id, cat: i.categoria, prev: i.previsto, real: i.realizado })) }));
     return data || [];
+  };
+
+  const loadComprovantesForShow = async (itemIds) => {
+    if (!itemIds?.length) return;
+    const { data } = await supabase.from('comprovantes').select('*').in('orcamento_id', itemIds);
+    if (data) {
+      const byItem = {};
+      data.forEach(c => {
+        if (!byItem[c.orcamento_id]) byItem[c.orcamento_id] = [];
+        byItem[c.orcamento_id].push({ id: c.id, url: c.url, fileName: c.arquivo });
+      });
+      setComprovantes(prev => ({ ...prev, ...byItem }));
+    }
+  };
+
+  const addComprovante = async (orcamentoId, file) => {
+    const fileName = `${Date.now()}_${file.name}`;
+    const { error: uploadError } = await supabase.storage.from('comprovantes').upload(fileName, file);
+    if (uploadError) { alert('Erro no upload: ' + uploadError.message); return null; }
+    const { data: { publicUrl } } = supabase.storage.from('comprovantes').getPublicUrl(fileName);
+    const { data, error } = await supabase.from('comprovantes').insert({ orcamento_id: orcamentoId, url: publicUrl, arquivo: fileName }).select().single();
+    if (error) { alert('Erro ao salvar comprovante: ' + error.message); return null; }
+    if (data) {
+      setComprovantes(prev => ({ ...prev, [orcamentoId]: [...(prev[orcamentoId] || []), { id: data.id, url: publicUrl, fileName }] }));
+      return data;
+    }
+    return null;
   };
 
   const clearBudgetForShow = async (showId) => {
@@ -277,6 +303,7 @@ const deleteMember = async (id) => {
       members, addMember, updateMember, updateMemberPerms, deleteMember,
       scaling, scaleToShow, removeFromShow, isMemberBusy, loadScaling, clearScalingForShow,
       budgets, addBudgetItem, updateBudgetItem, deleteBudgetItem, loadBudget, clearBudgetForShow,
+      comprovantes, addComprovante, loadComprovantesForShow,
       docs, addDoc, deleteDoc, loadDocs,
       inventory, updateInventory, addSerialItem, deleteSerialItem,
       manuals, addManualTopic, addManualFile, deleteManualFile,
