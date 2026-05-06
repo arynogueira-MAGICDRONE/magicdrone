@@ -37,9 +37,13 @@ export function Orcamento() {
   // Carrega orçamento sempre que o show selecionado mudar
   useEffect(() => {
     if (!sel) return;
+    const showId = parseInt(sel);
+    console.log('Show selecionado ID:', showId);
+    console.log('Budgets no estado:', budgets);
+    console.log('Items do show:', budgets[showId]);
     setLoadingBudget(true);
     setRealEdits({});
-    loadBudget(parseInt(sel)).finally(() => setLoadingBudget(false));
+    loadBudget(showId).finally(() => setLoadingBudget(false));
   }, [sel]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleShowSelect = (id) => {

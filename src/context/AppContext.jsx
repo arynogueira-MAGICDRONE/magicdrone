@@ -180,7 +180,9 @@ const deleteMember = async (id) => {
 
   // ─── BUDGET ──────────────────────────────────────
   const loadBudget = async (showId) => {
-    const { data } = await supabase.from('orcamento').select('*').eq('show_id', showId);
+    console.log('loadBudget chamado com ID:', showId);
+    const { data, error } = await supabase.from('orcamento').select('*').eq('show_id', showId);
+    console.log('Dados retornados:', data, 'Erro:', error);
     if (data) setBudgets(prev => ({ ...prev, [showId]: data.map(i => ({ id: i.id, cat: i.categoria, prev: i.previsto, real: i.realizado })) }));
     return data || [];
   };
