@@ -55,8 +55,8 @@ const emptyNegoForm = () => ({
 
 const emptyEditForm = (c = {}) => ({
   tipo: c.tipo || 'pf',
-  nome: c.nome || '', empresa: c.empresa || '', contato: c.contato || '',
-  telefone: c.telefone || '', telefoneIsWhatsapp: !c.whatsapp, whatsapp: c.whatsapp || '',
+  nome: c.nome || '', empresa: c.nome_empresa || '', contato: c.contato || '',
+  telefone: c.telefone || '', telefoneIsWhatsapp: c.tem_whatsapp !== false, whatsapp: c.whatsapp || '',
   email: c.email || '', cpf: c.cpf || '', cnpj: c.cnpj || '',
   cep: c.cep || '', rua: c.rua || '', numero: c.numero || '',
   complemento: c.complemento || '', bairro: c.bairro || '',
@@ -113,7 +113,7 @@ function fmtDateTime(iso) {
   return `${p(d.getDate())}/${p(d.getMonth() + 1)}/${d.getFullYear()} ${p(d.getHours())}:${p(d.getMinutes())}`;
 }
 
-function displayName(c) { return c?.tipo === 'pj' ? (c.empresa || '—') : (c?.nome || '—'); }
+function displayName(c) { return c?.tipo === 'pj' ? (c.nome_empresa || '—') : (c?.nome || '—'); }
 
 export default function CRM() {
   const { isMaster } = useAuth();
@@ -188,13 +188,15 @@ export default function CRM() {
     if (f.tipo === 'pj' && !f.contato.trim()) { alert('Informe o nome do contato.'); return; }
     setSavingClient(true);
     const row = {
-      tipo:     f.tipo,
-      nome:     f.tipo === 'pf' ? f.nome.trim()    : '',
-      empresa:  f.tipo === 'pj' ? f.empresa.trim() : '',
-      contato:  f.contato.trim(),
-      telefone: f.telefone.trim(),
-      whatsapp: f.telefoneIsWhatsapp ? '' : f.whatsapp.trim(),
-      email:    f.email.trim(),
+      tipo:         f.tipo,
+      ...(f.tipo === 'pf'
+        ? { nome: f.nome.trim() }
+        : { nome_empresa: f.empresa.trim(), contato: f.contato.trim() }
+      ),
+      email:        f.email.trim(),
+      telefone:     f.telefone.trim(),
+      tem_whatsapp: f.telefoneIsWhatsapp,
+      whatsapp:     f.telefoneIsWhatsapp ? '' : f.whatsapp.trim(),
     };
     const { data, error } = await supabase.from('crm').insert(row).select().single();
     setSavingClient(false);
@@ -344,24 +346,25 @@ export default function CRM() {
     if (f.tipo === 'pf' && !f.nome.trim())    { alert('Informe o nome.'); return; }
     if (f.tipo === 'pj' && !f.empresa.trim()) { alert('Informe o nome da empresa.'); return; }
     const row = {
-      tipo:        f.tipo,
-      nome:        f.tipo === 'pf' ? f.nome.trim()    : '',
-      empresa:     f.tipo === 'pj' ? f.empresa.trim() : '',
-      contato:     f.contato.trim(),
-      telefone:    f.telefone.trim(),
-      whatsapp:    f.telefoneIsWhatsapp ? '' : f.whatsapp.trim(),
-      email:       f.email.trim(),
-      cpf:         f.tipo === 'pf' ? f.cpf.trim()   : '',
-      cnpj:        f.tipo === 'pj' ? f.cnpj.trim()  : '',
-      cep:         f.cep.trim(),
-      rua:         f.rua.trim(),
-      numero:      f.numero.trim(),
-      complemento: f.complemento.trim(),
-      bairro:      f.bairro.trim(),
-      cidade:      f.cidade.trim(),
-      estado:      f.estado.trim(),
-      ramo:        f.tipo === 'pj' ? f.ramo.trim() : '',
-      socios:      f.tipo === 'pj' ? socios.filter(s => s.nome.trim()) : [],
+      tipo:         f.tipo,
+      nome:         f.tipo === 'pf' ? f.nome.trim()    : '',
+      nome_empresa: f.tipo === 'pj' ? f.empresa.trim() : '',
+      contato:      f.contato.trim(),
+      telefone:     f.telefone.trim(),
+      tem_whatsapp: f.telefoneIsWhatsapp,
+      whatsapp:     f.telefoneIsWhatsapp ? '' : f.whatsapp.trim(),
+      email:        f.email.trim(),
+      cpf:          f.tipo === 'pf' ? f.cpf.trim()  : '',
+      cnpj:         f.tipo === 'pj' ? f.cnpj.trim() : '',
+      cep:          f.cep.trim(),
+      rua:          f.rua.trim(),
+      numero:       f.numero.trim(),
+      complemento:  f.complemento.trim(),
+      bairro:       f.bairro.trim(),
+      cidade:       f.cidade.trim(),
+      estado:       f.estado.trim(),
+      ramo:         f.tipo === 'pj' ? f.ramo.trim() : '',
+      socios:       f.tipo === 'pj' ? socios.filter(s => s.nome.trim()) : [],
     };
     const { data, error } = await supabase.from('crm').update(row).eq('id', editingId).select().single();
     if (error) { alert('Erro ao salvar: ' + error.message); return; }
