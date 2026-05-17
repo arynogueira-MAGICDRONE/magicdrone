@@ -63,6 +63,43 @@ const emptyEditForm = (c = {}) => ({
   cidade: c.cidade || '', estado: c.estado || '', ramo: c.ramo || '',
 });
 
+function TypeToggle({ value, onChange }) {
+  return (
+    <div style={{ display: 'flex', gap: 8, marginBottom: 14 }}>
+      {['pf', 'pj'].map(t => (
+        <button key={t} onClick={() => onChange(t)} style={{
+          flex: 1, padding: '8px 0', fontFamily: 'Space Mono,monospace', fontSize: 10,
+          letterSpacing: 3, textTransform: 'uppercase', cursor: 'pointer',
+          border: `1px solid ${value === t ? '#fff' : '#333'}`,
+          background: value === t ? '#fff' : 'transparent',
+          color: value === t ? '#000' : '#888',
+        }}>
+          {t === 'pf' ? 'Pessoa Física' : 'Pessoa Jurídica'}
+        </button>
+      ))}
+    </div>
+  );
+}
+
+function PhoneFields({ f, setF }) {
+  return (
+    <>
+      <FInput label="Telefone" value={f.telefone}
+        onChange={e => setF(prev => ({ ...prev, telefone: e.target.value }))} placeholder="(00) 00000-0000" />
+      <label style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: f.telefoneIsWhatsapp ? 10 : 4, cursor: 'pointer' }}>
+        <input type="checkbox" checked={f.telefoneIsWhatsapp}
+          onChange={e => setF(prev => ({ ...prev, telefoneIsWhatsapp: e.target.checked }))}
+          style={{ accentColor: '#4caf50', width: 14, height: 14 }} />
+        <span style={{ fontSize: 11, color: '#aaa', letterSpacing: 1 }}>Este telefone é WhatsApp</span>
+      </label>
+      {!f.telefoneIsWhatsapp && (
+        <FInput label="WhatsApp" value={f.whatsapp}
+          onChange={e => setF(prev => ({ ...prev, whatsapp: e.target.value }))} placeholder="(00) 00000-0000" />
+      )}
+    </>
+  );
+}
+
 function fmtDate(str) {
   if (!str) return '—';
   const [y, m, d] = str.split('-');
@@ -331,44 +368,6 @@ export default function CRM() {
     setClients(prev => prev.map(c => c.id === editingId ? { ...data, _negoStatus: c._negoStatus } : c));
     setSelectedClient({ ...data, _negoStatus: selectedClient._negoStatus });
     setView('detail');
-  }
-
-  // ── Sub-components ────────────────────────────────────────────────
-  function TypeToggle({ value, onChange }) {
-    return (
-      <div style={{ display: 'flex', gap: 8, marginBottom: 14 }}>
-        {['pf', 'pj'].map(t => (
-          <button key={t} onClick={() => onChange(t)} style={{
-            flex: 1, padding: '8px 0', fontFamily: 'Space Mono,monospace', fontSize: 10,
-            letterSpacing: 3, textTransform: 'uppercase', cursor: 'pointer',
-            border: `1px solid ${value === t ? '#fff' : '#333'}`,
-            background: value === t ? '#fff' : 'transparent',
-            color: value === t ? '#000' : '#888',
-          }}>
-            {t === 'pf' ? 'Pessoa Física' : 'Pessoa Jurídica'}
-          </button>
-        ))}
-      </div>
-    );
-  }
-
-  function PhoneFields({ f, setF }) {
-    return (
-      <>
-        <FInput label="Telefone" value={f.telefone}
-          onChange={e => setF(prev => ({ ...prev, telefone: e.target.value }))} placeholder="(00) 00000-0000" />
-        <label style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: f.telefoneIsWhatsapp ? 10 : 4, cursor: 'pointer' }}>
-          <input type="checkbox" checked={f.telefoneIsWhatsapp}
-            onChange={e => setF(prev => ({ ...prev, telefoneIsWhatsapp: e.target.checked }))}
-            style={{ accentColor: '#4caf50', width: 14, height: 14 }} />
-          <span style={{ fontSize: 11, color: '#aaa', letterSpacing: 1 }}>Este telefone é WhatsApp</span>
-        </label>
-        {!f.telefoneIsWhatsapp && (
-          <FInput label="WhatsApp" value={f.whatsapp}
-            onChange={e => setF(prev => ({ ...prev, whatsapp: e.target.value }))} placeholder="(00) 00000-0000" />
-        )}
-      </>
-    );
   }
 
   // ── Render ────────────────────────────────────────────────────────
