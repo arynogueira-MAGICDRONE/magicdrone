@@ -74,7 +74,7 @@ export function Select({ label, value, onChange, options }) {
 // ─── Modal ──────────────────────────────────────────
 export function Modal({ title, onClose, children }) {
   return (
-    <div onClick={onClose} style={{
+    <div style={{
       position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.92)',
       zIndex: 200, overflowY: 'auto', padding: '16px',
       display: 'flex', alignItems: 'flex-start', justifyContent: 'center',
@@ -82,8 +82,17 @@ export function Modal({ title, onClose, children }) {
       <div onClick={e => e.stopPropagation()} style={{
         background: '#111', border: '1px solid #333', padding: 16,
         width: '100%', maxWidth: 400, marginTop: 60, animation: 'slideUp 0.25s ease',
+        position: 'relative',
       }}>
-        <div style={{ fontSize: 12, letterSpacing: 4, textTransform: 'uppercase', color: '#888', marginBottom: 14 }}>{title}</div>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
+          <div style={{ fontSize: 12, letterSpacing: 4, textTransform: 'uppercase', color: '#888' }}>{title}</div>
+          {onClose && (
+            <button onClick={onClose} style={{
+              background: 'transparent', border: 'none', color: '#666', cursor: 'pointer',
+              fontSize: 18, lineHeight: 1, padding: '0 2px', fontFamily: 'monospace',
+            }}>✕</button>
+          )}
+        </div>
         {children}
         <style>{`@keyframes slideUp { from{opacity:0;transform:translateY(16px)} to{opacity:1;transform:translateY(0)} }`}</style>
       </div>
