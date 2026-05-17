@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import * as XLSX from 'xlsx';
 import { supabase } from '../supabase';
 import { useApp } from '../context/AppContext';
@@ -22,24 +22,24 @@ function fmtDate(s) { if (!s) return '—'; const [y,m,d]=s.split('-'); return `
 function todayStr() { const d=new Date(),p=n=>n<10?'0'+n:n; return `${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())}`; }
 
 // ─── Estilos compartilhados ───────────────────────────────────────────────────
-const thS = { fontSize:11, letterSpacing:1, color:'#bbb', textTransform:'uppercase', padding:'9px 10px', borderBottom:'1px solid #1a1a1a', textAlign:'left', background:'#050505', whiteSpace:'nowrap' };
-const tdS = { fontSize:13, padding:'9px 10px', borderBottom:'1px solid #0d0d0d' };
-const selS = { background:'#000', border:'1px solid #333', color:'#fff', padding:'7px 10px', fontFamily:'Space Mono,monospace', fontSize:13, outline:'none' };
+const thS = { fontSize:14, letterSpacing:1, color:'#bbb', textTransform:'uppercase', padding:'9px 10px', borderBottom:'1px solid #1a1a1a', textAlign:'left', background:'#050505', whiteSpace:'nowrap' };
+const tdS = { fontSize:14, padding:'9px 10px', borderBottom:'1px solid #0d0d0d' };
+const selS = { background:'#000', border:'1px solid #333', color:'#fff', padding:'7px 10px', fontFamily:'Space Mono,monospace', fontSize:14, outline:'none' };
 
 // ─── Sub-componentes ─────────────────────────────────────────────────────────
 function KPI({ label, value, sub, color='#fff' }) {
   return (
     <div style={{ background:'#0a0a0a', border:'1px solid #1a1a1a', padding:'14px 12px' }}>
-      <div style={{ fontSize:11, letterSpacing:2, color:'#bbb', textTransform:'uppercase', marginBottom:6 }}>{label}</div>
+      <div style={{ fontSize:14, letterSpacing:2, color:'#bbb', textTransform:'uppercase', marginBottom:6 }}>{label}</div>
       <div style={{ fontSize:24, fontWeight:700, fontFamily:'Bebas Neue,sans-serif', color, letterSpacing:1 }}>{value}</div>
-      {sub && <div style={{ fontSize:12, color:'#aaa', marginTop:4 }}>{sub}</div>}
+      {sub && <div style={{ fontSize:14, color:'#aaa', marginTop:4 }}>{sub}</div>}
     </div>
   );
 }
 
 function SHead({ title }) {
   return (
-    <div style={{ fontSize:13, letterSpacing:2, color:'#bbb', textTransform:'uppercase', padding:'18px 16px 8px', borderTop:'1px solid #0d0d0d' }}>
+    <div style={{ fontSize:14, letterSpacing:2, color:'#bbb', textTransform:'uppercase', padding:'18px 16px 8px', borderTop:'1px solid #0d0d0d' }}>
       {title}
     </div>
   );
@@ -59,7 +59,7 @@ function SortTH({ label, col, sort, setSort, style={} }) {
 function BarChart({ data, labelKey, valueKey, fmtTip, color='#fff', height=140 }) {
   const [hov, setHov] = useState(null);
   if (!data.length || data.every(d=>!d[valueKey]))
-    return <div style={{ textAlign:'center', padding:'20px 0', color:'#888', fontSize:12 }}>Sem dados</div>;
+    return <div style={{ textAlign:'center', padding:'20px 0', color:'#888', fontSize:14 }}>Sem dados</div>;
   const maxV = Math.max(...data.map(d => d[valueKey]||0), 1);
   const barW = Math.max(18, Math.min(36, Math.floor(260 / data.length)));
   const gap  = 4;
@@ -84,10 +84,10 @@ function BarChart({ data, labelKey, valueKey, fmtTip, color='#fff', height=140 }
                 fill={hov===i ? '#ddd' : color} style={{ transition:'fill 0.1s' }} />
               {hov===i && val>0 && (
                 <text x={x+barW/2} y={Math.max(y-6, padT-2)} textAnchor="middle"
-                  fill="#fff" fontSize={8} fontFamily="Space Mono,monospace">{fmtTip ? fmtTip(val) : val}</text>
+                  fill="#fff" fontSize={11} fontFamily="Space Mono,monospace">{fmtTip ? fmtTip(val) : val}</text>
               )}
               <text x={x+barW/2} y={height+padT+padB-4} textAnchor="middle"
-                fill="#aaa" fontSize={9} fontFamily="Space Mono,monospace">{d[labelKey]}</text>
+                fill="#aaa" fontSize={11} fontFamily="Space Mono,monospace">{d[labelKey]}</text>
             </g>
           );
         })}
@@ -103,7 +103,7 @@ function LineChart({ data, labelKey, valueKey, height=130 }) {
   const [hov, setHov] = useState(null);
   const nonEmpty = data.filter(d => d[valueKey] > 0);
   if (!nonEmpty.length)
-    return <div style={{ textAlign:'center', padding:'20px 0', color:'#888', fontSize:12 }}>Sem dados</div>;
+    return <div style={{ textAlign:'center', padding:'20px 0', color:'#888', fontSize:14 }}>Sem dados</div>;
   const maxV  = Math.max(...data.map(d => d[valueKey]||0), 1);
   const padL=48, padR=12, padT=18, padB=22;
   const totalW = Math.max(data.length * 44 + padL + padR, 280);
@@ -121,7 +121,7 @@ function LineChart({ data, labelKey, valueKey, height=130 }) {
           return (
             <g key={f}>
               <line x1={padL} y1={y} x2={totalW-padR} y2={y} stroke="#0d0d0d" strokeWidth={1} />
-              <text x={padL-4} y={y+4} textAnchor="end" fill="#444" fontSize={8} fontFamily="Space Mono,monospace">
+              <text x={padL-4} y={y+4} textAnchor="end" fill="#444" fontSize={11} fontFamily="Space Mono,monospace">
                 {fmtShort(maxV*f).replace('R$ ','R$')}
               </text>
             </g>
@@ -134,11 +134,11 @@ function LineChart({ data, labelKey, valueKey, height=130 }) {
             <circle cx={p.x} cy={p.y} r={p.val>0?4:2}
               fill={hov===i?'#fff':'#000'} stroke={p.val>0?'#fff':'#333'} strokeWidth={2} style={{ cursor:'default' }} />
             {hov===i && p.val>0 && (
-              <text x={p.x} y={p.y-10} textAnchor="middle" fill="#fff" fontSize={8} fontFamily="Space Mono,monospace">
+              <text x={p.x} y={p.y-10} textAnchor="middle" fill="#fff" fontSize={11} fontFamily="Space Mono,monospace">
                 {fmtShort(p.val)}
               </text>
             )}
-            <text x={p.x} y={height+padT+padB-4} textAnchor="middle" fill="#555" fontSize={7} fontFamily="Space Mono,monospace">
+            <text x={p.x} y={height+padT+padB-4} textAnchor="middle" fill="#555" fontSize={11} fontFamily="Space Mono,monospace">
               {p.label}
             </text>
           </g>
@@ -155,7 +155,7 @@ function PieChart({ data, nameKey, valueKey }) {
   const [hov, setHov] = useState(null);
   const total = data.reduce((a,d) => a+d[valueKey], 0);
   if (!data.length || total === 0)
-    return <div style={{ textAlign:'center', padding:'20px 0', color:'#888', fontSize:12 }}>Sem dados</div>;
+    return <div style={{ textAlign:'center', padding:'20px 0', color:'#888', fontSize:14 }}>Sem dados</div>;
   const r = 48, cx = 60, cy = 60, circ = 2*Math.PI*r;
   let offset = 0;
   const segs = data.map((d, i) => {
@@ -186,9 +186,9 @@ function PieChart({ data, nameKey, valueKey }) {
             opacity: hov!==null && hov!==i ? 0.35 : 1, transition:'opacity 0.15s', cursor:'default' }}
             onMouseEnter={() => setHov(i)} onMouseLeave={() => setHov(null)}>
             <div style={{ width:8, height:8, background:seg.color, flexShrink:0 }} />
-            <span style={{ fontSize:12, color:'#ccc', flex:1 }}>{seg[nameKey]}</span>
-            <span style={{ fontSize:12, color:'#aaa', whiteSpace:'nowrap' }}>{(seg.frac*100).toFixed(1)}%</span>
-            <span style={{ fontSize:12, color:'#888', whiteSpace:'nowrap', marginLeft:4 }}>{fmt(seg[valueKey])}</span>
+            <span style={{ fontSize:14, color:'#ccc', flex:1 }}>{seg[nameKey]}</span>
+            <span style={{ fontSize:14, color:'#aaa', whiteSpace:'nowrap' }}>{(seg.frac*100).toFixed(1)}%</span>
+            <span style={{ fontSize:14, color:'#888', whiteSpace:'nowrap', marginLeft:4 }}>{fmt(seg[valueKey])}</span>
           </div>
         ))}
       </div>
@@ -379,7 +379,7 @@ export default function Relatorios() {
   const hasFilter = filterYear || filterQuarter || filterState || filterStatus;
 
   if (!loaded) return (
-    <div style={{ textAlign:'center', padding:'60px 16px', color:'#aaa', fontSize:12, letterSpacing:3, textTransform:'uppercase' }}>
+    <div style={{ textAlign:'center', padding:'60px 16px', color:'#aaa', fontSize:14, letterSpacing:3, textTransform:'uppercase' }}>
       Carregando dados...
     </div>
   );
@@ -443,20 +443,20 @@ export default function Relatorios() {
       <div style={{ padding:'12px 16px 0' }}>
         <div style={{ background:'#0a0a0a', border:'1px solid #1a1a1a', padding:14, display:'flex', alignItems:'center', justifyContent:'space-between', flexWrap:'wrap', gap:12 }}>
           <div>
-            <div style={{ fontSize:11, letterSpacing:2, color:'#bbb', textTransform:'uppercase', marginBottom:4 }}>Previsão de Receita</div>
-            <div style={{ fontSize:12, color:'#aaa', marginBottom:4 }}>Shows confirmados com data futura</div>
+            <div style={{ fontSize:14, letterSpacing:2, color:'#bbb', textTransform:'uppercase', marginBottom:4 }}>Previsão de Receita</div>
+            <div style={{ fontSize:14, color:'#aaa', marginBottom:4 }}>Shows confirmados com data futura</div>
             <div style={{ fontSize:24, fontWeight:700, fontFamily:'Bebas Neue,sans-serif', color:'#fff' }}>{fmt(previsao)}</div>
           </div>
           <div>
-            <div style={{ fontSize:11, letterSpacing:2, color:'#bbb', textTransform:'uppercase', marginBottom:4 }}>Meta Mensal</div>
+            <div style={{ fontSize:14, letterSpacing:2, color:'#bbb', textTransform:'uppercase', marginBottom:4 }}>Meta Mensal</div>
             {editMeta ? (
               <div style={{ display:'flex', gap:6, alignItems:'center' }}>
                 <input type="number" value={metaInput} onChange={e=>setMetaInput(e.target.value)}
-                  style={{ width:100, background:'#000', border:'1px solid #fff', color:'#fff', padding:'4px 8px', fontFamily:'Space Mono,monospace', fontSize:14, outline:'none' }} />
+                  style={{ width:100, background:'#000', border:'1px solid #fff', color:'#fff', padding:'4px 8px', fontFamily:'Space Mono,monospace', fontSize:16, outline:'none' }} />
                 <button onClick={() => {
                   const v = parseFloat(metaInput)||0;
                   setMeta(v); localStorage.setItem('md_meta_mensal',String(v)); setEditMeta(false);
-                }} style={{ padding:'4px 10px', background:'#fff', color:'#000', border:'none', fontFamily:'Space Mono,monospace', fontSize:11, cursor:'pointer' }}>OK</button>
+                }} style={{ padding:'4px 10px', background:'#fff', color:'#000', border:'none', fontFamily:'Space Mono,monospace', fontSize:14, cursor:'pointer' }}>OK</button>
               </div>
             ) : (
               <div style={{ display:'flex', gap:8, alignItems:'center' }}>
@@ -465,14 +465,14 @@ export default function Relatorios() {
                 </div>
                 {isMaster() && (
                   <button onClick={()=>{setMetaInput(String(meta));setEditMeta(true);}} className="no-print"
-                    style={{ fontSize:8, padding:'3px 8px', background:'transparent', border:'1px solid #333', color:'#aaa', fontFamily:'Space Mono,monospace', cursor:'pointer' }}>
+                    style={{ fontSize:14, padding:'4px 8px', background:'transparent', border:'1px solid #333', color:'#aaa', fontFamily:'Space Mono,monospace', cursor:'pointer' }}>
                     Editar
                   </button>
                 )}
               </div>
             )}
             {meta>0 && (
-              <div style={{ fontSize:11, color:previsao>=meta?'#4caf50':'#f44336', marginTop:3 }}>
+              <div style={{ fontSize:14, color:previsao>=meta?'#4caf50':'#f44336', marginTop:3 }}>
                 {previsao>=meta ? '✓ Meta atingida' : `Faltam ${fmt(meta-previsao)}`}
               </div>
             )}
@@ -504,8 +504,8 @@ export default function Relatorios() {
         <PieChart data={custosByCat} nameKey="cat" valueKey="total" />
         {custosByCat.length>0 && (
           <div style={{ display:'flex', justifyContent:'space-between', padding:'8px 0', borderTop:'1px solid #111', marginTop:10 }}>
-            <span style={{ fontSize:11, color:'#aaa', letterSpacing:2, textTransform:'uppercase' }}>Total Despesas</span>
-            <span style={{ fontSize:13, fontWeight:700, color:'#f44336' }}>{fmt(custosByCat.reduce((a,c)=>a+c.total,0))}</span>
+            <span style={{ fontSize:14, color:'#aaa', letterSpacing:2, textTransform:'uppercase' }}>Total Despesas</span>
+            <span style={{ fontSize:14, fontWeight:700, color:'#f44336' }}>{fmt(custosByCat.reduce((a,c)=>a+c.total,0))}</span>
           </div>
         )}
       </div>
@@ -514,7 +514,7 @@ export default function Relatorios() {
       <SHead title="Receita × Despesa × Lucro por Show" />
       <div style={{ padding:'0 16px 16px', overflowX:'auto' }}>
         {sortedFin.length===0 ? (
-          <div style={{ color:'#888', fontSize:12, textAlign:'center', padding:'20px 0' }}>Sem dados financeiros</div>
+          <div style={{ color:'#888', fontSize:14, textAlign:'center', padding:'20px 0' }}>Sem dados financeiros</div>
         ) : (
           <table style={{ width:'100%', borderCollapse:'collapse', minWidth:500 }}>
             <thead>
@@ -539,7 +539,7 @@ export default function Relatorios() {
                 </tr>
               ))}
               <tr style={{ background:'#111', borderTop:'2px solid #222' }}>
-                <td style={{ ...tdS, fontSize:11, letterSpacing:2, textTransform:'uppercase', color:'#888', fontWeight:700 }} colSpan={2}>Total</td>
+                <td style={{ ...tdS, fontSize:14, letterSpacing:2, textTransform:'uppercase', color:'#888', fontWeight:700 }} colSpan={2}>Total</td>
                 <td style={{ ...tdS, textAlign:'right', color:'#4caf50', fontWeight:700 }}>{fmt(finRows.reduce((a,f)=>a+f.receita,0))}</td>
                 <td style={{ ...tdS, textAlign:'right', color:'#f44336', fontWeight:700 }}>{fmt(finRows.reduce((a,f)=>a+f.despesa,0))}</td>
                 <td style={{ ...tdS, textAlign:'right', fontWeight:700, color:lucroTotal>=0?'#4caf50':'#f44336' }}>{fmt(lucroTotal)}</td>
@@ -554,7 +554,7 @@ export default function Relatorios() {
       <SHead title="Equipe × Diárias" />
       <div style={{ padding:'0 16px 16px', overflowX:'auto' }}>
         {equipeRows.length===0 ? (
-          <div style={{ color:'#888', fontSize:12, textAlign:'center', padding:'20px 0' }}>Sem escalações registradas</div>
+          <div style={{ color:'#888', fontSize:14, textAlign:'center', padding:'20px 0' }}>Sem escalações registradas</div>
         ) : (
           <table style={{ width:'100%', borderCollapse:'collapse' }}>
             <thead>
@@ -585,7 +585,7 @@ export default function Relatorios() {
       <SHead title="Ranking de Clientes (CRM)" />
       <div style={{ padding:'0 16px 16px', overflowX:'auto' }}>
         {sortedCli.length===0 ? (
-          <div style={{ color:'#888', fontSize:12, textAlign:'center', padding:'20px 0' }}>Sem dados no CRM</div>
+          <div style={{ color:'#888', fontSize:14, textAlign:'center', padding:'20px 0' }}>Sem dados no CRM</div>
         ) : (
           <table style={{ width:'100%', borderCollapse:'collapse' }}>
             <thead>
@@ -614,7 +614,7 @@ export default function Relatorios() {
       <SHead title="Taxa de Conversão CRM por Mês" />
       <div style={{ padding:'0 16px 24px', overflowX:'auto' }}>
         {crmConversao.length===0 ? (
-          <div style={{ color:'#888', fontSize:12, textAlign:'center', padding:'20px 0' }}>Sem dados de conversão</div>
+          <div style={{ color:'#888', fontSize:14, textAlign:'center', padding:'20px 0' }}>Sem dados de conversão</div>
         ) : (
           <table style={{ width:'100%', borderCollapse:'collapse' }}>
             <thead>

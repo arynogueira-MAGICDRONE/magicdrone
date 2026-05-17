@@ -1,4 +1,4 @@
-﻿import React, { useState, useRef } from 'react';
+import React, { useState, useRef } from 'react';
 import * as XLSX from 'xlsx';
 import { useApp } from '../context/AppContext';
 import { PageHeader, Btn, Input, Select, Modal, ModalBtns, Section, StatusPill, Empty } from '../components/layout/UI';
@@ -126,7 +126,7 @@ export default function Inventario() {
   const filterBtns = ['todos', 'ok', 'bad', 'manut'];
   const filterLabels = { todos: 'Todos', ok: 'Bom', bad: 'Ruim', manut: 'Manut.' };
 
-  const INP = { background: '#000', border: '1px solid #222', color: '#fff', padding: '9px 10px', fontFamily: 'Space Mono,monospace', fontSize: 14, outline: 'none', width: '100%', boxSizing: 'border-box' };
+  const INP = { background: '#000', border: '1px solid #222', color: '#fff', padding: '9px 10px', fontFamily: 'Space Mono,monospace', fontSize: 16, outline: 'none', width: '100%', boxSizing: 'border-box' };
 
   return (
     <div>
@@ -139,7 +139,7 @@ export default function Inventario() {
           {[['ok','#4caf50',okCount,'Bons'],['bad','#f44336',badCount,'Ruins'],['manut','#ff9800',mautCount,'Manut.']].map(([k,c,n,l]) => (
             <div key={k} style={{ background: '#0a0a0a', border: '1px solid #1a1a1a', padding: '10px', textAlign: 'center' }}>
               <div style={{ fontSize: 20, fontWeight: 700, color: c }}>{n}</div>
-              <div style={{ fontSize: 11, letterSpacing: 1, color: '#bbb', textTransform: 'uppercase', marginTop: 3 }}>{l}</div>
+              <div style={{ fontSize: 14, letterSpacing: 1, color: '#bbb', textTransform: 'uppercase', marginTop: 3 }}>{l}</div>
             </div>
           ))}
         </div>
@@ -147,13 +147,13 @@ export default function Inventario() {
         {/* Import */}
         <div style={{ display: 'flex', gap: 6, marginBottom: 4 }}>
           <button onClick={() => fileRef.current.click()} style={{
-            flex: 1, padding: '7px', fontFamily: 'Space Mono,monospace', fontSize: 11,
+            flex: 1, padding: '10px', fontFamily: 'Space Mono,monospace', fontSize: 14,
             letterSpacing: 2, textTransform: 'uppercase', cursor: 'pointer',
             border: '1px solid #fff', background: 'transparent', color: '#fff',
           }}>↑ Importar Excel / CSV</button>
           <input ref={fileRef} type="file" accept=".xlsx,.xls,.csv" style={{ display: 'none' }} onChange={handleImport} />
         </div>
-        <div style={{ fontSize: 11, color: '#888', letterSpacing: 1, marginBottom: 8 }}>Seriais na primeira coluna (A) — sem cabeçalho obrigatório</div>
+        <div style={{ fontSize: 14, color: '#888', letterSpacing: 1, marginBottom: 8 }}>Seriais na primeira coluna (A) — sem cabeçalho obrigatório</div>
 
         {/* Search */}
         <input
@@ -167,14 +167,14 @@ export default function Inventario() {
         <div style={{ display: 'flex', gap: 5, marginBottom: 8 }}>
           {filterBtns.map(f => (
             <button key={f} onClick={() => setFilter(f)} style={{
-              fontSize: 11, letterSpacing: 1, padding: '6px 12px', textTransform: 'uppercase',
+              fontSize: 14, letterSpacing: 1, padding: '6px 12px', textTransform: 'uppercase',
               fontFamily: 'Space Mono,monospace', cursor: 'pointer',
               border: `1px solid ${filter === f ? '#fff' : '#333'}`,
               background: filter === f ? '#111' : 'transparent',
               color: filter === f ? '#fff' : '#bbb',
             }}>{filterLabels[f]}</button>
           ))}
-          <span style={{ fontSize: 8, color: '#888', letterSpacing: 1, alignSelf: 'center', marginLeft: 4 }}>
+          <span style={{ fontSize: 14, color: '#888', letterSpacing: 1, alignSelf: 'center', marginLeft: 4 }}>
             {filtered.length}/{drones.length}
           </span>
         </div>
@@ -184,10 +184,10 @@ export default function Inventario() {
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
             <input type="checkbox" checked={allFilteredSelected} onChange={e => toggleAll(e.target.checked)}
               style={{ accentColor: '#fff', cursor: 'pointer' }} />
-            <span style={{ fontSize: 12, color: '#aaa' }}>Selecionar todos ({filtered.length})</span>
+            <span style={{ fontSize: 14, color: '#aaa' }}>Selecionar todos ({filtered.length})</span>
             {selected.size > 0 && (
               <button onClick={handleDeleteSelected} style={{
-                marginLeft: 'auto', fontSize: 8, letterSpacing: 2, padding: '4px 10px',
+                marginLeft: 'auto', fontSize: 14, letterSpacing: 2, padding: '6px 10px',
                 border: '1px solid #f44336', background: 'transparent', color: '#f44336',
                 fontFamily: 'Space Mono,monospace', cursor: 'pointer', textTransform: 'uppercase',
               }}>Excluir {selected.size} selecionado(s)</button>
@@ -203,7 +203,7 @@ export default function Inventario() {
                 <input type="checkbox" checked={selected.has(d.id)} onChange={() => toggleOne(d.id)}
                   style={{ accentColor: '#fff', cursor: 'pointer', flexShrink: 0 }} />
                 <div style={{ flex: 1 }}>
-                  <div style={{ fontSize: 15, fontWeight: 600, letterSpacing: 1 }}>{d.serial}</div>
+                  <div style={{ fontSize: 16, fontWeight: 600, letterSpacing: 1 }}>{d.serial}</div>
                 </div>
                 <div onClick={() => cycleStatus(d)} style={{ cursor: 'pointer' }}>
                   <StatusPill status={d.status} />
@@ -220,7 +220,7 @@ export default function Inventario() {
                     onChange={e => setDroneNote(d.id, 'obs', e.target.value)}
                     placeholder="Observação (problema, dano, etc.)..."
                     rows={2}
-                    style={{ width: '100%', background: '#000', border: '1px solid #222', color: '#fff', padding: '6px 8px', fontFamily: 'Space Mono,monospace', fontSize: 12, outline: 'none', resize: 'none', boxSizing: 'border-box', marginBottom: 6 }}
+                    style={{ width: '100%', background: '#000', border: '1px solid #222', color: '#fff', padding: '6px 8px', fontFamily: 'Space Mono,monospace', fontSize: 14, outline: 'none', resize: 'none', boxSizing: 'border-box', marginBottom: 6 }}
                   />
                   <label style={{ display: 'inline-flex', alignItems: 'center', gap: 6, cursor: 'pointer' }}>
                     <input
@@ -230,11 +230,11 @@ export default function Inventario() {
                       style={{ display: 'none' }}
                       onChange={e => { const f = e.target.files[0]; if (f) setDroneNote(d.id, 'photoName', f.name); }}
                     />
-                    <span style={{ fontSize: 8, letterSpacing: 2, padding: '4px 10px', border: '1px solid #444', color: '#aaa', textTransform: 'uppercase', fontFamily: 'Space Mono,monospace' }}>
+                    <span style={{ fontSize: 14, letterSpacing: 2, padding: '6px 10px', border: '1px solid #444', color: '#aaa', textTransform: 'uppercase', fontFamily: 'Space Mono,monospace' }}>
                       Foto
                     </span>
                     {droneNotes[d.id]?.photoName && (
-                      <span style={{ fontSize: 11, color: '#4caf50' }}>{droneNotes[d.id].photoName}</span>
+                      <span style={{ fontSize: 14, color: '#4caf50' }}>{droneNotes[d.id].photoName}</span>
                     )}
                   </label>
                 </div>
@@ -249,12 +249,12 @@ export default function Inventario() {
         {[['Sean', inventory.batSean], ['Magic', inventory.batMagic]].map(([name, qty]) => (
           <div key={name} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: '#0a0a0a', border: '1px solid #1a1a1a', padding: '10px 14px', marginBottom: 4 }}>
             <div>
-              <div style={{ fontSize: 14, fontWeight: 600 }}>{name}</div>
-              <div style={{ fontSize: 11, letterSpacing: 2, color: '#aaa', textTransform: 'uppercase' }}>Nome interno</div>
+              <div style={{ fontSize: 16, fontWeight: 600 }}>{name}</div>
+              <div style={{ fontSize: 14, letterSpacing: 2, color: '#aaa', textTransform: 'uppercase' }}>Nome interno</div>
             </div>
             <div style={{ textAlign: 'right' }}>
               <div style={{ fontSize: 20, fontWeight: 700 }}>{qty}</div>
-              <div style={{ fontSize: 8, color: '#aaa', letterSpacing: 1 }}>unidades</div>
+              <div style={{ fontSize: 14, color: '#aaa', letterSpacing: 1 }}>unidades</div>
             </div>
           </div>
         ))}
@@ -266,15 +266,15 @@ export default function Inventario() {
           <div key={key}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: '#0a0a0a', border: '1px solid #1a1a1a', padding: '9px 12px', marginBottom: 4 }}>
               <div>
-                <div style={{ fontSize: 13, fontWeight: 500 }}>{label}</div>
-                <div style={{ fontSize: 11, color: '#aaa', marginTop: 1, letterSpacing: 1 }}>{inventory[key]?.length || 0} cadastrado(s)</div>
+                <div style={{ fontSize: 14, fontWeight: 500 }}>{label}</div>
+                <div style={{ fontSize: 14, color: '#aaa', marginTop: 1, letterSpacing: 1 }}>{inventory[key]?.length || 0} cadastrado(s)</div>
               </div>
               <Btn size="sm" variant="ghost" onClick={() => { setForm({ pcModel: 'HP' }); setModal(key); }}>+ Add</Btn>
             </div>
             {(inventory[key] || []).map(item => (
               <div key={item.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '5px 10px', background: '#050505', border: '1px solid #111', marginBottom: 2, marginLeft: 8 }}>
-                <span style={{ fontSize: 13 }}>{item.value}</span>
-                <span onClick={() => deleteSerialItem(key, item.id)} style={{ fontSize: 12, color: '#f44336', cursor: 'pointer', padding: '0 4px' }}>✕</span>
+                <span style={{ fontSize: 14 }}>{item.value}</span>
+                <span onClick={() => deleteSerialItem(key, item.id)} style={{ fontSize: 14, color: '#f44336', cursor: 'pointer', padding: '0 4px' }}>✕</span>
               </div>
             ))}
           </div>
@@ -285,11 +285,11 @@ export default function Inventario() {
       <Section title="Quantidades">
         {qtyItems.map(({ key, label }) => (
           <div key={key} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: '#0a0a0a', border: '1px solid #1a1a1a', padding: '9px 12px', marginBottom: 4 }}>
-            <div style={{ fontSize: 13, fontWeight: 500 }}>{label}</div>
+            <div style={{ fontSize: 14, fontWeight: 500 }}>{label}</div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
               <div style={{ textAlign: 'right' }}>
-                <div style={{ fontSize: 13, fontWeight: 600 }}>{inventory.quantities[key]}</div>
-                <div style={{ fontSize: 8, color: '#aaa', letterSpacing: 1 }}>un</div>
+                <div style={{ fontSize: 14, fontWeight: 600 }}>{inventory.quantities[key]}</div>
+                <div style={{ fontSize: 14, color: '#aaa', letterSpacing: 1 }}>un</div>
               </div>
               <Btn size="sm" variant="ghost" onClick={() => { setForm({ qty: inventory.quantities[key] }); setModal(`qty-${key}`); }}>Editar</Btn>
             </div>

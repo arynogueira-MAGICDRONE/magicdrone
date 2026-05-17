@@ -28,13 +28,13 @@
 
 .brand {
   font-family: 'Bebas Neue', sans-serif;
-  font-size: 20px;
+  font-size: 22px;
   letter-spacing: 4px;
   color: #fff;
 }
 
 .masterBadge {
-  font-size: 9px;
+  font-size: 12px;
   letter-spacing: 2px;
   text-transform: uppercase;
   border: 1px solid #fff;
@@ -49,7 +49,7 @@
 }
 
 .userName {
-  font-size: 12px;
+  font-size: 14px;
   letter-spacing: 2px;
   color: #aaa;
   text-transform: uppercase;
@@ -61,7 +61,7 @@
   border-radius: 50%;
   background: #fff;
   color: #000;
-  font-size: 12px;
+  font-size: 14px;
   font-weight: 700;
   border: none;
   cursor: pointer;
@@ -120,8 +120,8 @@
 }
 .navBtn:hover    { color: #bbb; }
 .navBtnActive    { color: #fff !important; }
-.navIcon         { font-size: 18px; line-height: 1; }
-.navLabel        { font-size: 9px; letter-spacing: 2px; text-transform: uppercase; }
+.navIcon         { font-size: 20px; line-height: 1; }
+.navLabel        { font-size: 11px; letter-spacing: 2px; text-transform: uppercase; }
 
 /* ─── Desktop (≥ 768px) ────────────────────────────── */
 @media (min-width: 768px) {
@@ -186,14 +186,14 @@
   }
 
   .sideNavIcon {
-    font-size: 18px;
+    font-size: 20px;
     width: 24px;
     text-align: center;
     flex-shrink: 0;
   }
 
   .sideNavLabel {
-    font-size: 12px;
+    font-size: 14px;
     letter-spacing: 2px;
     text-transform: uppercase;
   }

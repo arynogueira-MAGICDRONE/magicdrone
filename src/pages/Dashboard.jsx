@@ -1,4 +1,4 @@
-﻿import React from 'react';
+import React from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useApp } from '../context/AppContext';
 import { PageHeader, StatusPill } from '../components/layout/UI';
@@ -65,22 +65,22 @@ export default function Dashboard() {
       {/* Próximo Show */}
       <div style={{ margin: '14px 16px 0' }}>
         {confirmedShows.length === 0 ? (
-          <div style={{ background: '#0a0a0a', border: '1px solid #1a1a1a', padding: 14, fontSize: 12, color: '#888', letterSpacing: 2, textTransform: 'uppercase', textAlign: 'center' }}>
+          <div style={{ background: '#0a0a0a', border: '1px solid #1a1a1a', padding: 14, fontSize: 14, color: '#888', letterSpacing: 2, textTransform: 'uppercase', textAlign: 'center' }}>
             Nenhum show confirmado
           </div>
         ) : (
           <div style={{ background: '#fff', color: '#000', padding: 14, position: 'relative' }}>
-            <div style={{ fontSize: 11, letterSpacing: 2, textTransform: 'uppercase', color: '#888', marginBottom: 6 }}>
+            <div style={{ fontSize: 14, letterSpacing: 2, textTransform: 'uppercase', color: '#888', marginBottom: 6 }}>
               Próximo Show {confirmedShows.length > 1 ? `(${showIdx + 1}/${confirmedShows.length})` : ''}
             </div>
             <div onClick={() => navigate('/shows')} style={{ cursor: 'pointer' }}>
-              <div style={{ fontSize: 16, fontWeight: 700, marginBottom: 2 }}>{nextShow.client}</div>
-              <div style={{ fontSize: 12, color: '#aaa' }}>{fmtDate(nextShow.date)} · {nextShow.city}, {nextShow.state}</div>
+              <div style={{ fontSize: 18, fontWeight: 700, marginBottom: 2 }}>{nextShow.client}</div>
+              <div style={{ fontSize: 14, color: '#aaa' }}>{fmtDate(nextShow.date)} · {nextShow.city}, {nextShow.state}</div>
               <div style={{ display: 'flex', gap: 6, marginTop: 8 }}>
-                <span style={{ fontSize: 8, letterSpacing: 2, padding: '3px 8px', border: '1px solid #2e7d32', color: '#2e7d32', textTransform: 'uppercase' }}>
+                <span style={{ fontSize: 14, letterSpacing: 2, padding: '3px 8px', border: '1px solid #2e7d32', color: '#2e7d32', textTransform: 'uppercase' }}>
                   Confirmado
                 </span>
-                <span style={{ fontSize: 8, letterSpacing: 2, padding: '3px 8px', border: '1px solid #999', color: '#aaa', textTransform: 'uppercase' }}>
+                <span style={{ fontSize: 14, letterSpacing: 2, padding: '3px 8px', border: '1px solid #999', color: '#aaa', textTransform: 'uppercase' }}>
                   {nextShow.drones} drones
                 </span>
               </div>
@@ -88,9 +88,9 @@ export default function Dashboard() {
             {confirmedShows.length > 1 && (
               <div style={{ display: 'flex', gap: 6, marginTop: 10 }}>
                 <button onClick={() => setShowIdx(i => Math.max(0, i - 1))} disabled={showIdx === 0}
-                  style={{ flex: 1, padding: '5px 0', background: 'transparent', border: '1px solid #ccc', color: showIdx === 0 ? '#ccc' : '#000', fontFamily: 'Space Mono, monospace', fontSize: 13, cursor: showIdx === 0 ? 'not-allowed' : 'pointer' }}>←</button>
+                  style={{ flex: 1, padding: '5px 0', background: 'transparent', border: '1px solid #ccc', color: showIdx === 0 ? '#ccc' : '#000', fontFamily: 'Space Mono, monospace', fontSize: 14, cursor: showIdx === 0 ? 'not-allowed' : 'pointer' }}>←</button>
                 <button onClick={() => setShowIdx(i => Math.min(confirmedShows.length - 1, i + 1))} disabled={showIdx === confirmedShows.length - 1}
-                  style={{ flex: 1, padding: '5px 0', background: 'transparent', border: '1px solid #ccc', color: showIdx === confirmedShows.length - 1 ? '#ccc' : '#000', fontFamily: 'Space Mono, monospace', fontSize: 13, cursor: showIdx === confirmedShows.length - 1 ? 'not-allowed' : 'pointer' }}>→</button>
+                  style={{ flex: 1, padding: '5px 0', background: 'transparent', border: '1px solid #ccc', color: showIdx === confirmedShows.length - 1 ? '#ccc' : '#000', fontFamily: 'Space Mono, monospace', fontSize: 14, cursor: showIdx === confirmedShows.length - 1 ? 'not-allowed' : 'pointer' }}>→</button>
               </div>
             )}
           </div>
@@ -99,7 +99,7 @@ export default function Dashboard() {
 
       {/* Visão Geral */}
       <div style={{ padding: '14px 16px 0' }}>
-        <div style={{ fontSize: 12, letterSpacing: 2, color: '#bbb', textTransform: 'uppercase', marginBottom: 10 }}>Visão Geral</div>
+        <div style={{ fontSize: 14, letterSpacing: 2, color: '#bbb', textTransform: 'uppercase', marginBottom: 10 }}>Visão Geral</div>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
           {[
             { icon: '📦', label: 'Equipamentos', val: drones.length, sub: `${dronesOk} bons · ${dronesBad} ruins`, to: '/inventario' },
@@ -109,9 +109,9 @@ export default function Dashboard() {
           ].map(card => (
             <div key={card.label} onClick={() => navigate(card.to)} style={{ background: '#0a0a0a', border: '1px solid #1a1a1a', padding: 12, cursor: 'pointer' }}>
               <div style={{ fontSize: 16, marginBottom: 6 }}>{card.icon}</div>
-              <div style={{ fontSize: 11, letterSpacing: 2, color: '#bbb', textTransform: 'uppercase', marginBottom: 3 }}>{card.label}</div>
+              <div style={{ fontSize: 14, letterSpacing: 2, color: '#bbb', textTransform: 'uppercase', marginBottom: 3 }}>{card.label}</div>
               <div style={{ fontSize: 22, fontWeight: 700, fontFamily: 'Bebas Neue, sans-serif' }}>{card.val}</div>
-              <div style={{ fontSize: 12, color: '#aaa', marginTop: 3 }}>{card.sub}</div>
+              <div style={{ fontSize: 14, color: '#aaa', marginTop: 3 }}>{card.sub}</div>
             </div>
           ))}
         </div>
@@ -120,16 +120,16 @@ export default function Dashboard() {
       {/* Resumo do Show */}
       <div style={{ margin: '14px 16px 0', background: '#0a0a0a', border: '1px solid #1a1a1a' }}>
         <div style={{ padding: '12px 14px', borderBottom: '1px solid #111', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-          <div style={{ fontSize: 11, letterSpacing: 4, textTransform: 'uppercase', color: '#888' }}>Resumo do Show</div>
+          <div style={{ fontSize: 14, letterSpacing: 4, textTransform: 'uppercase', color: '#888' }}>Resumo do Show</div>
           <select value={selectedShow} onChange={e => setSelectedShow(e.target.value)}
-            style={{ background: '#000', border: '1px solid #333', color: '#fff', padding: '5px 8px', fontFamily: 'Space Mono, monospace', fontSize: 12, outline: 'none' }}>
+            style={{ background: '#000', border: '1px solid #333', color: '#fff', padding: '5px 8px', fontFamily: 'Space Mono, monospace', fontSize: 14, outline: 'none' }}>
             <option value="">Selecionar...</option>
             {visibleShows.map(s => <option key={s.id} value={s.id}>{s.client}</option>)}
           </select>
         </div>
         <div style={{ padding: 14 }}>
           {!resumo ? (
-            <div style={{ textAlign: 'center', padding: '16px 0', color: '#333', fontSize: 12, letterSpacing: 3, textTransform: 'uppercase' }}>
+            <div style={{ textAlign: 'center', padding: '16px 0', color: '#333', fontSize: 14, letterSpacing: 3, textTransform: 'uppercase' }}>
               Selecione um show
             </div>
           ) : (
@@ -144,23 +144,23 @@ export default function Dashboard() {
                 ['Orç. Realizado', totalReal > 0 ? fmt(totalReal) : '—'],
               ].map(([label, val]) => (
                 <div key={label} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '7px 0', borderBottom: '1px solid #111' }}>
-                  <span style={{ fontSize: 12, color: '#aaa' }}>{label}</span>
-                  <span style={{ fontSize: 12, fontWeight: 600 }}>{val}</span>
+                  <span style={{ fontSize: 14, color: '#aaa' }}>{label}</span>
+                  <span style={{ fontSize: 14, fontWeight: 600 }}>{val}</span>
                 </div>
               ))}
               {scaledTeam.length > 0 && (
                 <>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '7px 0', borderBottom: '1px solid #111' }}>
-                    <span style={{ fontSize: 12, color: '#aaa' }}>Equipe</span>
-                    <span style={{ fontSize: 12, fontWeight: 600 }}>{scaledTeam.length} membro(s)</span>
+                    <span style={{ fontSize: 14, color: '#aaa' }}>Equipe</span>
+                    <span style={{ fontSize: 14, fontWeight: 600 }}>{scaledTeam.length} membro(s)</span>
                   </div>
                   {scaledTeam.map(sc => {
                     const m = members.find(m => m.id === sc.memberId);
                     if (!m) return null;
                     return (
                       <div key={sc.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '5px 0 5px 10px', borderBottom: '1px solid #0d0d0d' }}>
-                        <span style={{ fontSize: 12, color: '#aaa' }}>{m.name}</span>
-                        <span style={{ fontSize: 11, color: '#aaa' }}>{sc.role || '—'}</span>
+                        <span style={{ fontSize: 14, color: '#aaa' }}>{m.name}</span>
+                        <span style={{ fontSize: 14, color: '#aaa' }}>{sc.role || '—'}</span>
                       </div>
                     );
                   })}
@@ -173,7 +173,7 @@ export default function Dashboard() {
 
       {/* Acesso Rápido */}
       <div style={{ padding: '14px 16px 0', display: 'flex', flexDirection: 'column', gap: 6 }}>
-        <div style={{ fontSize: 12, letterSpacing: 2, color: '#bbb', textTransform: 'uppercase', marginBottom: 4 }}>Acesso Rápido</div>
+        <div style={{ fontSize: 14, letterSpacing: 2, color: '#bbb', textTransform: 'uppercase', marginBottom: 4 }}>Acesso Rápido</div>
         {[
           { label: 'Manual de Instruções', to: '/manual', icon: '📖' },
           { label: 'Documentação', to: '/documentacao', icon: '📄' },
@@ -183,7 +183,7 @@ export default function Dashboard() {
             border: '1px solid #1a1a1a', padding: '10px 12px', cursor: 'pointer',
           }}>
             <span style={{ fontSize: 16 }}>{item.icon}</span>
-            <span style={{ fontSize: 13, fontWeight: 600 }}>{item.label}</span>
+            <span style={{ fontSize: 14, fontWeight: 600 }}>{item.label}</span>
             <span style={{ marginLeft: 'auto', color: '#aaa' }}>›</span>
           </div>
         ))}

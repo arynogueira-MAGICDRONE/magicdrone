@@ -9,12 +9,12 @@ const STATUS_LABEL = { orcamento: 'Orçamento', negociando: 'Negociando', confir
 
 const FIELD = {
   background: '#000', border: '1px solid #333', color: '#fff',
-  padding: '9px 12px', fontFamily: 'Space Mono, monospace', fontSize: 14,
+  padding: '9px 12px', fontFamily: 'Space Mono, monospace', fontSize: 16,
   outline: 'none', width: '100%', boxSizing: 'border-box',
 };
-const LABEL = { fontSize: 12, letterSpacing: 2, color: '#aaa', textTransform: 'uppercase' };
+const LABEL = { fontSize: 14, letterSpacing: 2, color: '#aaa', textTransform: 'uppercase' };
 const SEC = {
-  fontSize: 12, letterSpacing: 2, color: '#bbb', textTransform: 'uppercase',
+  fontSize: 14, letterSpacing: 2, color: '#bbb', textTransform: 'uppercase',
   marginBottom: 8, marginTop: 6, paddingBottom: 6, borderBottom: '1px solid #1a1a1a',
 };
 
@@ -68,7 +68,7 @@ function TypeToggle({ value, onChange }) {
     <div style={{ display: 'flex', gap: 8, marginBottom: 14 }}>
       {['pf', 'pj'].map(t => (
         <button key={t} onClick={() => onChange(t)} style={{
-          flex: 1, padding: '9px 0', fontFamily: 'Space Mono,monospace', fontSize: 12,
+          flex: 1, padding: '10px 0', fontFamily: 'Space Mono,monospace', fontSize: 14,
           letterSpacing: 2, textTransform: 'uppercase', cursor: 'pointer',
           border: `1px solid ${value === t ? '#fff' : '#333'}`,
           background: value === t ? '#fff' : 'transparent',
@@ -90,7 +90,7 @@ function PhoneFields({ f, setF }) {
         <input type="checkbox" checked={f.telefoneIsWhatsapp}
           onChange={e => setF(prev => ({ ...prev, telefoneIsWhatsapp: e.target.checked }))}
           style={{ accentColor: '#4caf50', width: 14, height: 14 }} />
-        <span style={{ fontSize: 11, color: '#aaa', letterSpacing: 1 }}>Este telefone é WhatsApp</span>
+        <span style={{ fontSize: 14, color: '#aaa', letterSpacing: 1 }}>Este telefone é WhatsApp</span>
       </label>
       {!f.telefoneIsWhatsapp && (
         <FInput label="WhatsApp" value={f.whatsapp}
@@ -412,7 +412,7 @@ export default function CRM() {
 
       {/* Lista de clientes */}
       {loading ? (
-        <div style={{ textAlign: 'center', padding: '32px 0', color: '#aaa', fontSize: 12, letterSpacing: 3, textTransform: 'uppercase' }}>
+        <div style={{ textAlign: 'center', padding: '32px 0', color: '#aaa', fontSize: 14, letterSpacing: 3, textTransform: 'uppercase' }}>
           Carregando...
         </div>
       ) : clients.length === 0 ? (
@@ -425,20 +425,20 @@ export default function CRM() {
               <div key={c.id} onClick={() => openDetail(c)}
                 style={{ background: '#0a0a0a', border: '1px solid #1a1a1a', borderLeft: `3px solid ${color}`, padding: 12, marginBottom: 8, cursor: 'pointer' }}>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 }}>
-                  <div style={{ fontSize: 13, fontWeight: 700 }}>{displayName(c)}</div>
+                  <div style={{ fontSize: 14, fontWeight: 700 }}>{displayName(c)}</div>
                   {c._negoStatus && (
-                    <span style={{ fontSize: 8, letterSpacing: 2, padding: '2px 8px', border: `1px solid ${color}`, color, textTransform: 'uppercase' }}>
+                    <span style={{ fontSize: 14, letterSpacing: 2, padding: '2px 8px', border: `1px solid ${color}`, color, textTransform: 'uppercase' }}>
                       {STATUS_LABEL[c._negoStatus]}
                     </span>
                   )}
                 </div>
                 {c.tipo === 'pj' && c.contato && (
-                  <div style={{ fontSize: 12, color: '#888', marginBottom: 3 }}>{c.contato}</div>
+                  <div style={{ fontSize: 14, color: '#888', marginBottom: 3 }}>{c.contato}</div>
                 )}
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10 }}>
-                  {c.telefone && <span style={{ fontSize: 11, color: '#aaa' }}>{c.telefone}</span>}
-                  {c.email    && <span style={{ fontSize: 11, color: '#aaa' }}>{c.email}</span>}
-                  <span style={{ fontSize: 9, letterSpacing: 2, color: '#555', textTransform: 'uppercase' }}>
+                  {c.telefone && <span style={{ fontSize: 14, color: '#aaa' }}>{c.telefone}</span>}
+                  {c.email    && <span style={{ fontSize: 14, color: '#aaa' }}>{c.email}</span>}
+                  <span style={{ fontSize: 14, letterSpacing: 2, color: '#555', textTransform: 'uppercase' }}>
                     {c.tipo === 'pj' ? 'PJ' : 'PF'}
                   </span>
                 </div>
@@ -477,7 +477,7 @@ export default function CRM() {
       {/* ── MODAL: Deseja cadastrar negociação? ── */}
       {view === 'nego_prompt' && (
         <Modal title="Cliente Salvo" onClose={closeAll}>
-          <div style={{ fontSize: 14, color: '#ccc', marginBottom: 20, lineHeight: 1.7 }}>
+          <div style={{ fontSize: 16, color: '#ccc', marginBottom: 20, lineHeight: 1.7 }}>
             <strong>{displayName(savedClient)}</strong> cadastrado com sucesso.
             <br />Deseja cadastrar uma negociação?
           </div>
@@ -491,7 +491,7 @@ export default function CRM() {
       {/* ── MODAL: Nova Negociação (Etapa 2) ── */}
       {view === 'new_nego' && (
         <Modal title={negoFromDetail ? 'Nova Negociação' : 'Nova Negociação — Etapa 2'} onClose={negoFromDetail ? closeNegoOnly : closeAll}>
-          <div style={{ fontSize: 12, color: '#888', marginBottom: 12 }}>
+          <div style={{ fontSize: 14, color: '#888', marginBottom: 12 }}>
             Cliente: <span style={{ color: '#fff' }}>{displayName(savedClient)}</span>
           </div>
 
@@ -505,13 +505,13 @@ export default function CRM() {
           </div>
 
           {checkingDate && (
-            <div style={{ fontSize: 12, color: '#aaa', marginBottom: 10, letterSpacing: 1 }}>
+            <div style={{ fontSize: 14, color: '#aaa', marginBottom: 10, letterSpacing: 1 }}>
               Verificando data...
             </div>
           )}
           {!checkingDate && dateStatus && (
             <div style={{
-              fontSize: 12, padding: '8px 12px', marginBottom: 10, letterSpacing: 1,
+              fontSize: 14, padding: '8px 12px', marginBottom: 10, letterSpacing: 1,
               border: `1px solid ${dateStatus.type === 'ok' ? '#4caf50' : dateStatus.type === 'neg' ? '#ff9800' : '#f44336'}`,
               color:  dateStatus.type === 'ok' ? '#4caf50' : dateStatus.type === 'neg' ? '#ff9800' : '#f44336',
               background: dateStatus.type === 'ok' ? '#0a1a0a' : dateStatus.type === 'neg' ? '#1a0f00' : '#1a0a0a',
@@ -540,7 +540,7 @@ export default function CRM() {
       {/* ── MODAL: Deseja bloquear a data? ── */}
       {view === 'block_date_prompt' && (
         <Modal title="Negociação Salva" onClose={closeAll}>
-          <div style={{ fontSize: 14, color: '#ccc', marginBottom: 20, lineHeight: 1.7 }}>
+          <div style={{ fontSize: 16, color: '#ccc', marginBottom: 20, lineHeight: 1.7 }}>
             Deseja bloquear a data <strong>{fmtDate(savedNego?.data_evento)}</strong> na agenda de shows?
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
@@ -554,8 +554,8 @@ export default function CRM() {
       {view === 'detail' && selectedClient && (
         <Modal title="Detalhes" onClose={() => { setView(null); setSelectedClient(null); }}>
           <div style={{ marginBottom: 12 }}>
-            <div style={{ fontSize: 15, fontWeight: 700, marginBottom: 4 }}>{displayName(selectedClient)}</div>
-            <span style={{ fontSize: 9, letterSpacing: 2, padding: '2px 8px', border: '1px solid #444', color: '#888', textTransform: 'uppercase' }}>
+            <div style={{ fontSize: 16, fontWeight: 700, marginBottom: 4 }}>{displayName(selectedClient)}</div>
+            <span style={{ fontSize: 14, letterSpacing: 2, padding: '2px 8px', border: '1px solid #444', color: '#888', textTransform: 'uppercase' }}>
               {selectedClient.tipo === 'pj' ? 'Pessoa Jurídica' : 'Pessoa Física'}
             </span>
           </div>
@@ -574,8 +574,8 @@ export default function CRM() {
             selectedClient.rua  ? ['Endereço', [selectedClient.rua, selectedClient.numero, selectedClient.complemento, selectedClient.bairro].filter(Boolean).join(', ')] : null,
           ].filter(Boolean).map(([l, v]) => (
             <div key={l} style={{ display: 'flex', justifyContent: 'space-between', padding: '7px 0', borderBottom: '1px solid #111', gap: 10 }}>
-              <span style={{ color: '#aaa', fontSize: 12, flexShrink: 0 }}>{l}</span>
-              <span style={{ fontSize: 13, textAlign: 'right', wordBreak: 'break-word' }}>{v}</span>
+              <span style={{ color: '#aaa', fontSize: 14, flexShrink: 0 }}>{l}</span>
+              <span style={{ fontSize: 14, textAlign: 'right', wordBreak: 'break-word' }}>{v}</span>
             </div>
           ))}
 
@@ -585,9 +585,9 @@ export default function CRM() {
               <div style={SEC}>Sócios</div>
               {selectedClient.socios.map((s, i) => (
                 <div key={i} style={{ background: '#0a0a0a', border: '1px solid #1a1a1a', padding: '8px 10px', marginBottom: 4 }}>
-                  <div style={{ fontSize: 13, fontWeight: 600 }}>{s.nome}</div>
-                  {s.cpf     && <div style={{ fontSize: 11, color: '#aaa' }}>CPF: {s.cpf}</div>}
-                  {s.contato && <div style={{ fontSize: 11, color: '#aaa' }}>Contato: {s.contato}</div>}
+                  <div style={{ fontSize: 14, fontWeight: 600 }}>{s.nome}</div>
+                  {s.cpf     && <div style={{ fontSize: 14, color: '#aaa' }}>CPF: {s.cpf}</div>}
+                  {s.contato && <div style={{ fontSize: 14, color: '#aaa' }}>Contato: {s.contato}</div>}
                 </div>
               ))}
             </div>
@@ -602,15 +602,15 @@ export default function CRM() {
                 return (
                   <div key={n.id} style={{ background: '#0a0a0a', border: '1px solid #1a1a1a', borderLeft: `3px solid ${col}`, padding: '8px 10px', marginBottom: 4 }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 2 }}>
-                      <span style={{ fontSize: 13, fontWeight: 600 }}>{fmtDate(n.data_evento)}</span>
-                      <span style={{ fontSize: 8, letterSpacing: 2, padding: '2px 8px', border: `1px solid ${col}`, color: col, textTransform: 'uppercase' }}>
+                      <span style={{ fontSize: 14, fontWeight: 600 }}>{fmtDate(n.data_evento)}</span>
+                      <span style={{ fontSize: 14, letterSpacing: 2, padding: '2px 8px', border: `1px solid ${col}`, color: col, textTransform: 'uppercase' }}>
                         {STATUS_LABEL[n.status] || n.status}
                       </span>
                     </div>
                     {(n.cidade || n.estado) && (
-                      <div style={{ fontSize: 12, color: '#888' }}>{[n.cidade, n.estado].filter(Boolean).join(' – ')}</div>
+                      <div style={{ fontSize: 14, color: '#888' }}>{[n.cidade, n.estado].filter(Boolean).join(' – ')}</div>
                     )}
-                    {n.drones > 0 && <div style={{ fontSize: 11, color: '#aaa', marginTop: 2 }}>{n.drones} drones</div>}
+                    {n.drones > 0 && <div style={{ fontSize: 14, color: '#aaa', marginTop: 2 }}>{n.drones} drones</div>}
                   </div>
                 );
               })}
@@ -623,17 +623,17 @@ export default function CRM() {
               <div style={SEC}>Histórico de Observações</div>
               {observations.map(obs => (
                 <div key={obs.id} style={{ background: '#0a0a0a', border: '1px solid #1a1a1a', padding: '10px 12px', marginBottom: 6 }}>
-                  <div style={{ fontSize: 10, letterSpacing: 2, color: '#4caf50', marginBottom: 6, fontFamily: 'Space Mono,monospace' }}>
+                  <div style={{ fontSize: 14, letterSpacing: 2, color: '#4caf50', marginBottom: 6, fontFamily: 'Space Mono,monospace' }}>
                     {fmtDateTime(obs.criado_em)}
                   </div>
-                  <div style={{ fontSize: 13, color: '#ccc', lineHeight: 1.7, whiteSpace: 'pre-wrap' }}>{obs.texto}</div>
+                  <div style={{ fontSize: 14, color: '#ccc', lineHeight: 1.7, whiteSpace: 'pre-wrap' }}>{obs.texto}</div>
                 </div>
               ))}
             </div>
           )}
 
           {loadingDetail && (
-            <div style={{ fontSize: 12, color: '#aaa', padding: '12px 0', textAlign: 'center', letterSpacing: 2 }}>
+            <div style={{ fontSize: 14, color: '#aaa', padding: '12px 0', textAlign: 'center', letterSpacing: 2 }}>
               Carregando histórico...
             </div>
           )}
@@ -650,7 +650,7 @@ export default function CRM() {
       {/* ── MODAL: Nova Observação ── */}
       {view === 'new_obs' && selectedClient && (
         <Modal title="Nova Observação" onClose={() => setView('detail')}>
-          <div style={{ fontSize: 12, color: '#888', marginBottom: 12 }}>
+          <div style={{ fontSize: 14, color: '#888', marginBottom: 12 }}>
             Cliente: <span style={{ color: '#fff' }}>{displayName(selectedClient)}</span>
           </div>
           <FTextarea label="Observação" value={obsText}
@@ -699,7 +699,7 @@ export default function CRM() {
               {socios.map((s, i) => (
                 <div key={i} style={{ background: '#0a0a0a', border: '1px solid #1a1a1a', padding: '10px 12px', marginBottom: 8 }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
-                    <span style={{ fontSize: 11, color: '#666', letterSpacing: 2, textTransform: 'uppercase' }}>Sócio {i + 1}</span>
+                    <span style={{ fontSize: 14, color: '#666', letterSpacing: 2, textTransform: 'uppercase' }}>Sócio {i + 1}</span>
                     {socios.length > 1 && (
                       <button onClick={() => setSocios(prev => prev.filter((_, j) => j !== i))}
                         style={{ background: 'transparent', border: 'none', color: '#f44336', cursor: 'pointer', fontSize: 16, lineHeight: 1 }}>✕</button>
@@ -717,7 +717,7 @@ export default function CRM() {
                 </div>
               ))}
               <button onClick={() => setSocios(prev => [...prev, { nome: '', cpf: '', contato: '' }])}
-                style={{ width: '100%', padding: 8, marginBottom: 12, background: 'transparent', border: '1px dashed #333', color: '#888', fontFamily: 'Space Mono,monospace', fontSize: 11, letterSpacing: 2, textTransform: 'uppercase', cursor: 'pointer' }}>
+                style={{ width: '100%', padding: 8, marginBottom: 12, background: 'transparent', border: '1px dashed #333', color: '#888', fontFamily: 'Space Mono,monospace', fontSize: 14, letterSpacing: 2, textTransform: 'uppercase', cursor: 'pointer' }}>
                 + Adicionar Sócio
               </button>
             </>
@@ -736,7 +736,7 @@ export default function CRM() {
               />
             </div>
             <button onClick={buscarCep} disabled={cepLoading}
-              style={{ padding: '8px 14px', background: 'transparent', border: '1px solid #fff', color: cepLoading ? '#666' : '#fff', fontFamily: 'Space Mono,monospace', fontSize: 11, letterSpacing: 1, textTransform: 'uppercase', cursor: cepLoading ? 'not-allowed' : 'pointer', whiteSpace: 'nowrap' }}>
+              style={{ padding: '10px 14px', background: 'transparent', border: '1px solid #fff', color: cepLoading ? '#666' : '#fff', fontFamily: 'Space Mono,monospace', fontSize: 14, letterSpacing: 1, textTransform: 'uppercase', cursor: cepLoading ? 'not-allowed' : 'pointer', whiteSpace: 'nowrap' }}>
               {cepLoading ? '...' : 'Buscar'}
             </button>
           </div>
@@ -761,10 +761,10 @@ export default function CRM() {
           <div style={SEC}>Documentos</div>
           <label style={{ display: 'block', cursor: uploadingDocs ? 'wait' : 'pointer', border: '1px dashed #333', padding: '14px 16px', textAlign: 'center', marginBottom: 14 }}>
             <div style={{ fontSize: 20, marginBottom: 4 }}>📎</div>
-            <div style={{ fontSize: 11, letterSpacing: 2, color: '#aaa', textTransform: 'uppercase' }}>
+            <div style={{ fontSize: 14, letterSpacing: 2, color: '#aaa', textTransform: 'uppercase' }}>
               {uploadingDocs ? 'Enviando...' : 'Toque para selecionar documentos'}
             </div>
-            <div style={{ fontSize: 9, color: '#666', marginTop: 3 }}>PDF · JPG · PNG · WORD · Contrato</div>
+            <div style={{ fontSize: 14, color: '#666', marginTop: 3 }}>PDF · JPG · PNG · WORD · Contrato</div>
             <input type="file" multiple accept=".pdf,.jpg,.jpeg,.png,.doc,.docx,image/*" style={{ display: 'none' }}
               onChange={e => handleDocUpload(Array.from(e.target.files))} />
           </label>

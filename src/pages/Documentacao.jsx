@@ -1,4 +1,4 @@
-﻿import React, { useState, useRef } from 'react';
+import React, { useState, useRef } from 'react';
 import { useApp } from '../context/AppContext';
 import { PageHeader, Section, Empty, Btn } from '../components/layout/UI';
 
@@ -14,7 +14,7 @@ function getType(name) {
 }
 function fileIcon(type) { return { pdf: '📄', img: '🖼️', word: '📝', excel: '📊' }[type] || '📎'; }
 
-const SEL_STYLE = { width: '100%', background: '#000', border: '1px solid #333', color: '#fff', padding: '10px', fontFamily: 'Space Mono,monospace', fontSize: 14, outline: 'none' };
+const SEL_STYLE = { width: '100%', background: '#000', border: '1px solid #333', color: '#fff', padding: '10px', fontFamily: 'Space Mono,monospace', fontSize: 16, outline: 'none' };
 const STATUS_COLORS = { conf: '#4caf50', neg: '#ff9800', exec: '#555', cancelado: '#f44336' };
 
 export default function Documentacao() {
@@ -74,8 +74,8 @@ export default function Documentacao() {
             </select>
             {show && (
               <div style={{ background: '#0a0a0a', border: '1px solid #1a1a1a', borderLeft: `3px solid ${STATUS_COLORS[show.status] || '#fff'}`, padding: '10px 14px', marginTop: 8 }}>
-                <div style={{ fontSize: 13, fontWeight: 700 }}>{show.client}</div>
-                <div style={{ fontSize: 12, color: '#aaa', marginTop: 2 }}>{show.city}, {show.state}</div>
+                <div style={{ fontSize: 14, fontWeight: 700 }}>{show.client}</div>
+                <div style={{ fontSize: 14, color: '#aaa', marginTop: 2 }}>{show.city}, {show.state}</div>
               </div>
             )}
           </div>
@@ -84,7 +84,7 @@ export default function Documentacao() {
 
       {/* Mensagem quando aguardando seleção de show */}
       {docType === 'show' && !show && (
-        <div style={{ textAlign: 'center', padding: '32px 0', color: '#333', fontSize: 12, letterSpacing: 3, textTransform: 'uppercase' }}>
+        <div style={{ textAlign: 'center', padding: '32px 0', color: '#333', fontSize: 14, letterSpacing: 3, textTransform: 'uppercase' }}>
           Selecione um show
         </div>
       )}
@@ -102,7 +102,7 @@ export default function Documentacao() {
               ].map(([l, n, c]) => (
                 <div key={l} style={{ background: '#0a0a0a', border: '1px solid #1a1a1a', padding: '8px', textAlign: 'center' }}>
                   <div style={{ fontSize: 16, fontWeight: 700, color: c }}>{n}</div>
-                  <div style={{ fontSize: 8, letterSpacing: 2, color: '#aaa', textTransform: 'uppercase', marginTop: 2 }}>{l}</div>
+                  <div style={{ fontSize: 14, letterSpacing: 2, color: '#aaa', textTransform: 'uppercase', marginTop: 2 }}>{l}</div>
                 </div>
               ))}
             </div>
@@ -114,12 +114,12 @@ export default function Documentacao() {
             {/* Formulário inline */}
             {showForm && (
               <div style={{ background: '#0a0a0a', border: '1px solid #333', padding: 14, marginBottom: 10 }}>
-                <div style={{ fontSize: 11, letterSpacing: 3, color: '#aaa', textTransform: 'uppercase', marginBottom: 8 }}>Novo Documento</div>
+                <div style={{ fontSize: 14, letterSpacing: 3, color: '#aaa', textTransform: 'uppercase', marginBottom: 8 }}>Novo Documento</div>
                 <input
                   value={formName}
                   onChange={e => setFormName(e.target.value)}
                   placeholder="Nome do documento..."
-                  style={{ background: '#000', border: '1px solid #333', color: '#fff', padding: '8px 10px', fontFamily: 'Space Mono,monospace', fontSize: 14, outline: 'none', width: '100%', boxSizing: 'border-box', marginBottom: 10 }}
+                  style={{ background: '#000', border: '1px solid #333', color: '#fff', padding: '8px 10px', fontFamily: 'Space Mono,monospace', fontSize: 16, outline: 'none', width: '100%', boxSizing: 'border-box', marginBottom: 10 }}
                   onFocus={e => e.target.style.borderColor = '#fff'}
                   onBlur={e => e.target.style.borderColor = '#333'}
                 />
@@ -128,10 +128,10 @@ export default function Documentacao() {
                   style={{ border: '1px dashed #333', padding: '14px 16px', textAlign: 'center', cursor: 'pointer', marginBottom: 8 }}
                 >
                   <div style={{ fontSize: 20, marginBottom: 4 }}>📎</div>
-                  <div style={{ fontSize: 11, letterSpacing: 2, color: '#aaa', textTransform: 'uppercase' }}>
+                  <div style={{ fontSize: 14, letterSpacing: 2, color: '#aaa', textTransform: 'uppercase' }}>
                     {selFile ? selFile.name : 'Toque para selecionar ou tirar foto'}
                   </div>
-                  <div style={{ fontSize: 8, color: '#888', marginTop: 3 }}>PDF · JPG · PNG · WORD · EXCEL</div>
+                  <div style={{ fontSize: 14, color: '#888', marginTop: 3 }}>PDF · JPG · PNG · WORD · EXCEL</div>
                 </div>
                 <input
                   ref={fileRef}
@@ -142,11 +142,11 @@ export default function Documentacao() {
                   onChange={e => { if (e.target.files?.[0]) setSelFile(e.target.files[0]); }}
                 />
                 <div style={{ display: 'flex', gap: 8 }}>
-                  <button onClick={resetForm} style={{ flex: 1, padding: '8px', background: 'transparent', border: '1px solid #333', color: '#888', fontFamily: 'Space Mono,monospace', fontSize: 11, letterSpacing: 2, cursor: 'pointer', textTransform: 'uppercase' }}>
+                  <button onClick={resetForm} style={{ flex: 1, padding: '10px', background: 'transparent', border: '1px solid #333', color: '#888', fontFamily: 'Space Mono,monospace', fontSize: 14, letterSpacing: 2, cursor: 'pointer', textTransform: 'uppercase' }}>
                     Cancelar
                   </button>
                   <button onClick={save} disabled={uploading || !formName.trim() || !selFile}
-                    style={{ flex: 1, padding: '8px', background: uploading ? '#111' : '#fff', border: '1px solid #fff', color: uploading ? '#888' : '#000', fontFamily: 'Space Mono,monospace', fontSize: 11, letterSpacing: 2, cursor: uploading ? 'wait' : 'pointer', textTransform: 'uppercase' }}>
+                    style={{ flex: 1, padding: '10px', background: uploading ? '#111' : '#fff', border: '1px solid #fff', color: uploading ? '#888' : '#000', fontFamily: 'Space Mono,monospace', fontSize: 14, letterSpacing: 2, cursor: uploading ? 'wait' : 'pointer', textTransform: 'uppercase' }}>
                     {uploading ? 'Enviando...' : 'Salvar'}
                   </button>
                 </div>
@@ -162,13 +162,13 @@ export default function Documentacao() {
                     {fileIcon(doc.type)}
                   </div>
                   <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ fontSize: 14, fontWeight: 600 }}>{doc.name}</div>
-                    <div style={{ fontSize: 11, color: '#aaa', marginTop: 1, letterSpacing: 1 }}>{doc.size} · {doc.date}</div>
+                    <div style={{ fontSize: 16, fontWeight: 600 }}>{doc.name}</div>
+                    <div style={{ fontSize: 14, color: '#aaa', marginTop: 1, letterSpacing: 1 }}>{doc.size} · {doc.date}</div>
                   </div>
                   <div style={{ display: 'flex', gap: 4, flexShrink: 0 }}>
                     {doc.file && doc.file.startsWith('http') && (
                       <a href={doc.file} target="_blank" rel="noopener noreferrer"
-                        style={{ fontSize: 11, letterSpacing: 1, padding: '4px 8px', border: '1px solid #333', color: '#888', fontFamily: 'Space Mono,monospace', textDecoration: 'none', display: 'inline-block' }}>
+                        style={{ fontSize: 14, letterSpacing: 1, padding: '4px 8px', border: '1px solid #333', color: '#888', fontFamily: 'Space Mono,monospace', textDecoration: 'none', display: 'inline-block' }}>
                         Ver
                       </a>
                     )}

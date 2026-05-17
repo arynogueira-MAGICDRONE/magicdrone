@@ -1,4 +1,4 @@
-﻿import React, { useState } from 'react';
+import React, { useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import styles from './Login.module.css';
 
@@ -60,7 +60,7 @@ export default function Login() {
 
       <div style={{
         position: 'fixed', bottom: 16, left: 0, right: 0,
-        textAlign: 'center', fontSize: 11, letterSpacing: 3,
+        textAlign: 'center', fontSize: 14, letterSpacing: 3,
         color: '#333', textTransform: 'uppercase', pointerEvents: 'none',
       }}>
         Created by Ary Nogueira

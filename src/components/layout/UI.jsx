@@ -13,9 +13,9 @@ export function Btn({ children, variant = 'primary', size = 'md', onClick, disab
     minWidth: 80,
   };
   const sizes = {
-    sm: { fontSize: '11px', padding: '6px 12px' },
-    md: { fontSize: '12px', padding: '8px 16px' },
-    lg: { fontSize: '13px', padding: '12px 22px' },
+    sm: { fontSize: '13px', padding: '10px 16px' },
+    md: { fontSize: '14px', padding: '10px 18px' },
+    lg: { fontSize: '14px', padding: '12px 24px' },
   };
   const variants = {
     primary:  { background: '#fff',        color: '#000', borderColor: '#fff' },
@@ -35,14 +35,14 @@ export function Btn({ children, variant = 'primary', size = 'md', onClick, disab
 // ─── Input ──────────────────────────────────────────
 export function Input({ label, value, onChange, placeholder, type = 'text', maxLength, required }) {
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 4, marginBottom: 10 }}>
-      {label && <label style={{ fontSize: 12, letterSpacing: 2, color: '#aaa', textTransform: 'uppercase' }}>{label}</label>}
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 4, marginBottom: 12 }}>
+      {label && <label style={{ fontSize: 14, letterSpacing: 2, color: '#aaa', textTransform: 'uppercase' }}>{label}</label>}
       <input
         type={type} value={value} onChange={onChange} placeholder={placeholder}
         maxLength={maxLength} required={required}
         style={{
           background: '#000', border: '1px solid #333', color: '#fff',
-          padding: '9px 12px', fontFamily: 'Space Mono, monospace', fontSize: 14,
+          padding: '10px 12px', fontFamily: 'Space Mono, monospace', fontSize: 16,
           outline: 'none', width: '100%',
         }}
         onFocus={e => e.target.style.borderColor = '#fff'}
@@ -55,12 +55,12 @@ export function Input({ label, value, onChange, placeholder, type = 'text', maxL
 // ─── Select ─────────────────────────────────────────
 export function Select({ label, value, onChange, options }) {
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 4, marginBottom: 10 }}>
-      {label && <label style={{ fontSize: 12, letterSpacing: 2, color: '#aaa', textTransform: 'uppercase' }}>{label}</label>}
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 4, marginBottom: 12 }}>
+      {label && <label style={{ fontSize: 14, letterSpacing: 2, color: '#aaa', textTransform: 'uppercase' }}>{label}</label>}
       <select value={value} onChange={onChange}
         style={{
           background: '#000', border: '1px solid #333', color: '#fff',
-          padding: '9px 12px', fontFamily: 'Space Mono, monospace', fontSize: 14, outline: 'none', width: '100%',
+          padding: '10px 12px', fontFamily: 'Space Mono, monospace', fontSize: 16, outline: 'none', width: '100%',
         }}>
         {options.map(o => (
           <option key={o.value ?? o} value={o.value ?? o} style={{ background: '#111' }}>
@@ -81,12 +81,12 @@ export function Modal({ title, onClose, children }) {
       display: 'flex', alignItems: 'flex-start', justifyContent: 'center',
     }}>
       <div onClick={e => e.stopPropagation()} style={{
-        background: '#111', border: '1px solid #333', padding: 20,
-        width: '100%', maxWidth: 420, marginTop: 60, animation: 'slideUp 0.25s ease',
+        background: '#111', border: '1px solid #333', padding: 22,
+        width: '100%', maxWidth: 440, marginTop: 60, animation: 'slideUp 0.25s ease',
         position: 'relative',
       }}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
-          <div style={{ fontSize: 13, letterSpacing: 3, textTransform: 'uppercase', color: '#bbb' }}>{title}</div>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 18 }}>
+          <div style={{ fontSize: 14, letterSpacing: 3, textTransform: 'uppercase', color: '#bbb' }}>{title}</div>
           {onClose && (
             <button onClick={onClose} style={{
               background: 'transparent', border: 'none', color: '#888', cursor: 'pointer',
@@ -104,7 +104,7 @@ export function Modal({ title, onClose, children }) {
 // ─── ModalBtns ──────────────────────────────────────
 export function ModalBtns({ onCancel, onSave, saveLabel = 'Salvar', disabled }) {
   return (
-    <div style={{ display: 'flex', gap: 8, marginTop: 16 }}>
+    <div style={{ display: 'flex', gap: 8, marginTop: 18 }}>
       <Btn variant="ghost" full onClick={onCancel}>Cancelar</Btn>
       <Btn variant="primary" full onClick={onSave} disabled={disabled}>{saveLabel}</Btn>
     </div>
@@ -115,12 +115,12 @@ export function ModalBtns({ onCancel, onSave, saveLabel = 'Salvar', disabled }) 
 export function PageHeader({ label, title, action }) {
   return (
     <div style={{
-      padding: '16px 16px 12px', borderBottom: '1px solid #111',
+      padding: '16px 16px 14px', borderBottom: '1px solid #111',
       display: 'flex', alignItems: 'center', justifyContent: 'space-between',
     }}>
       <div>
-        <div style={{ fontSize: 12, letterSpacing: 3, color: '#bbb', textTransform: 'uppercase', marginBottom: 4 }}>{label}</div>
-        <div style={{ fontSize: 26, fontWeight: 700, fontFamily: 'Bebas Neue, sans-serif', letterSpacing: 2 }}>{title}</div>
+        <div style={{ fontSize: 14, letterSpacing: 3, color: '#bbb', textTransform: 'uppercase', marginBottom: 4 }}>{label}</div>
+        <div style={{ fontSize: 28, fontWeight: 700, fontFamily: 'Bebas Neue, sans-serif', letterSpacing: 2 }}>{title}</div>
       </div>
       {action}
     </div>
@@ -132,7 +132,7 @@ export function Section({ title, children, action }) {
   return (
     <div style={{ padding: '14px 16px 0' }}>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10, paddingBottom: 8, borderBottom: '1px solid #111' }}>
-        <div style={{ fontSize: 13, letterSpacing: 2, color: '#bbb', textTransform: 'uppercase' }}>{title}</div>
+        <div style={{ fontSize: 16, letterSpacing: 2, color: '#bbb', textTransform: 'uppercase' }}>{title}</div>
         {action}
       </div>
       {children}
@@ -154,7 +154,7 @@ export function StatusPill({ status }) {
   const s = map[status] || { label: status, color: '#888' };
   return (
     <span style={{
-      fontSize: 11, letterSpacing: 1, padding: '3px 9px',
+      fontSize: 12, letterSpacing: 1, padding: '3px 10px',
       border: `1px solid ${s.color}`, color: s.color, textTransform: 'uppercase',
     }}>{s.label}</span>
   );
@@ -164,12 +164,12 @@ export function StatusPill({ status }) {
 export function Toggle({ on, onClick }) {
   return (
     <div onClick={onClick} style={{
-      width: 32, height: 18, borderRadius: 9, background: on ? '#4caf50' : '#222',
+      width: 36, height: 20, borderRadius: 10, background: on ? '#4caf50' : '#222',
       position: 'relative', cursor: 'pointer', transition: 'background 0.2s', flexShrink: 0,
     }}>
       <div style={{
-        position: 'absolute', width: 14, height: 14, background: '#fff',
-        borderRadius: '50%', top: 2, left: on ? 16 : 2, transition: 'left 0.2s',
+        position: 'absolute', width: 16, height: 16, background: '#fff',
+        borderRadius: '50%', top: 2, left: on ? 18 : 2, transition: 'left 0.2s',
       }} />
     </div>
   );
@@ -178,7 +178,7 @@ export function Toggle({ on, onClick }) {
 // ─── Empty ──────────────────────────────────────────
 export function Empty({ text = 'Nenhum item' }) {
   return (
-    <div style={{ textAlign: 'center', padding: '24px 0', color: '#888', fontSize: 13, letterSpacing: 2, textTransform: 'uppercase' }}>
+    <div style={{ textAlign: 'center', padding: '28px 0', color: '#888', fontSize: 14, letterSpacing: 2, textTransform: 'uppercase' }}>
       {text}
     </div>
   );
@@ -192,7 +192,7 @@ export function Avatar({ name, size = 36 }) {
       width: size, height: size, borderRadius: '50%',
       background: '#1a1a1a', border: '1px solid #333',
       display: 'flex', alignItems: 'center', justifyContent: 'center',
-      fontSize: size * 0.32, fontWeight: 700, color: '#fff', flexShrink: 0,
+      fontSize: Math.max(14, size * 0.35), fontWeight: 700, color: '#fff', flexShrink: 0,
     }}>{initials}</div>
   );
 }

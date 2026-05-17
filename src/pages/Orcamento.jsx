@@ -1,4 +1,4 @@
-﻿// ─── ORÇAMENTO ───────────────────────────────────────────────────────────────
+// ─── ORÇAMENTO ───────────────────────────────────────────────────────────────
 import React, { useState, useEffect } from 'react';
 import { useApp } from '../context/AppContext';
 import { useAuth } from '../context/AuthContext';
@@ -16,7 +16,7 @@ function fmt(v) { return 'R$ ' + (v||0).toFixed(2).replace('.', ',').replace(/\B
 
 const INP = {
   background: '#000', border: '1px solid #222', color: '#fff',
-  padding: '8px 10px', fontFamily: 'Space Mono,monospace', fontSize: 14,
+  padding: '8px 10px', fontFamily: 'Space Mono,monospace', fontSize: 16,
   outline: 'none', width: '100%', boxSizing: 'border-box',
 };
 
@@ -107,7 +107,7 @@ export function Orcamento() {
   const renderDespesas = () => {
     if (loadingBudget) {
       return (
-        <div style={{ textAlign: 'center', padding: '20px 0', color: '#aaa', fontSize: 12, letterSpacing: 3, textTransform: 'uppercase' }}>
+        <div style={{ textAlign: 'center', padding: '20px 0', color: '#aaa', fontSize: 14, letterSpacing: 3, textTransform: 'uppercase' }}>
           Carregando despesas...
         </div>
       );
@@ -128,14 +128,14 @@ export function Orcamento() {
 
           {/* Cabeçalho da categoria */}
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 12px', borderBottom: '1px solid #111' }}>
-            <div style={{ fontSize: 13, letterSpacing: 1, textTransform: 'uppercase', color: '#bbb', fontWeight: 700 }}>{cat}</div>
+            <div style={{ fontSize: 14, letterSpacing: 1, textTransform: 'uppercase', color: '#bbb', fontWeight: 700 }}>{cat}</div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
               {!isSecondary && (
-                <span style={{ fontSize: 11, color: '#aaa' }}>Prev: {fmt(groupPrev)}</span>
+                <span style={{ fontSize: 14, color: '#aaa' }}>Prev: {fmt(groupPrev)}</span>
               )}
               {!isSecondary && (
                 <button onClick={() => addLancamento(cat)} style={{
-                  fontSize: 11, padding: '3px 8px', border: '1px solid #4caf50',
+                  fontSize: 14, padding: '4px 8px', border: '1px solid #4caf50',
                   background: 'transparent', color: '#4caf50', fontFamily: 'Space Mono,monospace',
                   cursor: 'pointer', letterSpacing: 1,
                 }}>+ Lançamento</button>
@@ -158,14 +158,14 @@ export function Orcamento() {
               return (
                 <div key={item.id} style={{ marginBottom: isLast ? 0 : 10, paddingBottom: isLast ? 0 : 10, borderBottom: isLast ? 'none' : '1px solid #111' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                    <span style={{ fontSize: 11, color: '#888', flexShrink: 0, width: 18 }}>#{idx + 1}</span>
+                    <span style={{ fontSize: 14, color: '#888', flexShrink: 0, width: 18 }}>#{idx + 1}</span>
                     <input
                       type="number"
                       value={realVal}
                       onChange={e => setRealEdits(prev => ({ ...prev, [item.id]: e.target.value }))}
                       onBlur={() => saveReal(item)}
                       placeholder="0,00"
-                      style={{ ...INP, flex: 1, color: inputColor, fontWeight: 700, fontSize: 13, border: 'none', borderBottom: '1px solid #333', background: 'transparent', padding: '4px 0' }}
+                      style={{ ...INP, flex: 1, color: inputColor, fontWeight: 700, fontSize: 14, border: 'none', borderBottom: '1px solid #333', background: 'transparent', padding: '4px 0' }}
                     />
                     <label style={{ cursor: 'pointer', flexShrink: 0 }}>
                       <input
@@ -176,7 +176,7 @@ export function Orcamento() {
                         onChange={e => handleComprovante(item, e.target.files[0])}
                       />
                       <span style={{
-                        fontSize: 8, letterSpacing: 1, padding: '5px 7px', border: '1px solid #444',
+                        fontSize: 14, letterSpacing: 1, padding: '6px 7px', border: '1px solid #444',
                         color: uploadingFor[item.id] ? '#888' : '#aaa', fontFamily: 'Space Mono,monospace',
                         whiteSpace: 'nowrap', display: 'block',
                       }}>
@@ -184,7 +184,7 @@ export function Orcamento() {
                       </span>
                     </label>
                     {!isSecondary && (
-                      <button onClick={() => deleteBudgetItem(show.id, item.id)} style={{ background: 'transparent', border: 'none', color: '#aaa', cursor: 'pointer', fontSize: 13, lineHeight: 1, padding: 0, flexShrink: 0 }}>🗑️</button>
+                      <button onClick={() => deleteBudgetItem(show.id, item.id)} style={{ background: 'transparent', border: 'none', color: '#aaa', cursor: 'pointer', fontSize: 14, lineHeight: 1, padding: 0, flexShrink: 0 }}>🗑️</button>
                     )}
                   </div>
 
@@ -198,7 +198,7 @@ export function Orcamento() {
                           </a>
                         ) : (
                           <a key={c.id} href={c.url} target="_blank" rel="noopener noreferrer"
-                            style={{ fontSize: 8, color: '#4caf50', letterSpacing: 1, padding: '4px 6px', border: '1px solid #1a2a1a', background: '#050f05', display: 'block', textDecoration: 'none' }}>
+                            style={{ fontSize: 14, color: '#4caf50', letterSpacing: 1, padding: '4px 6px', border: '1px solid #1a2a1a', background: '#050f05', display: 'block', textDecoration: 'none' }}>
                             📄 {c.fileName.replace(/^\d+_/, '')}
                           </a>
                         )
@@ -212,8 +212,8 @@ export function Orcamento() {
 
           {/* Total realizado do grupo */}
           <div style={{ padding: '8px 12px', borderTop: '1px solid #111', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <span style={{ fontSize: 12, color: '#bbb', letterSpacing: 1, textTransform: 'uppercase' }}>Total Realizado</span>
-            <span style={{ fontSize: 13, fontWeight: 700, color: groupOver ? '#f44336' : '#4caf50' }}>{fmt(groupReal)}</span>
+            <span style={{ fontSize: 14, color: '#bbb', letterSpacing: 1, textTransform: 'uppercase' }}>Total Realizado</span>
+            <span style={{ fontSize: 14, fontWeight: 700, color: groupOver ? '#f44336' : '#4caf50' }}>{fmt(groupReal)}</span>
           </div>
         </div>
       );
@@ -226,14 +226,14 @@ export function Orcamento() {
 
       <Section title="Selecionar Show">
         <select value={sel} onChange={e => handleShowSelect(e.target.value)}
-          style={{ width: '100%', background: '#000', border: '1px solid #333', color: '#fff', padding: '10px', fontFamily: 'Space Mono,monospace', fontSize: 14, outline: 'none' }}>
+          style={{ width: '100%', background: '#000', border: '1px solid #333', color: '#fff', padding: '10px', fontFamily: 'Space Mono,monospace', fontSize: 16, outline: 'none' }}>
           <option value="">Selecione um show...</option>
           {shows.map(s => <option key={s.id} value={s.id}>{s.client}</option>)}
         </select>
       </Section>
 
       {!show && (
-        <div style={{ textAlign: 'center', padding: '32px 0', color: '#333', fontSize: 12, letterSpacing: 3, textTransform: 'uppercase' }}>
+        <div style={{ textAlign: 'center', padding: '32px 0', color: '#333', fontSize: 14, letterSpacing: 3, textTransform: 'uppercase' }}>
           Selecione um show
         </div>
       )}
@@ -245,26 +245,26 @@ export function Orcamento() {
               ['Origem', 'São José dos Campos, SP'],
               ['Destino', `${show.city || '—'}, ${show.state || '—'}`],
             ].map(([l, v]) => (
-              <div key={l} style={{ display: 'flex', justifyContent: 'space-between', padding: '7px 0', borderBottom: '1px solid #111', fontSize: 14 }}>
-                <span style={{ color: '#aaa', fontSize: 12 }}>{l}</span><span>{v}</span>
+              <div key={l} style={{ display: 'flex', justifyContent: 'space-between', padding: '7px 0', borderBottom: '1px solid #111', fontSize: 16 }}>
+                <span style={{ color: '#aaa', fontSize: 14 }}>{l}</span><span>{v}</span>
               </div>
             ))}
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '7px 0', borderBottom: '1px solid #111' }}>
-              <span style={{ color: '#aaa', fontSize: 12 }}>Distância</span>
+              <span style={{ color: '#aaa', fontSize: 14 }}>Distância</span>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                <span style={{ fontSize: 14 }}>{dist ? dist.km : '—'}</span>
-                <button onClick={calcDist} disabled={loadingDist} style={{ fontSize: 8, letterSpacing: 2, padding: '3px 8px', border: '1px solid #fff', background: 'transparent', color: '#fff', fontFamily: 'Space Mono,monospace', cursor: 'pointer', textTransform: 'uppercase' }}>
+                <span style={{ fontSize: 16 }}>{dist ? dist.km : '—'}</span>
+                <button onClick={calcDist} disabled={loadingDist} style={{ fontSize: 14, letterSpacing: 2, padding: '4px 8px', border: '1px solid #fff', background: 'transparent', color: '#fff', fontFamily: 'Space Mono,monospace', cursor: 'pointer', textTransform: 'uppercase' }}>
                   {loadingDist ? '...' : 'Calcular'}
                 </button>
               </div>
             </div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', padding: '7px 0', borderBottom: '1px solid #111', fontSize: 14 }}>
-              <span style={{ color: '#aaa', fontSize: 12 }}>Tempo estimado</span><span>{dist ? dist.tempo : '—'}</span>
+            <div style={{ display: 'flex', justifyContent: 'space-between', padding: '7px 0', borderBottom: '1px solid #111', fontSize: 16 }}>
+              <span style={{ color: '#aaa', fontSize: 14 }}>Tempo estimado</span><span>{dist ? dist.tempo : '—'}</span>
             </div>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '7px 0' }}>
-              <span style={{ color: '#aaa', fontSize: 12 }}>Dias de viagem</span>
+              <span style={{ color: '#aaa', fontSize: 14 }}>Dias de viagem</span>
               <input type="number" value={dias} onChange={e => setDias(e.target.value)} min={1}
-                style={{ background: '#000', border: '1px solid #333', color: '#fff', padding: '4px 8px', fontFamily: 'Space Mono,monospace', fontSize: 14, width: 60, outline: 'none', textAlign: 'right' }} />
+                style={{ background: '#000', border: '1px solid #333', color: '#fff', padding: '4px 8px', fontFamily: 'Space Mono,monospace', fontSize: 16, width: 60, outline: 'none', textAlign: 'right' }} />
             </div>
           </div>
         </Section>
@@ -277,16 +277,16 @@ export function Orcamento() {
           <div style={{ background: '#fff', color: '#000', padding: '14px 16px', margin: '14px 16px 0' }}>
             {!isSecondary && (
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
-                <div style={{ fontSize: 11, letterSpacing: 3, textTransform: 'uppercase', fontWeight: 700 }}>Total Previsto</div>
+                <div style={{ fontSize: 14, letterSpacing: 3, textTransform: 'uppercase', fontWeight: 700 }}>Total Previsto</div>
                 <div style={{ fontSize: 18, fontWeight: 700 }}>{fmt(totalPrev)}</div>
               </div>
             )}
             <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: isSecondary ? 0 : 6 }}>
-              <div style={{ fontSize: 11, letterSpacing: 3, textTransform: 'uppercase', fontWeight: 700 }}>Total Realizado</div>
+              <div style={{ fontSize: 14, letterSpacing: 3, textTransform: 'uppercase', fontWeight: 700 }}>Total Realizado</div>
               <div style={{ fontSize: 18, fontWeight: 700 }}>{fmt(totalReal)}</div>
             </div>
             {!isSecondary && (
-              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, color: '#aaa', paddingTop: 6, borderTop: '1px solid #ddd' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 14, color: '#aaa', paddingTop: 6, borderTop: '1px solid #ddd' }}>
                 <span>Diferença</span>
                 <span style={{ color: diff > 0 ? '#c62828' : '#2e7d32', fontWeight: 700 }}>{diff >= 0 ? '+' : ''}{fmt(diff)}</span>
               </div>
