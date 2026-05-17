@@ -118,9 +118,9 @@ export default function Equipe() {
       <div style={{ display: 'flex', borderBottom: '1px solid #222' }}>
         {tabs.map(t => (
           <button key={t.key} onClick={() => setTab(t.key)} style={{
-            flex: 1, padding: '10px 4px', fontSize: 11, letterSpacing: 2, textTransform: 'uppercase',
+            flex: 1, padding: '11px 4px', fontSize: 12, letterSpacing: 1.5, textTransform: 'uppercase',
             textAlign: 'center', cursor: 'pointer', fontFamily: 'Space Mono,monospace',
-            color: tab === t.key ? '#fff' : '#555',
+            color: tab === t.key ? '#fff' : '#bbb',
             borderBottom: `2px solid ${tab === t.key ? '#fff' : 'transparent'}`,
             background: 'transparent', border: 'none',
           }}>{t.label}</button>
@@ -140,7 +140,7 @@ export default function Equipe() {
               </div>
               {m.sarpas && (
                 <div style={{ marginTop: 6 }}>
-                  <span style={{ fontSize: 8, letterSpacing: 1, padding: '2px 7px', border: '1px solid #4caf50', color: '#4caf50', textTransform: 'uppercase' }}>
+                  <span style={{ fontSize: 11, letterSpacing: 1, padding: '3px 8px', border: '1px solid #4caf50', color: '#4caf50', textTransform: 'uppercase' }}>
                     Sarpas: {m.sarpas}
                   </span>
                 </div>
@@ -191,7 +191,7 @@ export default function Equipe() {
                     <Avatar name={m.name} size={28} />
                     <div>
                       <div style={{ fontSize: 14, fontWeight: 600 }}>{m.name}</div>
-                      <div style={{ fontSize: 11, color: busy ? '#f44336' : '#4caf50', letterSpacing: 1 }}>{busy ? 'Ocupado em outro show' : 'Disponível'}</div>
+                      <div style={{ fontSize: 12, color: busy ? '#f44336' : '#4caf50', letterSpacing: 1 }}>{busy ? 'Ocupado em outro show' : 'Disponível'}</div>
                     </div>
                   </div>
                 );

@@ -9,12 +9,12 @@ const STATUS_LABEL = { orcamento: 'Orçamento', negociando: 'Negociando', confir
 
 const FIELD = {
   background: '#000', border: '1px solid #333', color: '#fff',
-  padding: '8px 10px', fontFamily: 'Space Mono, monospace', fontSize: 14,
+  padding: '9px 12px', fontFamily: 'Space Mono, monospace', fontSize: 14,
   outline: 'none', width: '100%', boxSizing: 'border-box',
 };
-const LABEL = { fontSize: 11, letterSpacing: 3, color: '#aaa', textTransform: 'uppercase' };
+const LABEL = { fontSize: 12, letterSpacing: 2, color: '#aaa', textTransform: 'uppercase' };
 const SEC = {
-  fontSize: 11, letterSpacing: 3, color: '#aaa', textTransform: 'uppercase',
+  fontSize: 12, letterSpacing: 2, color: '#bbb', textTransform: 'uppercase',
   marginBottom: 8, marginTop: 6, paddingBottom: 6, borderBottom: '1px solid #1a1a1a',
 };
 
@@ -68,11 +68,11 @@ function TypeToggle({ value, onChange }) {
     <div style={{ display: 'flex', gap: 8, marginBottom: 14 }}>
       {['pf', 'pj'].map(t => (
         <button key={t} onClick={() => onChange(t)} style={{
-          flex: 1, padding: '8px 0', fontFamily: 'Space Mono,monospace', fontSize: 10,
-          letterSpacing: 3, textTransform: 'uppercase', cursor: 'pointer',
+          flex: 1, padding: '9px 0', fontFamily: 'Space Mono,monospace', fontSize: 12,
+          letterSpacing: 2, textTransform: 'uppercase', cursor: 'pointer',
           border: `1px solid ${value === t ? '#fff' : '#333'}`,
           background: value === t ? '#fff' : 'transparent',
-          color: value === t ? '#000' : '#888',
+          color: value === t ? '#000' : '#bbb',
         }}>
           {t === 'pf' ? 'Pessoa Física' : 'Pessoa Jurídica'}
         </button>
@@ -142,8 +142,9 @@ export default function CRM() {
   const [loadingDetail,  setLoadingDetail]  = useState(false);
 
   // Observation
-  const [obsText,   setObsText]   = useState('');
-  const [savingObs, setSavingObs] = useState(false);
+  const [obsText,       setObsText]       = useState('');
+  const [savingObs,     setSavingObs]     = useState(false);
+  const [negoFromDetail, setNegoFromDetail] = useState(false);
 
   // Edit
   const [editForm,      setEditForm]      = useState({});
@@ -246,6 +247,7 @@ export default function CRM() {
     if (error) { alert('Erro ao salvar negociação: ' + error.message); return; }
     setSavedNego(data);
     setClients(prev => prev.map(c => c.id === savedClient.id ? { ...c, _negoStatus: 'orcamento' } : c));
+    if (negoFromDetail) setNegotiations(prev => [data, ...prev]);
     setView('block_date_prompt');
   }
 
@@ -260,7 +262,16 @@ export default function CRM() {
       state:  savedNego.estado || '',
       test:   null, valor: null,
     });
-    closeAll();
+    if (negoFromDetail) closeNegoOnly(); else closeAll();
+  }
+
+  function closeNegoOnly() {
+    setNegoForm(emptyNegoForm());
+    setSavedClient(null);
+    setSavedNego(null);
+    setDateStatus(null);
+    setNegoFromDetail(false);
+    setView('detail');
   }
 
   function closeAll() {
@@ -270,6 +281,15 @@ export default function CRM() {
     setSavedClient(null);
     setSavedNego(null);
     setDateStatus(null);
+    setNegoFromDetail(false);
+  }
+
+  function openNegoFromDetail() {
+    setSavedClient(selectedClient);
+    setNegoFromDetail(true);
+    setNegoForm(emptyNegoForm());
+    setDateStatus(null);
+    setView('new_nego');
   }
 
   // ── Detail ────────────────────────────────────────────────────────
@@ -470,7 +490,7 @@ export default function CRM() {
 
       {/* ── MODAL: Nova Negociação (Etapa 2) ── */}
       {view === 'new_nego' && (
-        <Modal title="Nova Negociação — Etapa 2" onClose={closeAll}>
+        <Modal title={negoFromDetail ? 'Nova Negociação' : 'Nova Negociação — Etapa 2'} onClose={negoFromDetail ? closeNegoOnly : closeAll}>
           <div style={{ fontSize: 12, color: '#888', marginBottom: 12 }}>
             Cliente: <span style={{ color: '#fff' }}>{displayName(savedClient)}</span>
           </div>
@@ -512,7 +532,7 @@ export default function CRM() {
             onChange={e => setNegoForm(f => ({ ...f, observacao: e.target.value }))}
             placeholder="Detalhes, requisitos especiais..." />
 
-          <ModalBtns onCancel={closeAll} onSave={saveNego}
+          <ModalBtns onCancel={negoFromDetail ? closeNegoOnly : closeAll} onSave={saveNego}
             saveLabel={savingNego ? 'Salvando...' : 'Salvar'} disabled={savingNego} />
         </Modal>
       )}
@@ -525,7 +545,7 @@ export default function CRM() {
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
             <Btn full variant="success" onClick={handleBlockDate}>Bloquear Data</Btn>
-            <Btn full variant="ghost"   onClick={closeAll}>Só Salvar</Btn>
+            <Btn full variant="ghost"   onClick={negoFromDetail ? closeNegoOnly : closeAll}>Só Salvar</Btn>
           </div>
         </Modal>
       )}
@@ -618,8 +638,9 @@ export default function CRM() {
             </div>
           )}
 
-          <div style={{ display: 'flex', gap: 6, marginTop: 14 }}>
+          <div style={{ display: 'flex', gap: 6, marginTop: 14, flexWrap: 'wrap' }}>
             <Btn size="sm" variant="ghost"   full onClick={() => openEdit(selectedClient)}>✏️ Editar</Btn>
+            <Btn size="sm" variant="outline" full onClick={openNegoFromDetail}>📋 Negociação</Btn>
             <Btn size="sm" variant="outline" full onClick={() => { setObsText(''); setView('new_obs'); }}>💬 Observação</Btn>
             <Btn size="sm" variant="danger"  full onClick={handleDelete}>🗑️</Btn>
           </div>

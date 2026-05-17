@@ -70,7 +70,7 @@ export default function Dashboard() {
           </div>
         ) : (
           <div style={{ background: '#fff', color: '#000', padding: 14, position: 'relative' }}>
-            <div style={{ fontSize: 8, letterSpacing: 4, textTransform: 'uppercase', color: '#aaa', marginBottom: 6 }}>
+            <div style={{ fontSize: 11, letterSpacing: 2, textTransform: 'uppercase', color: '#888', marginBottom: 6 }}>
               Próximo Show {confirmedShows.length > 1 ? `(${showIdx + 1}/${confirmedShows.length})` : ''}
             </div>
             <div onClick={() => navigate('/shows')} style={{ cursor: 'pointer' }}>
@@ -99,7 +99,7 @@ export default function Dashboard() {
 
       {/* Visão Geral */}
       <div style={{ padding: '14px 16px 0' }}>
-        <div style={{ fontSize: 11, letterSpacing: 4, color: '#aaa', textTransform: 'uppercase', marginBottom: 10 }}>Visão Geral</div>
+        <div style={{ fontSize: 12, letterSpacing: 2, color: '#bbb', textTransform: 'uppercase', marginBottom: 10 }}>Visão Geral</div>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
           {[
             { icon: '📦', label: 'Equipamentos', val: drones.length, sub: `${dronesOk} bons · ${dronesBad} ruins`, to: '/inventario' },
@@ -109,9 +109,9 @@ export default function Dashboard() {
           ].map(card => (
             <div key={card.label} onClick={() => navigate(card.to)} style={{ background: '#0a0a0a', border: '1px solid #1a1a1a', padding: 12, cursor: 'pointer' }}>
               <div style={{ fontSize: 16, marginBottom: 6 }}>{card.icon}</div>
-              <div style={{ fontSize: 8, letterSpacing: 3, color: '#aaa', textTransform: 'uppercase', marginBottom: 3 }}>{card.label}</div>
-              <div style={{ fontSize: 20, fontWeight: 700, fontFamily: 'Bebas Neue, sans-serif' }}>{card.val}</div>
-              <div style={{ fontSize: 11, color: '#aaa', marginTop: 3 }}>{card.sub}</div>
+              <div style={{ fontSize: 11, letterSpacing: 2, color: '#bbb', textTransform: 'uppercase', marginBottom: 3 }}>{card.label}</div>
+              <div style={{ fontSize: 22, fontWeight: 700, fontFamily: 'Bebas Neue, sans-serif' }}>{card.val}</div>
+              <div style={{ fontSize: 12, color: '#aaa', marginTop: 3 }}>{card.sub}</div>
             </div>
           ))}
         </div>
@@ -173,7 +173,7 @@ export default function Dashboard() {
 
       {/* Acesso Rápido */}
       <div style={{ padding: '14px 16px 0', display: 'flex', flexDirection: 'column', gap: 6 }}>
-        <div style={{ fontSize: 11, letterSpacing: 4, color: '#aaa', textTransform: 'uppercase', marginBottom: 4 }}>Acesso Rápido</div>
+        <div style={{ fontSize: 12, letterSpacing: 2, color: '#bbb', textTransform: 'uppercase', marginBottom: 4 }}>Acesso Rápido</div>
         {[
           { label: 'Manual de Instruções', to: '/manual', icon: '📖' },
           { label: 'Documentação', to: '/documentacao', icon: '📄' },

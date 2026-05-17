@@ -16,7 +16,7 @@ function fmt(v) { return 'R$ ' + (v||0).toFixed(2).replace('.', ',').replace(/\B
 
 const INP = {
   background: '#000', border: '1px solid #222', color: '#fff',
-  padding: '6px 8px', fontFamily: 'Space Mono,monospace', fontSize: 14,
+  padding: '8px 10px', fontFamily: 'Space Mono,monospace', fontSize: 14,
   outline: 'none', width: '100%', boxSizing: 'border-box',
 };
 
@@ -128,7 +128,7 @@ export function Orcamento() {
 
           {/* Cabeçalho da categoria */}
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 12px', borderBottom: '1px solid #111' }}>
-            <div style={{ fontSize: 12, letterSpacing: 2, textTransform: 'uppercase', color: '#888', fontWeight: 700 }}>{cat}</div>
+            <div style={{ fontSize: 13, letterSpacing: 1, textTransform: 'uppercase', color: '#bbb', fontWeight: 700 }}>{cat}</div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
               {!isSecondary && (
                 <span style={{ fontSize: 11, color: '#aaa' }}>Prev: {fmt(groupPrev)}</span>
@@ -212,7 +212,7 @@ export function Orcamento() {
 
           {/* Total realizado do grupo */}
           <div style={{ padding: '8px 12px', borderTop: '1px solid #111', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <span style={{ fontSize: 11, color: '#aaa', letterSpacing: 1, textTransform: 'uppercase' }}>Total Realizado</span>
+            <span style={{ fontSize: 12, color: '#bbb', letterSpacing: 1, textTransform: 'uppercase' }}>Total Realizado</span>
             <span style={{ fontSize: 13, fontWeight: 700, color: groupOver ? '#f44336' : '#4caf50' }}>{fmt(groupReal)}</span>
           </div>
         </div>

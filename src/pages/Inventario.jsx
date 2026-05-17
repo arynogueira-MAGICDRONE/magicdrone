@@ -126,7 +126,7 @@ export default function Inventario() {
   const filterBtns = ['todos', 'ok', 'bad', 'manut'];
   const filterLabels = { todos: 'Todos', ok: 'Bom', bad: 'Ruim', manut: 'Manut.' };
 
-  const INP = { background: '#000', border: '1px solid #222', color: '#fff', padding: '7px 10px', fontFamily: 'Space Mono,monospace', fontSize: 13, outline: 'none', width: '100%', boxSizing: 'border-box' };
+  const INP = { background: '#000', border: '1px solid #222', color: '#fff', padding: '9px 10px', fontFamily: 'Space Mono,monospace', fontSize: 14, outline: 'none', width: '100%', boxSizing: 'border-box' };
 
   return (
     <div>
@@ -137,9 +137,9 @@ export default function Inventario() {
         {/* Stats */}
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 6, marginBottom: 10 }}>
           {[['ok','#4caf50',okCount,'Bons'],['bad','#f44336',badCount,'Ruins'],['manut','#ff9800',mautCount,'Manut.']].map(([k,c,n,l]) => (
-            <div key={k} style={{ background: '#0a0a0a', border: '1px solid #1a1a1a', padding: '8px 10px', textAlign: 'center' }}>
-              <div style={{ fontSize: 18, fontWeight: 700, color: c }}>{n}</div>
-              <div style={{ fontSize: 8, letterSpacing: 2, color: '#aaa', textTransform: 'uppercase', marginTop: 2 }}>{l}</div>
+            <div key={k} style={{ background: '#0a0a0a', border: '1px solid #1a1a1a', padding: '10px', textAlign: 'center' }}>
+              <div style={{ fontSize: 20, fontWeight: 700, color: c }}>{n}</div>
+              <div style={{ fontSize: 11, letterSpacing: 1, color: '#bbb', textTransform: 'uppercase', marginTop: 3 }}>{l}</div>
             </div>
           ))}
         </div>
@@ -167,11 +167,11 @@ export default function Inventario() {
         <div style={{ display: 'flex', gap: 5, marginBottom: 8 }}>
           {filterBtns.map(f => (
             <button key={f} onClick={() => setFilter(f)} style={{
-              fontSize: 8, letterSpacing: 2, padding: '4px 8px', textTransform: 'uppercase',
+              fontSize: 11, letterSpacing: 1, padding: '6px 12px', textTransform: 'uppercase',
               fontFamily: 'Space Mono,monospace', cursor: 'pointer',
               border: `1px solid ${filter === f ? '#fff' : '#333'}`,
               background: filter === f ? '#111' : 'transparent',
-              color: filter === f ? '#fff' : '#666',
+              color: filter === f ? '#fff' : '#bbb',
             }}>{filterLabels[f]}</button>
           ))}
           <span style={{ fontSize: 8, color: '#888', letterSpacing: 1, alignSelf: 'center', marginLeft: 4 }}>
@@ -203,7 +203,7 @@ export default function Inventario() {
                 <input type="checkbox" checked={selected.has(d.id)} onChange={() => toggleOne(d.id)}
                   style={{ accentColor: '#fff', cursor: 'pointer', flexShrink: 0 }} />
                 <div style={{ flex: 1 }}>
-                  <div style={{ fontSize: 14, fontWeight: 600, letterSpacing: 1 }}>{d.serial}</div>
+                  <div style={{ fontSize: 15, fontWeight: 600, letterSpacing: 1 }}>{d.serial}</div>
                 </div>
                 <div onClick={() => cycleStatus(d)} style={{ cursor: 'pointer' }}>
                   <StatusPill status={d.status} />

@@ -37,10 +37,10 @@ const EMPTY_BUDGET = {
 };
 
 // Mini-componentes para o formulário de orçamento
-const INP = { background: '#000', border: '1px solid #222', color: '#fff', padding: '7px 8px', fontFamily: 'Space Mono,monospace', fontSize: 13, outline: 'none', boxSizing: 'border-box' };
-const LBL = { fontSize: 11, letterSpacing: 3, color: '#aaa', textTransform: 'uppercase', display: 'block', marginBottom: 3 };
-const HDIV = { marginTop: 12, paddingTop: 10, borderTop: '1px solid #1a1a1a' };
-const SECTTITLE = { fontSize: 11, letterSpacing: 3, color: '#888', textTransform: 'uppercase', marginBottom: 10 };
+const INP = { background: '#000', border: '1px solid #222', color: '#fff', padding: '9px 10px', fontFamily: 'Space Mono,monospace', fontSize: 14, outline: 'none', boxSizing: 'border-box' };
+const LBL = { fontSize: 12, letterSpacing: 2, color: '#aaa', textTransform: 'uppercase', display: 'block', marginBottom: 4 };
+const HDIV = { marginTop: 14, paddingTop: 12, borderTop: '1px solid #1a1a1a' };
+const SECTTITLE = { fontSize: 12, letterSpacing: 2, color: '#bbb', textTransform: 'uppercase', marginBottom: 10 };
 
 function BField({ label, value, onChange }) {
   return (
@@ -328,7 +328,7 @@ export default function Shows() {
           <button onClick={() => changeMonth(1)} style={{ background: 'transparent', border: '1px solid #333', color: '#fff', padding: '4px 10px', cursor: 'pointer', fontFamily: 'Space Mono, monospace' }}>→</button>
         </div>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 2, marginBottom: 2 }}>
-          {DAYS.map(d => <div key={d} style={{ fontSize: 8, letterSpacing: 1, color: '#aaa', textAlign: 'center', padding: '4px 0', textTransform: 'uppercase' }}>{d}</div>)}
+          {DAYS.map(d => <div key={d} style={{ fontSize: 11, letterSpacing: 1, color: '#bbb', textAlign: 'center', padding: '4px 0', textTransform: 'uppercase' }}>{d}</div>)}
         </div>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 2 }}>
           {renderCal().map((cell, i) => (
@@ -357,11 +357,11 @@ export default function Shows() {
             borderLeft: `3px solid ${STATUS_COLOR[s.status] || '#888'}`,
             padding: '12px 14px', marginBottom: 6, cursor: 'pointer',
           }}>
-            <div style={{ fontSize: 11, letterSpacing: 2, color: '#aaa', marginBottom: 3 }}>
+            <div style={{ fontSize: 12, letterSpacing: 1, color: '#bbb', marginBottom: 3 }}>
               {fmtDate(s.date)} {s.test ? `· Teste: ${fmtTestDates(s.test)}` : ''}
             </div>
-            <div style={{ fontSize: 14, fontWeight: 700, marginBottom: 2 }}>{s.client}</div>
-            {(s.city || s.state) && <div style={{ fontSize: 12, color: '#888' }}>{[s.city, s.state].filter(Boolean).join(', ')}</div>}
+            <div style={{ fontSize: 15, fontWeight: 700, marginBottom: 2 }}>{s.client}</div>
+            {(s.city || s.state) && <div style={{ fontSize: 13, color: '#aaa' }}>{[s.city, s.state].filter(Boolean).join(', ')}</div>}
             <div style={{ display: 'flex', gap: 6, marginTop: 6 }}>
               <StatusPill status={s.status} />
               <span style={{ fontSize: 8, letterSpacing: 2, padding: '2px 8px', border: '1px solid #444', color: '#aaa', textTransform: 'uppercase' }}>{s.drones} drones</span>

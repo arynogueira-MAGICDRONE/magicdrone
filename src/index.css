@@ -36,7 +36,8 @@ html, body, #root {
   background: var(--black);
   color: var(--white);
   font-family: var(--font-mono);
-  font-size: 14px;
+  font-size: 15px;
+  letter-spacing: 0.3px;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }

@@ -22,24 +22,24 @@ function fmtDate(s) { if (!s) return '—'; const [y,m,d]=s.split('-'); return `
 function todayStr() { const d=new Date(),p=n=>n<10?'0'+n:n; return `${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())}`; }
 
 // ─── Estilos compartilhados ───────────────────────────────────────────────────
-const thS = { fontSize:8, letterSpacing:2, color:'#aaa', textTransform:'uppercase', padding:'7px 10px', borderBottom:'1px solid #1a1a1a', textAlign:'left', background:'#050505', whiteSpace:'nowrap' };
-const tdS = { fontSize:13, padding:'8px 10px', borderBottom:'1px solid #0d0d0d' };
-const selS = { background:'#000', border:'1px solid #333', color:'#fff', padding:'6px 8px', fontFamily:'Space Mono,monospace', fontSize:12, outline:'none' };
+const thS = { fontSize:11, letterSpacing:1, color:'#bbb', textTransform:'uppercase', padding:'9px 10px', borderBottom:'1px solid #1a1a1a', textAlign:'left', background:'#050505', whiteSpace:'nowrap' };
+const tdS = { fontSize:13, padding:'9px 10px', borderBottom:'1px solid #0d0d0d' };
+const selS = { background:'#000', border:'1px solid #333', color:'#fff', padding:'7px 10px', fontFamily:'Space Mono,monospace', fontSize:13, outline:'none' };
 
 // ─── Sub-componentes ─────────────────────────────────────────────────────────
 function KPI({ label, value, sub, color='#fff' }) {
   return (
-    <div style={{ background:'#0a0a0a', border:'1px solid #1a1a1a', padding:'12px 10px' }}>
-      <div style={{ fontSize:8, letterSpacing:3, color:'#aaa', textTransform:'uppercase', marginBottom:5 }}>{label}</div>
-      <div style={{ fontSize:22, fontWeight:700, fontFamily:'Bebas Neue,sans-serif', color, letterSpacing:1 }}>{value}</div>
-      {sub && <div style={{ fontSize:11, color:'#888', marginTop:3 }}>{sub}</div>}
+    <div style={{ background:'#0a0a0a', border:'1px solid #1a1a1a', padding:'14px 12px' }}>
+      <div style={{ fontSize:11, letterSpacing:2, color:'#bbb', textTransform:'uppercase', marginBottom:6 }}>{label}</div>
+      <div style={{ fontSize:24, fontWeight:700, fontFamily:'Bebas Neue,sans-serif', color, letterSpacing:1 }}>{value}</div>
+      {sub && <div style={{ fontSize:12, color:'#aaa', marginTop:4 }}>{sub}</div>}
     </div>
   );
 }
 
 function SHead({ title }) {
   return (
-    <div style={{ fontSize:11, letterSpacing:4, color:'#aaa', textTransform:'uppercase', padding:'18px 16px 8px', borderTop:'1px solid #0d0d0d' }}>
+    <div style={{ fontSize:13, letterSpacing:2, color:'#bbb', textTransform:'uppercase', padding:'18px 16px 8px', borderTop:'1px solid #0d0d0d' }}>
       {title}
     </div>
   );
@@ -87,7 +87,7 @@ function BarChart({ data, labelKey, valueKey, fmtTip, color='#fff', height=140 }
                   fill="#fff" fontSize={8} fontFamily="Space Mono,monospace">{fmtTip ? fmtTip(val) : val}</text>
               )}
               <text x={x+barW/2} y={height+padT+padB-4} textAnchor="middle"
-                fill="#555" fontSize={7} fontFamily="Space Mono,monospace">{d[labelKey]}</text>
+                fill="#aaa" fontSize={9} fontFamily="Space Mono,monospace">{d[labelKey]}</text>
             </g>
           );
         })}
@@ -186,9 +186,9 @@ function PieChart({ data, nameKey, valueKey }) {
             opacity: hov!==null && hov!==i ? 0.35 : 1, transition:'opacity 0.15s', cursor:'default' }}
             onMouseEnter={() => setHov(i)} onMouseLeave={() => setHov(null)}>
             <div style={{ width:8, height:8, background:seg.color, flexShrink:0 }} />
-            <span style={{ fontSize:11, color:'#ccc', flex:1 }}>{seg[nameKey]}</span>
-            <span style={{ fontSize:11, color:'#aaa', whiteSpace:'nowrap' }}>{(seg.frac*100).toFixed(1)}%</span>
-            <span style={{ fontSize:11, color:'#888', whiteSpace:'nowrap', marginLeft:4 }}>{fmt(seg[valueKey])}</span>
+            <span style={{ fontSize:12, color:'#ccc', flex:1 }}>{seg[nameKey]}</span>
+            <span style={{ fontSize:12, color:'#aaa', whiteSpace:'nowrap' }}>{(seg.frac*100).toFixed(1)}%</span>
+            <span style={{ fontSize:12, color:'#888', whiteSpace:'nowrap', marginLeft:4 }}>{fmt(seg[valueKey])}</span>
           </div>
         ))}
       </div>
@@ -443,12 +443,12 @@ export default function Relatorios() {
       <div style={{ padding:'12px 16px 0' }}>
         <div style={{ background:'#0a0a0a', border:'1px solid #1a1a1a', padding:14, display:'flex', alignItems:'center', justifyContent:'space-between', flexWrap:'wrap', gap:12 }}>
           <div>
-            <div style={{ fontSize:8, letterSpacing:3, color:'#aaa', textTransform:'uppercase', marginBottom:4 }}>Previsão de Receita</div>
-            <div style={{ fontSize:8, color:'#888', marginBottom:4 }}>Shows confirmados com data futura</div>
+            <div style={{ fontSize:11, letterSpacing:2, color:'#bbb', textTransform:'uppercase', marginBottom:4 }}>Previsão de Receita</div>
+            <div style={{ fontSize:12, color:'#aaa', marginBottom:4 }}>Shows confirmados com data futura</div>
             <div style={{ fontSize:24, fontWeight:700, fontFamily:'Bebas Neue,sans-serif', color:'#fff' }}>{fmt(previsao)}</div>
           </div>
           <div>
-            <div style={{ fontSize:8, letterSpacing:3, color:'#aaa', textTransform:'uppercase', marginBottom:4 }}>Meta Mensal</div>
+            <div style={{ fontSize:11, letterSpacing:2, color:'#bbb', textTransform:'uppercase', marginBottom:4 }}>Meta Mensal</div>
             {editMeta ? (
               <div style={{ display:'flex', gap:6, alignItems:'center' }}>
                 <input type="number" value={metaInput} onChange={e=>setMetaInput(e.target.value)}
