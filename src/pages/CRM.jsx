@@ -60,7 +60,7 @@ const emptyEditForm = (c = {}) => ({
   email: c.email || '', cpf: c.cpf || '', cnpj: c.cnpj || '',
   cep: c.cep || '', rua: c.rua || '', numero: c.numero || '',
   complemento: c.complemento || '', bairro: c.bairro || '',
-  cidade: c.cidade || '', estado: c.estado || '', ramo: c.ramo || '',
+  cidade: c.cidade || '', estado: c.estado || '', ramo: c.ramo_atividade || '',
 });
 
 function TypeToggle({ value, onChange }) {
@@ -335,7 +335,17 @@ export default function CRM() {
     setUploadingDocs(true);
     for (const file of files) {
       const path = `crm/${editingId}/${Date.now()}_${file.name}`;
-      await supabase.storage.from('comprovantes').upload(path, file);
+      const { error: upErr } = await supabase.storage.from('comprovantes').upload(path, file);
+      if (upErr) continue;
+      const { data: urlData } = supabase.storage.from('comprovantes').getPublicUrl(path);
+      const ext = file.name.split('.').pop().toLowerCase();
+      const tipo = ['jpg','jpeg','png','gif','webp'].includes(ext) ? 'img' : ext === 'pdf' ? 'pdf' : 'doc';
+      await supabase.from('crm_documentos').insert({
+        crm_id: editingId,
+        nome:   file.name,
+        url:    urlData.publicUrl,
+        tipo,
+      });
     }
     setUploadingDocs(false);
     alert('Documentos enviados com sucesso!');
@@ -346,25 +356,25 @@ export default function CRM() {
     if (f.tipo === 'pf' && !f.nome.trim())    { alert('Informe o nome.'); return; }
     if (f.tipo === 'pj' && !f.empresa.trim()) { alert('Informe o nome da empresa.'); return; }
     const row = {
-      tipo:         f.tipo,
-      nome:         f.tipo === 'pf' ? f.nome.trim()    : '',
-      nome_empresa: f.tipo === 'pj' ? f.empresa.trim() : '',
-      contato:      f.contato.trim(),
-      telefone:     f.telefone.trim(),
-      tem_whatsapp: f.telefoneIsWhatsapp,
-      whatsapp:     f.telefoneIsWhatsapp ? '' : f.whatsapp.trim(),
-      email:        f.email.trim(),
-      cpf:          f.tipo === 'pf' ? f.cpf.trim()  : '',
-      cnpj:         f.tipo === 'pj' ? f.cnpj.trim() : '',
-      cep:          f.cep.trim(),
-      rua:          f.rua.trim(),
-      numero:       f.numero.trim(),
-      complemento:  f.complemento.trim(),
-      bairro:       f.bairro.trim(),
-      cidade:       f.cidade.trim(),
-      estado:       f.estado.trim(),
-      ramo:         f.tipo === 'pj' ? f.ramo.trim() : '',
-      socios:       f.tipo === 'pj' ? socios.filter(s => s.nome.trim()) : [],
+      tipo:           f.tipo,
+      nome:           f.tipo === 'pf' ? f.nome.trim()    : '',
+      nome_empresa:   f.tipo === 'pj' ? f.empresa.trim() : '',
+      contato:        f.contato.trim(),
+      telefone:       f.telefone.trim(),
+      tem_whatsapp:   f.telefoneIsWhatsapp,
+      whatsapp:       f.telefoneIsWhatsapp ? '' : f.whatsapp.trim(),
+      email:          f.email.trim(),
+      cpf:            f.tipo === 'pf' ? f.cpf.trim()  : '',
+      cnpj:           f.tipo === 'pj' ? f.cnpj.trim() : '',
+      cep:            f.cep.trim(),
+      rua:            f.rua.trim(),
+      numero:         f.numero.trim(),
+      complemento:    f.complemento.trim(),
+      bairro:         f.bairro.trim(),
+      cidade:         f.cidade.trim(),
+      estado:         f.estado.trim(),
+      ramo_atividade: f.tipo === 'pj' ? f.ramo.trim() : '',
+      socios:         f.tipo === 'pj' ? socios.filter(s => s.nome.trim()) : [],
     };
     const { data, error } = await supabase.from('crm').update(row).eq('id', editingId).select().single();
     if (error) { alert('Erro ao salvar: ' + error.message); return; }
@@ -537,7 +547,7 @@ export default function CRM() {
             selectedClient.email    ? ['Email',    selectedClient.email]    : null,
             selectedClient.cpf      ? ['CPF',      selectedClient.cpf]      : null,
             selectedClient.cnpj     ? ['CNPJ',     selectedClient.cnpj]     : null,
-            selectedClient.ramo     ? ['Ramo',     selectedClient.ramo]     : null,
+            selectedClient.ramo_atividade ? ['Ramo', selectedClient.ramo_atividade] : null,
             (selectedClient.cidade || selectedClient.estado)
               ? ['Cidade', [selectedClient.cidade, selectedClient.estado].filter(Boolean).join(' – ')] : null,
             selectedClient.cep  ? ['CEP', selectedClient.cep] : null,
