@@ -1,5 +1,7 @@
 // ─── ORÇAMENTO ───────────────────────────────────────────────────────────────
 import React, { useState, useEffect, useRef } from 'react';
+import * as XLSX from 'xlsx';
+import { supabase } from '../supabase';
 import { useApp } from '../context/AppContext';
 import { useAuth } from '../context/AuthContext';
 import { PageHeader, Section, Input, Select, Modal, ModalBtns, Empty, Btn } from '../components/layout/UI';
@@ -13,20 +15,19 @@ const DISTANCES = [
 ];
 
 const PER_MEMBER_PREFIXES = ['Diária - ', 'Meia Diária - ', 'Alimentação - '];
+const isPerMemberCat = (cat) => cat && PER_MEMBER_PREFIXES.some(pfx => cat.startsWith(pfx));
 
 function memberDefaults(name) {
   const isWellington = name?.toLowerCase().includes('wellington');
   return {
-    diaria:    isWellington ? '480'    : '315',
-    meia:      isWellington ? '240'    : '157.50',
-    cafe:      '30',
-    almoco:    '60',
-    jantar:    '60',
+    diaria: isWellington ? '480'   : '315',
+    meia:   isWellington ? '240'   : '157.50',
+    cafe:   '30', almoco: '60', jantar: '60',
   };
 }
-const isPerMemberCat = (cat) => cat && PER_MEMBER_PREFIXES.some(pfx => cat.startsWith(pfx));
 
 function fmt(v) { return 'R$ ' + (v||0).toFixed(2).replace('.', ',').replace(/\B(?=(\d{3})+(?!\d))/g, '.'); }
+function fmtDate(str) { if (!str) return '—'; const [y,m,d] = str.split('-'); return `${d}/${m}/${y}`; }
 const pf = v => parseFloat(String(v || 0).replace(',', '.')) || 0;
 const qi = v => parseInt(v) || 0;
 
@@ -35,22 +36,53 @@ const INP = {
   padding: '8px 10px', fontFamily: 'Space Mono,monospace', fontSize: 16,
   outline: 'none', width: '100%', boxSizing: 'border-box',
 };
-
 const INP_SM = {
   background: '#000', border: '1px solid #222', color: '#fff',
   padding: '6px 8px', fontFamily: 'Space Mono,monospace', fontSize: 14,
   outline: 'none', flex: 1, minWidth: 0, boxSizing: 'border-box',
 };
-
 const SEL_SM = {
   background: '#000', border: '1px solid #333', color: '#fff',
   padding: '6px 8px', fontFamily: 'Space Mono,monospace', fontSize: 13, outline: 'none',
 };
-
 const ROW_LABEL = { fontSize: 13, color: '#aaa', minWidth: 100, flexShrink: 0 };
 
-const emptyDiaria  = (memberId, name) => ({ memberId, name, diariaVal: '', diariaQty: '', meiaVal: '', meiaQty: '' });
-const emptyAlim    = (memberId, name) => ({ memberId, name, cafeVal: '', cafeQty: '', almocoVal: '', almocoQty: '', jantarVal: '', jantarQty: '' });
+const emptyDiaria = (memberId, name) => ({ memberId, name, diariaVal: '', diariaQty: '', meiaVal: '', meiaQty: '' });
+const emptyAlim   = (memberId, name) => ({ memberId, name, cafeVal: '', cafeQty: '', almocoVal: '', almocoQty: '', jantarVal: '', jantarQty: '' });
+
+const ADIANT_STATUS = {
+  solicitado: { label: 'Solicitado', color: '#ff9800' },
+  aprovado:   { label: 'Aprovado',   color: '#2196f3' },
+  pago:       { label: 'Pago',       color: '#4caf50' },
+};
+
+// ─── PDF helper via window.open ───────────────────────────────────────────────
+function printHtml(htmlContent, title) {
+  const win = window.open('', '_blank');
+  if (!win) { alert('Permita pop-ups para gerar o PDF.'); return; }
+  win.document.write(`<!DOCTYPE html><html><head><meta charset="utf-8">
+    <title>${title}</title>
+    <style>
+      body { font-family: Arial, sans-serif; font-size: 13px; color: #000; background: #fff; padding: 24px; }
+      h1 { font-size: 16px; text-align: center; margin-bottom: 4px; }
+      h2 { font-size: 13px; text-align: center; margin-bottom: 16px; color: #333; }
+      table { width: 100%; border-collapse: collapse; margin: 12px 0; }
+      th { background: #ddd; font-weight: bold; border: 1px solid #999; padding: 7px 10px; text-align: left; }
+      td { border: 1px solid #bbb; padding: 6px 10px; }
+      .total-row td { font-weight: bold; background: #f0f0f0; }
+      .saldo-row td { font-weight: bold; background: #e8f5e9; }
+      .neg td { background: #fce4ec; }
+      .comp-sim { color: #2e7d32; font-weight: bold; }
+      .comp-nao { color: #c62828; font-weight: bold; }
+      .img-section { margin: 12px 0; }
+      .img-section img { max-width: 320px; max-height: 320px; display: block; margin: 8px 0; border: 1px solid #ccc; }
+      @media print { body { padding: 0; } }
+    </style>
+  </head><body>${htmlContent}
+    <script>setTimeout(function(){ window.print(); }, 400);</script>
+  </body></html>`);
+  win.document.close();
+}
 
 export function Orcamento() {
   const {
@@ -60,7 +92,9 @@ export function Orcamento() {
   } = useApp();
   const { user } = useAuth();
   const isSecondary = user?.perfil === 'secundario';
+  const canApprove  = user?.perfil === 'master' || user?.perfil === 'administrativo';
 
+  // ── Existing state ───────────────────────────────────────────────
   const [sel, setSel]               = useState('');
   const [modal, setModal]           = useState(false);
   const [form, setForm]             = useState({ cat: 'Hotel', prev: '', nova: '' });
@@ -71,22 +105,29 @@ export function Orcamento() {
   const [loadingBudget, setLoadingBudget] = useState(false);
   const [uploadingFor, setUploadingFor]   = useState({});
 
-  // Per-member diárias
+  // ── Per-member diárias ───────────────────────────────────────────
   const [diariaMembers, setDiariaMembers] = useState([]);
   const [diariaAddSel, setDiariaAddSel]   = useState('');
   const diariaRef = useRef([]);
   useEffect(() => { diariaRef.current = diariaMembers; }, [diariaMembers]);
 
-  // Per-member alimentação
+  // ── Per-member alimentação ───────────────────────────────────────
   const [alimMembers, setAlimMembers] = useState([]);
   const [alimAddSel, setAlimAddSel]   = useState('');
   const alimRef = useRef([]);
   useEffect(() => { alimRef.current = alimMembers; }, [alimMembers]);
 
+  // ── Adiantamento state ───────────────────────────────────────────
+  const [adiantMap, setAdiantMap]     = useState({});  // { [itemId]: {valor, status, numero} }
+  const [adiantEdits, setAdiantEdits] = useState({});  // { [itemId]: string }
+
+  // ── Report state ─────────────────────────────────────────────────
+  const [reportModal, setReportModal] = useState(false);
+
+  // ── Derived ──────────────────────────────────────────────────────
   const show  = sel ? shows.find(s => String(s.id) === sel) : null;
   const items = show ? (budgets[show.id] || []) : [];
 
-  // Group budget items — exclude per-member categories
   const groupedMap = {};
   const groupOrder = [];
   for (const item of items) {
@@ -98,15 +139,13 @@ export function Orcamento() {
 
   const totalPrev = items.reduce((a, i) => a + (i.prev || 0), 0);
   const totalReal = items.reduce((a, i) => a + (i.real || 0), 0);
-  const diff = totalReal - totalPrev;
+  const diff      = totalReal - totalPrev;
 
-  // Scaled members for current show
-  const scaledMemberIds  = show ? (scaling[show.id] || []).map(sc => sc.memberId) : [];
-  const scaledMembers    = members.filter(m => scaledMemberIds.includes(m.id));
+  const scaledMemberIds = show ? (scaling[show.id] || []).map(sc => sc.memberId) : [];
+  const scaledMembers   = members.filter(m => scaledMemberIds.includes(m.id));
   const availDiaria = scaledMembers.filter(m => !diariaMembers.some(d => d.memberId === m.id));
   const availAlim   = scaledMembers.filter(m => !alimMembers.some(a  => a.memberId  === m.id));
 
-  // Computed totals
   const diariaTotalAll = diariaMembers.reduce((acc, m) => acc + pf(m.diariaVal)*qi(m.diariaQty) + pf(m.meiaVal)*qi(m.meiaQty), 0);
   const alimTotalAll   = alimMembers.reduce((acc, m) => acc + pf(m.cafeVal)*qi(m.cafeQty) + pf(m.almocoVal)*qi(m.almocoQty) + pf(m.jantarVal)*qi(m.jantarQty), 0);
 
@@ -119,16 +158,63 @@ export function Orcamento() {
     setAlimMembers([]);
     setDiariaAddSel('');
     setAlimAddSel('');
+    setAdiantMap({});
+    setAdiantEdits({});
     Promise.all([loadBudget(sel), loadScaling(sel)])
       .then(([rawItems]) => {
-        if (rawItems.length > 0) loadComprovantesForShow(rawItems.map(i => i.id));
+        if (rawItems.length > 0) {
+          loadComprovantesForShow(rawItems.map(i => i.id));
+          loadAdiantamentos(rawItems.map(i => i.id));
+        }
         populatePerMemberState(rawItems);
       })
       .finally(() => setLoadingBudget(false));
   }, [sel]); // eslint-disable-line react-hooks/exhaustive-deps
 
+  // ── Adiantamento helpers ─────────────────────────────────────────
+  async function loadAdiantamentos(itemIds) {
+    if (!itemIds.length) return;
+    const { data } = await supabase
+      .from('orcamento')
+      .select('id, adiantamento, status_adiantamento, numero_lancamento')
+      .in('id', itemIds);
+    if (data) {
+      const map = {};
+      data.forEach(i => {
+        map[i.id] = {
+          valor:  i.adiantamento       || 0,
+          status: i.status_adiantamento || null,
+          numero: i.numero_lancamento   || null,
+        };
+      });
+      setAdiantMap(map);
+    }
+  }
+
+  async function requestAdiantamento(itemId) {
+    const val = pf(adiantEdits[itemId] !== undefined ? adiantEdits[itemId] : adiantMap[itemId]?.valor);
+    if (!val) { alert('Informe o valor do adiantamento.'); return; }
+    const { error } = await supabase.from('orcamento')
+      .update({ adiantamento: val, status_adiantamento: 'solicitado' })
+      .eq('id', itemId);
+    if (error) { alert('Erro: ' + error.message); return; }
+    setAdiantMap(prev => ({ ...prev, [itemId]: { ...prev[itemId], valor: val, status: 'solicitado' } }));
+    setAdiantEdits(prev => { const n = { ...prev }; delete n[itemId]; return n; });
+  }
+
+  async function cycleAdiantStatus(itemId) {
+    if (!canApprove) return;
+    const cycle = { solicitado: 'aprovado', aprovado: 'pago', pago: 'solicitado' };
+    const current = adiantMap[itemId]?.status || 'solicitado';
+    const next    = cycle[current];
+    const { error } = await supabase.from('orcamento')
+      .update({ status_adiantamento: next })
+      .eq('id', itemId);
+    if (!error) setAdiantMap(prev => ({ ...prev, [itemId]: { ...prev[itemId], status: next } }));
+  }
+
+  // ── Per-member helpers ────────────────────────────────────────────
   function populatePerMemberState(rawItems) {
-    // Diárias
     const diariaResult = [];
     const seenD = new Set();
     for (const item of rawItems) {
@@ -139,17 +225,15 @@ export function Orcamento() {
       const member   = members.find(m => m.name === name);
       const meiaItem = rawItems.find(i => i.cat === `Meia Diária - ${name}`);
       diariaResult.push({
-        memberId:  member?.id || name,
-        name,
-        diariaVal: item.prev > 0     ? String(item.prev)     : '',
-        diariaQty: item.prev > 0     ? '1'                   : '',
+        memberId: member?.id || name, name,
+        diariaVal: item.prev > 0 ? String(item.prev) : '',
+        diariaQty: item.prev > 0 ? '1' : '',
         meiaVal:   meiaItem?.prev > 0 ? String(meiaItem.prev) : '',
-        meiaQty:   meiaItem?.prev > 0 ? '1'                   : '',
+        meiaQty:   meiaItem?.prev > 0 ? '1' : '',
       });
     }
     setDiariaMembers(diariaResult);
 
-    // Alimentação
     const alimResult = [];
     const seenA = new Set();
     for (const item of rawItems) {
@@ -163,21 +247,20 @@ export function Orcamento() {
     setAlimMembers(alimResult);
   }
 
-  // ── Diárias helpers ──────────────────────────────────────────────
   const updateDiaria = (idx, field, value) =>
     setDiariaMembers(prev => prev.map((m, i) => i === idx ? { ...m, [field]: value } : m));
 
   const saveDiariaLine = async (m) => {
     if (!show || !m) return;
-    const diariaTotal = pf(m.diariaVal) * qi(m.diariaQty);
-    const meiaTotal   = pf(m.meiaVal)   * qi(m.meiaQty);
+    const dt = pf(m.diariaVal) * qi(m.diariaQty);
+    const mt = pf(m.meiaVal)   * qi(m.meiaQty);
     const cur = budgets[show.id] || [];
     const di  = cur.find(i => i.cat === `Diária - ${m.name}`);
     const mi  = cur.find(i => i.cat === `Meia Diária - ${m.name}`);
-    if (di) await updateBudgetItem(show.id, di.id, { prev: diariaTotal, real: di.real });
-    else    await addBudgetItem(show.id, { cat: `Diária - ${m.name}`, prev: diariaTotal, real: 0 });
-    if (mi) await updateBudgetItem(show.id, mi.id, { prev: meiaTotal, real: mi.real });
-    else    await addBudgetItem(show.id, { cat: `Meia Diária - ${m.name}`, prev: meiaTotal, real: 0 });
+    if (di) await updateBudgetItem(show.id, di.id, { prev: dt, real: di.real });
+    else    await addBudgetItem(show.id, { cat: `Diária - ${m.name}`, prev: dt, real: 0 });
+    if (mi) await updateBudgetItem(show.id, mi.id, { prev: mt, real: mi.real });
+    else    await addBudgetItem(show.id, { cat: `Meia Diária - ${m.name}`, prev: mt, real: 0 });
   };
 
   const addDiariaMember = async () => {
@@ -209,15 +292,14 @@ export function Orcamento() {
     setDiariaMembers(prev => prev.filter(x => x.memberId !== memberId));
   };
 
-  // ── Alimentação helpers ──────────────────────────────────────────
   const updateAlim = (idx, field, value) =>
     setAlimMembers(prev => prev.map((m, i) => i === idx ? { ...m, [field]: value } : m));
 
   const saveAlimLine = async (m) => {
     if (!show || !m) return;
     const total = pf(m.cafeVal)*qi(m.cafeQty) + pf(m.almocoVal)*qi(m.almocoQty) + pf(m.jantarVal)*qi(m.jantarQty);
-    const cur  = budgets[show.id] || [];
-    const ai   = cur.find(i => i.cat === `Alimentação - ${m.name}`);
+    const cur = budgets[show.id] || [];
+    const ai  = cur.find(i => i.cat === `Alimentação - ${m.name}`);
     if (ai) await updateBudgetItem(show.id, ai.id, { prev: total, real: ai.real });
     else    await addBudgetItem(show.id, { cat: `Alimentação - ${m.name}`, prev: total, real: 0 });
   };
@@ -230,9 +312,7 @@ export function Orcamento() {
     await addBudgetItem(show.id, { cat: `Alimentação - ${member.name}`, prev: 0, real: 0 });
     setAlimMembers(prev => [...prev, {
       memberId: member.id, name: member.name,
-      cafeVal:   def.cafe,   cafeQty:   '',
-      almocoVal: def.almoco, almocoQty: '',
-      jantarVal: def.jantar, jantarQty: '',
+      cafeVal: def.cafe, cafeQty: '', almocoVal: def.almoco, almocoQty: '', jantarVal: def.jantar, jantarQty: '',
     }]);
     setAlimAddSel('');
   };
@@ -246,7 +326,10 @@ export function Orcamento() {
     setAlimMembers(prev => prev.filter(x => x.memberId !== memberId));
   };
 
-  // ── Existing helpers ─────────────────────────────────────────────
+  const availDiariaMembers = scaledMembers.filter(m => !diariaMembers.some(d => d.memberId === m.id));
+  const availAlimMembers   = scaledMembers.filter(m => !alimMembers.some(a  => a.memberId  === m.id));
+
+  // ── Existing misc helpers ────────────────────────────────────────
   const handleShowSelect = (id) => { setSel(id); setDist(null); };
 
   const calcDist = () => {
@@ -285,33 +368,221 @@ export function Orcamento() {
     setUploadingFor(prev => ({ ...prev, [item.id]: false }));
   };
 
-  // ── Add-member action bar ────────────────────────────────────────
-  function AddMemberBar({ options, selVal, onSelChange, onAdd, label }) {
-    return options.length > 0 ? (
-      <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
-        <select value={selVal} onChange={e => onSelChange(e.target.value)} style={SEL_SM}>
-          <option value="">Membro...</option>
-          {options.map(m => <option key={m.id} value={m.id}>{m.name}</option>)}
-        </select>
-        <button onClick={onAdd} disabled={!selVal} style={{
-          padding: '6px 12px', background: 'transparent', border: '1px solid #fff',
-          color: selVal ? '#fff' : '#555', fontFamily: 'Space Mono,monospace', fontSize: 13,
-          cursor: selVal ? 'pointer' : 'not-allowed', textTransform: 'uppercase', letterSpacing: 1, whiteSpace: 'nowrap',
-        }}>{label}</button>
-      </div>
-    ) : null;
+  // ── Reports ──────────────────────────────────────────────────────
+  async function getPrevShowBalance() {
+    if (!show) return 0;
+    const clientShows = shows
+      .filter(s => s.client === show.client && String(s.id) !== String(show.id))
+      .sort((a, b) => b.date.localeCompare(a.date));
+    if (!clientShows.length) return 0;
+    const { data } = await supabase.from('orcamento')
+      .select('adiantamento, realizado')
+      .eq('show_id', clientShows[0].id);
+    if (!data) return 0;
+    const totalAdiant = data.reduce((a, i) => a + (i.adiantamento || 0), 0);
+    const totalReal   = data.reduce((a, i) => a + (i.realizado   || 0), 0);
+    return totalAdiant - totalReal;
   }
 
-  // ── Empty state message ──────────────────────────────────────────
-  function EmptyMemberSection({ scaledCount }) {
-    return (
-      <div style={{ fontSize: 13, color: '#555', padding: '12px 0', textAlign: 'center', letterSpacing: 1 }}>
-        {scaledCount === 0 ? 'Nenhum membro escalado para este show' : 'Use o seletor acima para adicionar um membro'}
-      </div>
-    );
+  async function handleReportA(format) {
+    const adiantItems = items.filter(i => adiantMap[i.id]?.valor > 0);
+    if (!adiantItems.length) { alert('Nenhum adiantamento solicitado para este show.'); return; }
+    const prevBalance = await getPrevShowBalance();
+    const total = adiantItems.reduce((a, i) => a + (adiantMap[i.id]?.valor || 0), 0);
+    const grandTotal = total + prevBalance;
+
+    if (format === 'excel') {
+      const rows = [
+        ['SOLICITAÇÃO DE ADIANTAMENTO'],
+        [`SHOW: ${show.client}    DATA: ${fmtDate(show.date)}`],
+        [''],
+        ['DESPESA', 'VALOR (R$)'],
+        ...adiantItems.map(i => [i.cat, adiantMap[i.id]?.valor || 0]),
+        [''],
+        [`Diferença show anterior`, prevBalance],
+        ['TOTAL', grandTotal],
+      ];
+      const wb = XLSX.utils.book_new();
+      const ws = XLSX.utils.aoa_to_sheet(rows);
+      ws['!cols'] = [{ wch: 40 }, { wch: 16 }];
+      XLSX.utils.book_append_sheet(wb, ws, 'Adiantamento');
+      XLSX.writeFile(wb, `adiantamento-${show.client}-${show.date}.xlsx`);
+    } else {
+      const rows = adiantItems.map(i => `<tr><td>${i.cat}</td><td style="text-align:right">${fmt(adiantMap[i.id]?.valor || 0)}</td></tr>`).join('');
+      printHtml(`
+        <h1>SOLICITAÇÃO DE ADIANTAMENTO</h1>
+        <h2>SHOW: ${show.client} &nbsp;&nbsp; DATA: ${fmtDate(show.date)}</h2>
+        <table>
+          <thead><tr><th>Despesa</th><th>Valor</th></tr></thead>
+          <tbody>
+            ${rows}
+            <tr><td>Diferença show anterior</td><td style="text-align:right">${fmt(prevBalance)}</td></tr>
+          </tbody>
+          <tfoot class="total-row"><tr><td><b>TOTAL</b></td><td style="text-align:right"><b>${fmt(grandTotal)}</b></td></tr></tfoot>
+        </table>
+      `, 'Adiantamento de Despesas');
+    }
   }
 
-  // ── Renderiza Despesas genéricas ─────────────────────────────────
+  function handleReportB(format) {
+    if (!items.length) { alert('Sem despesas para este show.'); return; }
+    const totPrev = items.reduce((a, i) => a + (i.prev || 0), 0);
+    const totReal = items.reduce((a, i) => a + (i.real || 0), 0);
+    const saldo   = totReal - totPrev;
+
+    if (format === 'excel') {
+      const rows = [
+        ['ADIANTAMENTO X REALIZADO'],
+        [`${show.client} — ${fmtDate(show.date)}`],
+        [''],
+        ['DESPESA', 'PREVISTO (R$)', 'REALIZADO (R$)'],
+        ...items.map(i => [i.cat, i.prev || 0, i.real || 0]),
+        [''],
+        ['TOTAL', totPrev, totReal],
+        ['SALDO', '', saldo],
+      ];
+      const wb = XLSX.utils.book_new();
+      const ws = XLSX.utils.aoa_to_sheet(rows);
+      ws['!cols'] = [{ wch: 40 }, { wch: 16 }, { wch: 16 }];
+      XLSX.utils.book_append_sheet(wb, ws, 'Adiant x Realizado');
+      XLSX.writeFile(wb, `adiant-vs-realizado-${show.client}-${show.date}.xlsx`);
+    } else {
+      const rows = items.map(i => `<tr><td>${i.cat}</td><td style="text-align:right">${fmt(i.prev||0)}</td><td style="text-align:right">${fmt(i.real||0)}</td></tr>`).join('');
+      const saldoClass = saldo < 0 ? 'neg' : 'saldo-row';
+      printHtml(`
+        <h1>ADIANTAMENTO X REALIZADO</h1>
+        <h2>${show.client} — ${fmtDate(show.date)}</h2>
+        <table>
+          <thead><tr><th>Despesa</th><th>Previsto</th><th>Realizado</th></tr></thead>
+          <tbody>${rows}</tbody>
+          <tfoot>
+            <tr class="total-row"><td><b>TOTAL</b></td><td style="text-align:right"><b>${fmt(totPrev)}</b></td><td style="text-align:right"><b>${fmt(totReal)}</b></td></tr>
+            <tr class="${saldoClass}"><td><b>SALDO</b></td><td></td><td style="text-align:right"><b>${fmt(saldo)}</b></td></tr>
+          </tfoot>
+        </table>
+      `, 'Adiantamento vs Realizado');
+    }
+  }
+
+  function handleReportC(format) {
+    if (!items.length) { alert('Sem despesas para este show.'); return; }
+    const valorVenda  = show.valor || 0;
+    const totDespesas = items.reduce((a, i) => a + (i.real || 0), 0);
+    const resultado   = valorVenda - totDespesas;
+    const margem      = valorVenda > 0 ? (resultado / valorVenda * 100).toFixed(1) : '—';
+
+    // Group by category
+    const catMap = {};
+    items.forEach(i => { catMap[i.cat] = (catMap[i.cat] || 0) + (i.real || 0); });
+
+    if (format === 'excel') {
+      const rows = [
+        ['RELATÓRIO FINAL'],
+        [`${show.client} — ${fmtDate(show.date)}`],
+        [''],
+        ['Valor de Venda', valorVenda],
+        [''],
+        ['CATEGORIA', 'REALIZADO (R$)'],
+        ...Object.entries(catMap).map(([cat, val]) => [cat, val]),
+        [''],
+        ['Total Despesas', totDespesas],
+        ['Resultado (Lucro)', resultado],
+        ['Margem %', margem + '%'],
+      ];
+      const wb = XLSX.utils.book_new();
+      const ws = XLSX.utils.aoa_to_sheet(rows);
+      ws['!cols'] = [{ wch: 40 }, { wch: 16 }];
+      XLSX.utils.book_append_sheet(wb, ws, 'Relatório Final');
+      XLSX.writeFile(wb, `relatorio-final-${show.client}-${show.date}.xlsx`);
+    } else {
+      const rows = Object.entries(catMap).map(([cat, val]) =>
+        `<tr><td>${cat}</td><td style="text-align:right">${fmt(val)}</td></tr>`
+      ).join('');
+      printHtml(`
+        <h1>RELATÓRIO FINAL</h1>
+        <h2>${show.client} — ${fmtDate(show.date)}</h2>
+        <table style="margin-bottom:8px">
+          <tr><td><b>Valor de Venda</b></td><td style="text-align:right"><b>${fmt(valorVenda)}</b></td></tr>
+        </table>
+        <table>
+          <thead><tr><th>Categoria</th><th>Realizado</th></tr></thead>
+          <tbody>${rows}</tbody>
+          <tfoot>
+            <tr class="total-row"><td><b>Total Despesas</b></td><td style="text-align:right"><b>${fmt(totDespesas)}</b></td></tr>
+            <tr class="${resultado >= 0 ? 'saldo-row' : 'neg'}">
+              <td><b>Resultado (Lucro)</b></td>
+              <td style="text-align:right"><b>${fmt(resultado)}</b></td>
+            </tr>
+            <tr><td>Margem</td><td style="text-align:right">${margem}%</td></tr>
+          </tfoot>
+        </table>
+      `, 'Relatório Final');
+    }
+  }
+
+  function handleReportD(format) {
+    if (!items.length) { alert('Sem despesas para este show.'); return; }
+    const totPrev = items.reduce((a, i) => a + (i.prev || 0), 0);
+    const totReal = items.reduce((a, i) => a + (i.real || 0), 0);
+
+    if (format === 'excel') {
+      const rows = [
+        ['TOTAL DE DESPESAS'],
+        [`${show.client} — ${fmtDate(show.date)}`],
+        [''],
+        ['Nº', 'Despesa', 'Previsto (R$)', 'Realizado (R$)', 'Comprovante'],
+        ...items.map((i, idx) => [
+          adiantMap[i.id]?.numero || (idx + 1),
+          i.cat,
+          i.prev || 0,
+          i.real || 0,
+          (comprovantes[i.id]?.length > 0) ? 'Sim ✓' : 'Não ✗',
+        ]),
+        [''],
+        ['', 'TOTAL', totPrev, totReal, ''],
+      ];
+      const wb = XLSX.utils.book_new();
+      const ws = XLSX.utils.aoa_to_sheet(rows);
+      ws['!cols'] = [{ wch: 6 }, { wch: 40 }, { wch: 16 }, { wch: 16 }, { wch: 14 }];
+      XLSX.utils.book_append_sheet(wb, ws, 'Total Despesas');
+      XLSX.writeFile(wb, `total-despesas-${show.client}-${show.date}.xlsx`);
+    } else {
+      const rows = items.map((i, idx) => {
+        const hasComp = comprovantes[i.id]?.length > 0;
+        const imgs    = (comprovantes[i.id] || [])
+          .filter(c => /\.(jpg|jpeg|png|gif|webp)$/i.test(c.url))
+          .map(c => `<img src="${c.url}" alt="comprovante">`)
+          .join('');
+        const compCell = hasComp
+          ? `<span class="comp-sim">Sim ✓</span>`
+          : `<span class="comp-nao">Não ✗</span>`;
+        const imgSection = hasComp && imgs
+          ? `<tr><td colspan="5"><div class="img-section">${imgs}</div></td></tr>`
+          : '';
+        return `<tr>
+          <td>${adiantMap[i.id]?.numero || (idx + 1)}</td>
+          <td>${i.cat}</td>
+          <td style="text-align:right">${fmt(i.prev||0)}</td>
+          <td style="text-align:right">${fmt(i.real||0)}</td>
+          <td style="text-align:center">${compCell}</td>
+        </tr>${imgSection}`;
+      }).join('');
+
+      printHtml(`
+        <h1>TOTAL DE DESPESAS</h1>
+        <h2>${show.client} — ${fmtDate(show.date)}</h2>
+        <table>
+          <thead><tr><th>Nº</th><th>Despesa</th><th>Previsto</th><th>Realizado</th><th>Comprovante</th></tr></thead>
+          <tbody>${rows}</tbody>
+          <tfoot class="total-row">
+            <tr><td></td><td><b>TOTAL</b></td><td style="text-align:right"><b>${fmt(totPrev)}</b></td><td style="text-align:right"><b>${fmt(totReal)}</b></td><td></td></tr>
+          </tfoot>
+        </table>
+      `, 'Total de Despesas');
+    }
+  }
+
+  // ── renderDespesas ───────────────────────────────────────────────
   const renderDespesas = () => {
     if (loadingBudget) return (
       <div style={{ textAlign: 'center', padding: '20px 0', color: '#aaa', fontSize: 14, letterSpacing: 3, textTransform: 'uppercase' }}>
@@ -325,8 +596,10 @@ export function Orcamento() {
       const groupPrev = catItems.reduce((a, i) => a + (i.prev || 0), 0);
       const groupReal = catItems.reduce((a, i) => a + (i.real || 0), 0);
       const groupOver = groupReal > groupPrev && groupPrev > 0;
+
       return (
         <div key={cat} style={{ background: '#0a0a0a', border: '1px solid #1a1a1a', marginBottom: 8 }}>
+          {/* Category header */}
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 12px', borderBottom: '1px solid #111' }}>
             <div style={{ fontSize: 14, letterSpacing: 1, textTransform: 'uppercase', color: '#bbb', fontWeight: 700 }}>{cat}</div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
@@ -339,35 +612,76 @@ export function Orcamento() {
               )}
             </div>
           </div>
+
+          {/* Items */}
           <div style={{ padding: '8px 12px' }}>
             {catItems.map((item, idx) => {
-              const realVal   = realEdits[item.id] !== undefined ? realEdits[item.id] : String(item.real || 0);
-              const realFloat = parseFloat(realVal) || 0;
+              const realVal    = realEdits[item.id] !== undefined ? realEdits[item.id] : String(item.real || 0);
+              const realFloat  = parseFloat(realVal) || 0;
               const inputColor = item.prev > 0 ? (realFloat > item.prev ? '#f44336' : '#4caf50') : '#4caf50';
-              const comps = comprovantes[item.id] || [];
-              const isLast = idx === catItems.length - 1;
+              const comps      = comprovantes[item.id] || [];
+              const isLast     = idx === catItems.length - 1;
+              const adiantInfo = adiantMap[item.id];
+              const adiantVal  = adiantEdits[item.id] !== undefined ? adiantEdits[item.id] : String(adiantInfo?.valor || '');
+
               return (
-                <div key={item.id} style={{ marginBottom: isLast ? 0 : 10, paddingBottom: isLast ? 0 : 10, borderBottom: isLast ? 'none' : '1px solid #111' }}>
+                <div key={item.id} style={{ marginBottom: isLast ? 0 : 12, paddingBottom: isLast ? 0 : 12, borderBottom: isLast ? 'none' : '1px solid #111' }}>
+                  {/* Realizado row */}
                   <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                    <span style={{ fontSize: 14, color: '#888', flexShrink: 0, width: 18 }}>#{idx + 1}</span>
+                    <span style={{ fontSize: 14, color: '#888', flexShrink: 0, width: 18 }}>
+                      #{adiantInfo?.numero || (idx + 1)}
+                    </span>
                     <input type="number" value={realVal}
                       onChange={e => setRealEdits(prev => ({ ...prev, [item.id]: e.target.value }))}
-                      onBlur={() => saveReal(item)} placeholder="0,00"
+                      onBlur={() => saveReal(item)} placeholder="Realizado R$"
                       style={{ ...INP, flex: 1, color: inputColor, fontWeight: 700, fontSize: 14, border: 'none', borderBottom: '1px solid #333', background: 'transparent', padding: '4px 0' }}
                     />
                     <label style={{ cursor: 'pointer', flexShrink: 0 }}>
                       <input type="file" accept="image/*,application/pdf" capture="environment" style={{ display: 'none' }}
                         onChange={e => handleComprovante(item, e.target.files[0])} />
                       <span style={{ fontSize: 14, padding: '6px 7px', border: '1px solid #444', color: uploadingFor[item.id] ? '#888' : '#aaa', fontFamily: 'Space Mono,monospace', whiteSpace: 'nowrap', display: 'block' }}>
-                        {uploadingFor[item.id] ? '...' : '📎'}
+                        {uploadingFor[item.id] ? '...' : (comps.length > 0 ? '📎✓' : '📎')}
                       </span>
                     </label>
                     {!isSecondary && (
                       <button onClick={() => deleteBudgetItem(show.id, item.id)} style={{ background: 'transparent', border: 'none', color: '#aaa', cursor: 'pointer', fontSize: 14, lineHeight: 1, padding: 0, flexShrink: 0 }}>🗑️</button>
                     )}
                   </div>
+
+                  {/* Adiantamento row */}
+                  {!isSecondary && (
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 8, paddingLeft: 26 }}>
+                      <span style={{ fontSize: 12, color: '#666', minWidth: 90, flexShrink: 0 }}>Adiantamento</span>
+                      <input type="number" value={adiantVal}
+                        onChange={e => setAdiantEdits(prev => ({ ...prev, [item.id]: e.target.value }))}
+                        placeholder="R$ 0,00"
+                        style={{ ...INP_SM, maxWidth: 110, fontSize: 13 }} />
+                      <button onClick={() => requestAdiantamento(item.id)} style={{
+                        padding: '5px 10px', background: 'transparent', border: '1px solid #aaa',
+                        color: '#aaa', fontFamily: 'Space Mono,monospace', fontSize: 12,
+                        cursor: 'pointer', letterSpacing: 1, textTransform: 'uppercase', whiteSpace: 'nowrap',
+                      }}>Solicitar</button>
+                      {adiantInfo?.status && (
+                        <span
+                          onClick={() => cycleAdiantStatus(item.id)}
+                          title={canApprove ? 'Clique para avançar status' : ''}
+                          style={{
+                            fontSize: 12, padding: '3px 8px', letterSpacing: 1,
+                            border: `1px solid ${ADIANT_STATUS[adiantInfo.status]?.color || '#888'}`,
+                            color: ADIANT_STATUS[adiantInfo.status]?.color || '#888',
+                            textTransform: 'uppercase',
+                            cursor: canApprove ? 'pointer' : 'default',
+                            whiteSpace: 'nowrap',
+                          }}>
+                          {ADIANT_STATUS[adiantInfo.status]?.label || adiantInfo.status}
+                        </span>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Comprovantes */}
                   {comps.length > 0 && (
-                    <div style={{ marginTop: 6, marginLeft: 24, display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+                    <div style={{ marginTop: 6, marginLeft: 26, display: 'flex', flexWrap: 'wrap', gap: 6 }}>
                       {comps.map(c => (
                         /\.(jpg|jpeg|png|gif|webp)$/i.test(c.url) ? (
                           <a key={c.id} href={c.url} target="_blank" rel="noopener noreferrer">
@@ -375,7 +689,7 @@ export function Orcamento() {
                           </a>
                         ) : (
                           <a key={c.id} href={c.url} target="_blank" rel="noopener noreferrer"
-                            style={{ fontSize: 14, color: '#4caf50', padding: '4px 6px', border: '1px solid #1a2a1a', background: '#050f05', display: 'block', textDecoration: 'none' }}>
+                            style={{ fontSize: 13, color: '#4caf50', padding: '4px 6px', border: '1px solid #1a2a1a', background: '#050f05', display: 'block', textDecoration: 'none' }}>
                             📄 {c.fileName.replace(/^\d+_/, '')}
                           </a>
                         )
@@ -386,6 +700,8 @@ export function Orcamento() {
               );
             })}
           </div>
+
+          {/* Group total */}
           <div style={{ padding: '8px 12px', borderTop: '1px solid #111', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <span style={{ fontSize: 14, color: '#bbb', letterSpacing: 1, textTransform: 'uppercase' }}>Total Realizado</span>
             <span style={{ fontSize: 14, fontWeight: 700, color: groupOver ? '#f44336' : '#4caf50' }}>{fmt(groupReal)}</span>
@@ -395,10 +711,39 @@ export function Orcamento() {
     });
   };
 
-  // ── Render ───────────────────────────────────────────────────────
+  // ── Add-member bar ────────────────────────────────────────────────
+  function AddMemberBar({ options, selVal, onSelChange, onAdd }) {
+    return options.length > 0 ? (
+      <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+        <select value={selVal} onChange={e => onSelChange(e.target.value)} style={SEL_SM}>
+          <option value="">Membro...</option>
+          {options.map(m => <option key={m.id} value={m.id}>{m.name}</option>)}
+        </select>
+        <button onClick={onAdd} disabled={!selVal} style={{
+          padding: '6px 12px', background: 'transparent', border: '1px solid #fff',
+          color: selVal ? '#fff' : '#555', fontFamily: 'Space Mono,monospace', fontSize: 13,
+          cursor: selVal ? 'pointer' : 'not-allowed', textTransform: 'uppercase', letterSpacing: 1, whiteSpace: 'nowrap',
+        }}>+ Membro</button>
+      </div>
+    ) : null;
+  }
+
+  function EmptyMemberSection({ scaledCount }) {
+    return (
+      <div style={{ fontSize: 13, color: '#555', padding: '12px 0', textAlign: 'center', letterSpacing: 1 }}>
+        {scaledCount === 0 ? 'Nenhum membro escalado para este show' : 'Use o seletor acima para adicionar um membro'}
+      </div>
+    );
+  }
+
+  // ── Render ────────────────────────────────────────────────────────
   return (
     <div>
-      <PageHeader label="Módulo" title="Orçamento" />
+      <PageHeader label="Módulo" title="Orçamento"
+        action={show && !isSecondary && (
+          <Btn size="sm" variant="outline" onClick={() => setReportModal(true)}>📊 Relatório</Btn>
+        )}
+      />
 
       <Section title="Selecionar Show">
         <select value={sel} onChange={e => handleShowSelect(e.target.value)}
@@ -415,7 +760,6 @@ export function Orcamento() {
       )}
 
       {show && <>
-
         {/* ── Viagem ── */}
         <Section title="Informações da Viagem">
           <div style={{ background: '#0a0a0a', border: '1px solid #1a1a1a', padding: 12 }}>
@@ -448,69 +792,34 @@ export function Orcamento() {
         {!isSecondary && (
           <Section
             title={`Diárias${diariaTotalAll > 0 ? '  —  ' + fmt(diariaTotalAll) : ''}`}
-            action={
-              <AddMemberBar
-                options={availDiaria} selVal={diariaAddSel}
-                onSelChange={setDiariaAddSel} onAdd={addDiariaMember}
-                label="+ Membro"
-              />
-            }
+            action={<AddMemberBar options={availDiaria} selVal={diariaAddSel} onSelChange={setDiariaAddSel} onAdd={addDiariaMember} />}
           >
-            {diariaMembers.length === 0
-              ? <EmptyMemberSection scaledCount={scaledMembers.length} />
+            {diariaMembers.length === 0 ? <EmptyMemberSection scaledCount={scaledMembers.length} />
               : diariaMembers.map((m, idx) => {
-                  const dt    = pf(m.diariaVal) * qi(m.diariaQty);
-                  const mt    = pf(m.meiaVal)   * qi(m.meiaQty);
-                  const total = dt + mt;
-                  return (
-                    <div key={m.memberId} style={{ background: '#0a0a0a', border: '1px solid #1a1a1a', padding: '12px 14px', marginBottom: 8 }}>
-                      {/* Card header */}
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
-                        <div style={{ fontSize: 15, fontWeight: 700 }}>{m.name}</div>
-                        <button onClick={() => removeDiariaMember(m.memberId)}
-                          style={{ background: 'transparent', border: 'none', color: '#f44336', cursor: 'pointer', fontSize: 16 }}>🗑️</button>
-                      </div>
-
-                      {/* Diária */}
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
-                        <span style={ROW_LABEL}>Diária</span>
-                        <input type="number" value={m.diariaVal}
-                          onChange={e => updateDiaria(idx, 'diariaVal', e.target.value)}
-                          onBlur={() => saveDiariaLine(diariaRef.current[idx])}
-                          placeholder="R$ unit." style={{ ...INP_SM, maxWidth: 110 }} />
-                        <span style={{ fontSize: 14, color: '#555' }}>×</span>
-                        <input type="number" value={m.diariaQty}
-                          onChange={e => updateDiaria(idx, 'diariaQty', e.target.value)}
-                          onBlur={() => saveDiariaLine(diariaRef.current[idx])}
-                          placeholder="Qtd" style={{ ...INP_SM, maxWidth: 70 }} />
-                        <span style={{ fontSize: 14, color: '#4caf50', marginLeft: 'auto', minWidth: 90, textAlign: 'right' }}>{fmt(dt)}</span>
-                      </div>
-
-                      {/* Meia Diária */}
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
-                        <span style={ROW_LABEL}>Meia Diária</span>
-                        <input type="number" value={m.meiaVal}
-                          onChange={e => updateDiaria(idx, 'meiaVal', e.target.value)}
-                          onBlur={() => saveDiariaLine(diariaRef.current[idx])}
-                          placeholder="R$ unit." style={{ ...INP_SM, maxWidth: 110 }} />
-                        <span style={{ fontSize: 14, color: '#555' }}>×</span>
-                        <input type="number" value={m.meiaQty}
-                          onChange={e => updateDiaria(idx, 'meiaQty', e.target.value)}
-                          onBlur={() => saveDiariaLine(diariaRef.current[idx])}
-                          placeholder="Qtd" style={{ ...INP_SM, maxWidth: 70 }} />
-                        <span style={{ fontSize: 14, color: '#4caf50', marginLeft: 'auto', minWidth: 90, textAlign: 'right' }}>{fmt(mt)}</span>
-                      </div>
-
-                      {/* Member total */}
-                      <div style={{ display: 'flex', justifyContent: 'space-between', borderTop: '1px solid #222', paddingTop: 8 }}>
-                        <span style={{ fontSize: 13, color: '#aaa', textTransform: 'uppercase', letterSpacing: 1 }}>Total</span>
-                        <span style={{ fontSize: 15, fontWeight: 700, color: total > 0 ? '#fff' : '#555' }}>{fmt(total)}</span>
-                      </div>
+                const dt = pf(m.diariaVal)*qi(m.diariaQty), mt = pf(m.meiaVal)*qi(m.meiaQty), total = dt + mt;
+                return (
+                  <div key={m.memberId} style={{ background: '#0a0a0a', border: '1px solid #1a1a1a', padding: '12px 14px', marginBottom: 8 }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+                      <div style={{ fontSize: 15, fontWeight: 700 }}>{m.name}</div>
+                      <button onClick={() => removeDiariaMember(m.memberId)} style={{ background: 'transparent', border: 'none', color: '#f44336', cursor: 'pointer', fontSize: 16 }}>🗑️</button>
                     </div>
-                  );
-                })
+                    {[['Diária', 'diariaVal', 'diariaQty', dt], ['Meia Diária', 'meiaVal', 'meiaQty', mt]].map(([label, vf, qf, lineTotal]) => (
+                      <div key={label} style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
+                        <span style={ROW_LABEL}>{label}</span>
+                        <input type="number" value={m[vf]} onChange={e => updateDiaria(idx, vf, e.target.value)} onBlur={() => saveDiariaLine(diariaRef.current[idx])} placeholder="R$ unit." style={{ ...INP_SM, maxWidth: 110 }} />
+                        <span style={{ fontSize: 14, color: '#555' }}>×</span>
+                        <input type="number" value={m[qf]} onChange={e => updateDiaria(idx, qf, e.target.value)} onBlur={() => saveDiariaLine(diariaRef.current[idx])} placeholder="Qtd" style={{ ...INP_SM, maxWidth: 70 }} />
+                        <span style={{ fontSize: 14, color: '#4caf50', marginLeft: 'auto', minWidth: 90, textAlign: 'right' }}>{fmt(lineTotal)}</span>
+                      </div>
+                    ))}
+                    <div style={{ display: 'flex', justifyContent: 'space-between', borderTop: '1px solid #222', paddingTop: 8 }}>
+                      <span style={{ fontSize: 13, color: '#aaa', textTransform: 'uppercase', letterSpacing: 1 }}>Total</span>
+                      <span style={{ fontSize: 15, fontWeight: 700, color: total > 0 ? '#fff' : '#555' }}>{fmt(total)}</span>
+                    </div>
+                  </div>
+                );
+              })
             }
-
             {diariaMembers.length > 1 && (
               <div style={{ display: 'flex', justifyContent: 'space-between', padding: '10px 14px', background: '#111', border: '1px solid #222', marginTop: 4 }}>
                 <span style={{ fontSize: 14, color: '#bbb', textTransform: 'uppercase', letterSpacing: 1 }}>Total Geral Diárias</span>
@@ -524,57 +833,34 @@ export function Orcamento() {
         {!isSecondary && (
           <Section
             title={`Alimentação${alimTotalAll > 0 ? '  —  ' + fmt(alimTotalAll) : ''}`}
-            action={
-              <AddMemberBar
-                options={availAlim} selVal={alimAddSel}
-                onSelChange={setAlimAddSel} onAdd={addAlimMember}
-                label="+ Membro"
-              />
-            }
+            action={<AddMemberBar options={availAlim} selVal={alimAddSel} onSelChange={setAlimAddSel} onAdd={addAlimMember} />}
           >
-            {alimMembers.length === 0
-              ? <EmptyMemberSection scaledCount={scaledMembers.length} />
+            {alimMembers.length === 0 ? <EmptyMemberSection scaledCount={scaledMembers.length} />
               : alimMembers.map((m, idx) => {
-                  const ct    = pf(m.cafeVal)   * qi(m.cafeQty);
-                  const at    = pf(m.almocoVal) * qi(m.almocoQty);
-                  const jt    = pf(m.jantarVal) * qi(m.jantarQty);
-                  const total = ct + at + jt;
-
-                  const AlimRow = ({ label, valField, qtyField, lineTotal }) => (
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
-                      <span style={ROW_LABEL}>{label}</span>
-                      <input type="number" value={m[valField]}
-                        onChange={e => updateAlim(idx, valField, e.target.value)}
-                        onBlur={() => saveAlimLine(alimRef.current[idx])}
-                        placeholder="R$ unit." style={{ ...INP_SM, maxWidth: 110 }} />
-                      <span style={{ fontSize: 14, color: '#555' }}>×</span>
-                      <input type="number" value={m[qtyField]}
-                        onChange={e => updateAlim(idx, qtyField, e.target.value)}
-                        onBlur={() => saveAlimLine(alimRef.current[idx])}
-                        placeholder="Qtd" style={{ ...INP_SM, maxWidth: 70 }} />
-                      <span style={{ fontSize: 14, color: '#4caf50', marginLeft: 'auto', minWidth: 90, textAlign: 'right' }}>{fmt(lineTotal)}</span>
+                const ct = pf(m.cafeVal)*qi(m.cafeQty), at = pf(m.almocoVal)*qi(m.almocoQty), jt = pf(m.jantarVal)*qi(m.jantarQty), total = ct + at + jt;
+                return (
+                  <div key={m.memberId} style={{ background: '#0a0a0a', border: '1px solid #1a1a1a', padding: '12px 14px', marginBottom: 8 }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+                      <div style={{ fontSize: 15, fontWeight: 700 }}>{m.name}</div>
+                      <button onClick={() => removeAlimMember(m.memberId)} style={{ background: 'transparent', border: 'none', color: '#f44336', cursor: 'pointer', fontSize: 16 }}>🗑️</button>
                     </div>
-                  );
-
-                  return (
-                    <div key={m.memberId} style={{ background: '#0a0a0a', border: '1px solid #1a1a1a', padding: '12px 14px', marginBottom: 8 }}>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
-                        <div style={{ fontSize: 15, fontWeight: 700 }}>{m.name}</div>
-                        <button onClick={() => removeAlimMember(m.memberId)}
-                          style={{ background: 'transparent', border: 'none', color: '#f44336', cursor: 'pointer', fontSize: 16 }}>🗑️</button>
+                    {[['Café da Manhã','cafeVal','cafeQty',ct],['Almoço','almocoVal','almocoQty',at],['Jantar','jantarVal','jantarQty',jt]].map(([label, vf, qf, lineTotal]) => (
+                      <div key={label} style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
+                        <span style={ROW_LABEL}>{label}</span>
+                        <input type="number" value={m[vf]} onChange={e => updateAlim(idx, vf, e.target.value)} onBlur={() => saveAlimLine(alimRef.current[idx])} placeholder="R$ unit." style={{ ...INP_SM, maxWidth: 110 }} />
+                        <span style={{ fontSize: 14, color: '#555' }}>×</span>
+                        <input type="number" value={m[qf]} onChange={e => updateAlim(idx, qf, e.target.value)} onBlur={() => saveAlimLine(alimRef.current[idx])} placeholder="Qtd" style={{ ...INP_SM, maxWidth: 70 }} />
+                        <span style={{ fontSize: 14, color: '#4caf50', marginLeft: 'auto', minWidth: 90, textAlign: 'right' }}>{fmt(lineTotal)}</span>
                       </div>
-                      <AlimRow label="Café da Manhã" valField="cafeVal"   qtyField="cafeQty"   lineTotal={ct} />
-                      <AlimRow label="Almoço"        valField="almocoVal" qtyField="almocoQty" lineTotal={at} />
-                      <AlimRow label="Jantar"        valField="jantarVal" qtyField="jantarQty" lineTotal={jt} />
-                      <div style={{ display: 'flex', justifyContent: 'space-between', borderTop: '1px solid #222', paddingTop: 8, marginTop: 4 }}>
-                        <span style={{ fontSize: 13, color: '#aaa', textTransform: 'uppercase', letterSpacing: 1 }}>Total</span>
-                        <span style={{ fontSize: 15, fontWeight: 700, color: total > 0 ? '#fff' : '#555' }}>{fmt(total)}</span>
-                      </div>
+                    ))}
+                    <div style={{ display: 'flex', justifyContent: 'space-between', borderTop: '1px solid #222', paddingTop: 8, marginTop: 4 }}>
+                      <span style={{ fontSize: 13, color: '#aaa', textTransform: 'uppercase', letterSpacing: 1 }}>Total</span>
+                      <span style={{ fontSize: 15, fontWeight: 700, color: total > 0 ? '#fff' : '#555' }}>{fmt(total)}</span>
                     </div>
-                  );
-                })
+                  </div>
+                );
+              })
             }
-
             {alimMembers.length > 1 && (
               <div style={{ display: 'flex', justifyContent: 'space-between', padding: '10px 14px', background: '#111', border: '1px solid #222', marginTop: 4 }}>
                 <span style={{ fontSize: 14, color: '#bbb', textTransform: 'uppercase', letterSpacing: 1 }}>Total Geral Alimentação</span>
@@ -612,6 +898,7 @@ export function Orcamento() {
         )}
       </>}
 
+      {/* ── Modal Add Despesa ── */}
       {modal && !isSecondary && (
         <Modal title="Nova Categoria de Despesa" onClose={() => setModal(false)}>
           <Select label="Categoria" value={form.cat} onChange={e => setForm({...form, cat: e.target.value})}
@@ -621,6 +908,44 @@ export function Orcamento() {
           )}
           <Input label="Previsto (R$)" type="number" value={form.prev||''} onChange={e=>setForm({...form,prev:e.target.value})} placeholder="0,00" />
           <ModalBtns onCancel={() => setModal(false)} onSave={saveModal} />
+        </Modal>
+      )}
+
+      {/* ── Modal Relatórios ── */}
+      {reportModal && show && (
+        <Modal title="Gerar Relatório" onClose={() => setReportModal(false)}>
+          <div style={{ fontSize: 13, color: '#888', marginBottom: 14 }}>
+            {show.client} — {fmtDate(show.date)}
+          </div>
+
+          {[
+            { key: 'A', label: 'Adiantamento de Despesas',  onExcel: () => handleReportA('excel'), onPdf: () => handleReportA('pdf') },
+            { key: 'B', label: 'Adiantamento vs Realizado', onExcel: () => handleReportB('excel'), onPdf: () => handleReportB('pdf') },
+            { key: 'C', label: 'Relatório Final',            onExcel: () => handleReportC('excel'), onPdf: () => handleReportC('pdf') },
+            { key: 'D', label: 'Total de Despesas',          onExcel: () => handleReportD('excel'), onPdf: () => handleReportD('pdf') },
+          ].map(r => (
+            <div key={r.key} style={{ background: '#0a0a0a', border: '1px solid #1a1a1a', padding: '10px 12px', marginBottom: 8 }}>
+              <div style={{ fontSize: 14, fontWeight: 600, marginBottom: 8 }}>
+                <span style={{ color: '#4caf50', marginRight: 8 }}>{r.key}.</span>{r.label}
+              </div>
+              <div style={{ display: 'flex', gap: 8 }}>
+                <button onClick={() => { r.onExcel(); }} style={{
+                  flex: 1, padding: '7px 0', background: 'transparent', border: '1px solid #4caf50',
+                  color: '#4caf50', fontFamily: 'Space Mono,monospace', fontSize: 13, cursor: 'pointer',
+                  letterSpacing: 1, textTransform: 'uppercase',
+                }}>↓ Excel</button>
+                <button onClick={() => { r.onPdf(); }} style={{
+                  flex: 1, padding: '7px 0', background: 'transparent', border: '1px solid #2196f3',
+                  color: '#2196f3', fontFamily: 'Space Mono,monospace', fontSize: 13, cursor: 'pointer',
+                  letterSpacing: 1, textTransform: 'uppercase',
+                }}>🖨 PDF</button>
+              </div>
+            </div>
+          ))}
+
+          <div style={{ marginTop: 8 }}>
+            <Btn full variant="ghost" onClick={() => setReportModal(false)}>Fechar</Btn>
+          </div>
         </Modal>
       )}
     </div>
