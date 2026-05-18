@@ -91,15 +91,21 @@ export function AppProvider({ children }) {
   };
 
   const updateShow = async (id, show) => {
+    // Garantir tipos corretos para cada campo do Supabase
+    const toDateStr = (v) => {
+      if (!v) return null;
+      // Aceita 'YYYY-MM-DD' diretamente; ignora se for string inválida
+      return String(v).match(/^\d{4}-\d{2}-\d{2}/) ? String(v).slice(0, 10) : null;
+    };
     const updateData = {
-      data:       show.date,
-      status:     show.status,
-      cliente:    show.client,
-      drones:     show.drones,
-      cidade:     show.city,
-      estado:     show.state,
-      data_teste: show.test || null,
-      valor:      show.valor || null,
+      data:       toDateStr(show.date),
+      status:     String(show.status || ''),
+      cliente:    String(show.client || ''),
+      drones:     parseInt(show.drones) || 0,
+      cidade:     String(show.city  || ''),
+      estado:     String(show.state || ''),
+      data_teste: toDateStr(show.test),
+      valor:      show.valor ? parseFloat(show.valor) : null,
     };
     console.log('Atualizando show:', id, updateData);
     const { data, error } = await supabase
@@ -108,16 +114,22 @@ export function AppProvider({ children }) {
       .eq('id', id)
       .select()
       .single();
-    console.log('Erro update:', error);
+    console.log('Resultado update:', data, 'Erro:', error);
     if (error) {
-      alert('Erro ao salvar show: ' + error.message);
+      alert('Erro ao salvar show: ' + error.message + (error.details ? '\n' + error.details : ''));
       return;
     }
     if (data) {
       setShows(prev => prev.map(s => s.id === id ? {
-        id: data.id, date: data.data, status: data.status, client: data.cliente,
-        drones: data.drones, city: data.cidade, state: data.estado,
-        test: data.data_teste, valor: data.valor,
+        id:     data.id,
+        date:   data.data,
+        status: data.status,
+        client: data.cliente,
+        drones: data.drones,
+        city:   data.cidade,
+        state:  data.estado,
+        test:   data.data_teste,
+        valor:  data.valor,
       } : s));
     }
   };
