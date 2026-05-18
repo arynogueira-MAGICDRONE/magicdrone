@@ -24,13 +24,15 @@ export default function ProximosShows() {
 
   const loadShows = useCallback(async () => {
     setLoading(true);
-    const today = todayStr();
+    console.log('Buscando shows...');
+    const hoje = new Date().toISOString().split('T')[0];
+    console.log('Data de hoje:', hoje);
     const { data, error } = await supabase
       .from('shows')
       .select('*')
-      .eq('status', 'conf')
-      .gte('data', today)
-      .order('data', { ascending: true });
+      .eq('status', 'conf');
+    console.log('Shows encontrados:', data);
+    console.log('Erro:', error);
 
     if (!error && data) {
       setShows(data.map(s => ({
