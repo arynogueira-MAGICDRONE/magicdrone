@@ -368,6 +368,18 @@ export function Orcamento() {
     setUploadingFor(prev => ({ ...prev, [item.id]: false }));
   };
 
+  // ── Report helpers ──────────────────────────────────────────────
+  // Merge pending realEdits into items so reports always have latest values
+  function getItemsForReport() {
+    return items.map(i => ({
+      ...i,
+      real: realEdits[i.id] !== undefined ? (parseFloat(realEdits[i.id]) || 0) : (i.real || 0),
+    }));
+  }
+
+  // Show '—' for zero / null realized values in PDF display
+  function fmtOrDash(v) { return (!v || v === 0) ? '—' : fmt(v); }
+
   // ── Reports ──────────────────────────────────────────────────────
   async function getPrevShowBalance() {
     if (!show) return 0;
@@ -425,9 +437,10 @@ export function Orcamento() {
   }
 
   function handleReportB(format) {
-    if (!items.length) { alert('Sem despesas para este show.'); return; }
-    const totPrev = items.reduce((a, i) => a + (i.prev || 0), 0);
-    const totReal = items.reduce((a, i) => a + (i.real || 0), 0);
+    const rItems = getItemsForReport();
+    if (!rItems.length) { alert('Sem despesas para este show.'); return; }
+    const totPrev = rItems.reduce((a, i) => a + (i.prev || 0), 0);
+    const totReal = rItems.reduce((a, i) => a + (i.real || 0), 0);
     const saldo   = totReal - totPrev;
 
     if (format === 'excel') {
@@ -436,7 +449,7 @@ export function Orcamento() {
         [`${show.client} — ${fmtDate(show.date)}`],
         [''],
         ['DESPESA', 'PREVISTO (R$)', 'REALIZADO (R$)'],
-        ...items.map(i => [i.cat, i.prev || 0, i.real || 0]),
+        ...rItems.map(i => [i.cat, i.prev || 0, i.real || 0]),
         [''],
         ['TOTAL', totPrev, totReal],
         ['SALDO', '', saldo],
@@ -447,7 +460,9 @@ export function Orcamento() {
       XLSX.utils.book_append_sheet(wb, ws, 'Adiant x Realizado');
       XLSX.writeFile(wb, `adiant-vs-realizado-${show.client}-${show.date}.xlsx`);
     } else {
-      const rows = items.map(i => `<tr><td>${i.cat}</td><td style="text-align:right">${fmt(i.prev||0)}</td><td style="text-align:right">${fmt(i.real||0)}</td></tr>`).join('');
+      const rows = rItems.map(i =>
+        `<tr><td>${i.cat}</td><td style="text-align:right">${fmt(i.prev||0)}</td><td style="text-align:right">${fmtOrDash(i.real)}</td></tr>`
+      ).join('');
       const saldoClass = saldo < 0 ? 'neg' : 'saldo-row';
       printHtml(`
         <h1>ADIANTAMENTO X REALIZADO</h1>
@@ -465,15 +480,16 @@ export function Orcamento() {
   }
 
   function handleReportC(format) {
-    if (!items.length) { alert('Sem despesas para este show.'); return; }
+    const rItems = getItemsForReport();
+    if (!rItems.length) { alert('Sem despesas para este show.'); return; }
     const valorVenda  = show.valor || 0;
-    const totDespesas = items.reduce((a, i) => a + (i.real || 0), 0);
+    const totDespesas = rItems.reduce((a, i) => a + (i.real || 0), 0);
     const resultado   = valorVenda - totDespesas;
     const margem      = valorVenda > 0 ? (resultado / valorVenda * 100).toFixed(1) : '—';
 
     // Group by category
     const catMap = {};
-    items.forEach(i => { catMap[i.cat] = (catMap[i.cat] || 0) + (i.real || 0); });
+    rItems.forEach(i => { catMap[i.cat] = (catMap[i.cat] || 0) + (i.real || 0); });
 
     if (format === 'excel') {
       const rows = [
@@ -483,7 +499,7 @@ export function Orcamento() {
         ['Valor de Venda', valorVenda],
         [''],
         ['CATEGORIA', 'REALIZADO (R$)'],
-        ...Object.entries(catMap).map(([cat, val]) => [cat, val]),
+        ...Object.entries(catMap).map(([cat, val]) => [cat, val || 0]),
         [''],
         ['Total Despesas', totDespesas],
         ['Resultado (Lucro)', resultado],
@@ -496,7 +512,7 @@ export function Orcamento() {
       XLSX.writeFile(wb, `relatorio-final-${show.client}-${show.date}.xlsx`);
     } else {
       const rows = Object.entries(catMap).map(([cat, val]) =>
-        `<tr><td>${cat}</td><td style="text-align:right">${fmt(val)}</td></tr>`
+        `<tr><td>${cat}</td><td style="text-align:right">${fmtOrDash(val)}</td></tr>`
       ).join('');
       printHtml(`
         <h1>RELATÓRIO FINAL</h1>
@@ -521,9 +537,10 @@ export function Orcamento() {
   }
 
   function handleReportD(format) {
-    if (!items.length) { alert('Sem despesas para este show.'); return; }
-    const totPrev = items.reduce((a, i) => a + (i.prev || 0), 0);
-    const totReal = items.reduce((a, i) => a + (i.real || 0), 0);
+    const rItems = getItemsForReport();
+    if (!rItems.length) { alert('Sem despesas para este show.'); return; }
+    const totPrev = rItems.reduce((a, i) => a + (i.prev || 0), 0);
+    const totReal = rItems.reduce((a, i) => a + (i.real || 0), 0);
 
     if (format === 'excel') {
       const rows = [
@@ -531,7 +548,7 @@ export function Orcamento() {
         [`${show.client} — ${fmtDate(show.date)}`],
         [''],
         ['Nº', 'Despesa', 'Previsto (R$)', 'Realizado (R$)', 'Comprovante'],
-        ...items.map((i, idx) => [
+        ...rItems.map((i, idx) => [
           adiantMap[i.id]?.numero || (idx + 1),
           i.cat,
           i.prev || 0,
@@ -547,25 +564,36 @@ export function Orcamento() {
       XLSX.utils.book_append_sheet(wb, ws, 'Total Despesas');
       XLSX.writeFile(wb, `total-despesas-${show.client}-${show.date}.xlsx`);
     } else {
-      const rows = items.map((i, idx) => {
-        const hasComp = comprovantes[i.id]?.length > 0;
-        const imgs    = (comprovantes[i.id] || [])
-          .filter(c => /\.(jpg|jpeg|png|gif|webp)$/i.test(c.url))
-          .map(c => `<img src="${c.url}" alt="comprovante">`)
-          .join('');
+      const rows = rItems.map((i, idx) => {
+        const compsAll  = comprovantes[i.id] || [];
+        const imgComps  = compsAll.filter(c => /\.(jpg|jpeg|png|gif|webp)$/i.test(c.url));
+        const pdfComps  = compsAll.filter(c => /\.pdf$/i.test(c.url));
+        const otherComp = compsAll.filter(c => !/\.(jpg|jpeg|png|gif|webp|pdf)$/i.test(c.url));
+        const hasComp   = compsAll.length > 0;
+        const num       = adiantMap[i.id]?.numero || (idx + 1);
+
         const compCell = hasComp
           ? `<span class="comp-sim">Sim ✓</span>`
           : `<span class="comp-nao">Não ✗</span>`;
-        const imgSection = hasComp && imgs
-          ? `<tr><td colspan="5"><div class="img-section">${imgs}</div></td></tr>`
-          : '';
+
+        const compSection = hasComp ? `<tr><td colspan="5" style="padding:8px 10px;background:#fafafa;">
+          ${imgComps.map(c => `<img src="${c.url}" alt="comprovante Nº ${num}" style="max-width:300px;max-height:300px;display:block;margin:6px 0;border:1px solid #ccc;">`).join('')}
+          ${pdfComps.map((c, pi) => `<div style="margin:5px 0;padding:8px 10px;border:1px solid #999;background:#fff;font-size:12px;">
+            📄 Comprovante Nº ${num}.${pi + 1} — Arquivo PDF:
+            <a href="${c.url}" target="_blank" style="color:#1565c0;">${(c.fileName || '').replace(/^\d+_/, '') || 'arquivo.pdf'}</a>
+          </div>`).join('')}
+          ${otherComp.map(c => `<div style="margin:5px 0;padding:8px 10px;border:1px solid #999;background:#fff;font-size:12px;">
+            📎 <a href="${c.url}" target="_blank" style="color:#1565c0;">${(c.fileName || '').replace(/^\d+_/, '') || 'arquivo'}</a>
+          </div>`).join('')}
+        </td></tr>` : '';
+
         return `<tr>
-          <td>${adiantMap[i.id]?.numero || (idx + 1)}</td>
+          <td>${num}</td>
           <td>${i.cat}</td>
           <td style="text-align:right">${fmt(i.prev||0)}</td>
-          <td style="text-align:right">${fmt(i.real||0)}</td>
+          <td style="text-align:right">${fmtOrDash(i.real)}</td>
           <td style="text-align:center">${compCell}</td>
-        </tr>${imgSection}`;
+        </tr>${compSection}`;
       }).join('');
 
       printHtml(`
