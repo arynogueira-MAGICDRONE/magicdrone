@@ -1,4 +1,5 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
+import { supabase } from '../supabase';
 import { useApp } from '../context/AppContext';
 import { PageHeader, Section, Empty, Btn } from '../components/layout/UI';
 
@@ -28,8 +29,44 @@ export default function Documentacao() {
   const [uploading, setUploading] = useState(false);
   const fileRef = useRef();
 
+  // Comprovantes vindos do Orçamento
+  const [budgetComps, setBudgetComps] = useState([]);
+  const [loadingBudgetComps, setLoadingBudgetComps] = useState(false);
+
   const show = sel ? shows.find(s => String(s.id) === sel) : null;
   const list = docType === 'admin' ? (adminDocs || []) : (show ? (docs[show.id] || []) : []);
+
+  // Carrega comprovantes do orçamento ao selecionar show
+  useEffect(() => {
+    if (docType !== 'show' || !sel) { setBudgetComps([]); return; }
+    setLoadingBudgetComps(true);
+    (async () => {
+      const { data: orcItems } = await supabase
+        .from('orcamento')
+        .select('id, categoria')
+        .eq('show_id', sel);
+      if (!orcItems?.length) { setBudgetComps([]); setLoadingBudgetComps(false); return; }
+
+      const { data: comps } = await supabase
+        .from('comprovantes')
+        .select('id, orcamento_id, url, arquivo')
+        .in('orcamento_id', orcItems.map(i => i.id));
+      if (!comps?.length) { setBudgetComps([]); setLoadingBudgetComps(false); return; }
+
+      setBudgetComps(comps.map(c => {
+        const item = orcItems.find(i => i.id === c.orcamento_id);
+        return {
+          id:       c.id,
+          name:     `Comprovante - ${item?.categoria || 'Despesa'}`,
+          url:      c.url,
+          fileName: c.arquivo,
+          type:     getType(c.arquivo || ''),
+          cat:      item?.categoria || '',
+        };
+      }));
+      setLoadingBudgetComps(false);
+    })();
+  }, [sel, docType]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const resetForm = () => { setShowForm(false); setFormName(''); setSelFile(null); };
 
@@ -94,15 +131,16 @@ export default function Documentacao() {
         <>
           {/* Stats */}
           <Section title="Resumo">
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 6 }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 6 }}>
               {[
-                ['Total', list.length, '#fff'],
+                ['Documentos', list.length, '#fff'],
                 ['PDF', list.filter(d => d.type === 'pdf').length, '#f44336'],
                 ['Outros', list.filter(d => d.type !== 'pdf').length, '#4caf50'],
+                ['Comprovantes', budgetComps.length, '#2196f3'],
               ].map(([l, n, c]) => (
                 <div key={l} style={{ background: '#0a0a0a', border: '1px solid #1a1a1a', padding: '8px', textAlign: 'center' }}>
                   <div style={{ fontSize: 16, fontWeight: 700, color: c }}>{n}</div>
-                  <div style={{ fontSize: 14, letterSpacing: 2, color: '#aaa', textTransform: 'uppercase', marginTop: 2 }}>{l}</div>
+                  <div style={{ fontSize: 12, letterSpacing: 1, color: '#aaa', textTransform: 'uppercase', marginTop: 2 }}>{l}</div>
                 </div>
               ))}
             </div>
@@ -181,6 +219,44 @@ export default function Documentacao() {
               ))
             )}
           </Section>
+
+          {/* Comprovantes do Orçamento — apenas para shows */}
+          {docType === 'show' && (
+            <Section title="Comprovantes de Orçamento">
+              {loadingBudgetComps ? (
+                <div style={{ textAlign: 'center', padding: '16px 0', color: '#aaa', fontSize: 13, letterSpacing: 2, textTransform: 'uppercase' }}>
+                  Carregando comprovantes...
+                </div>
+              ) : budgetComps.length === 0 ? (
+                <Empty text="Nenhum comprovante de orçamento" />
+              ) : (
+                budgetComps.map(doc => (
+                  <div key={doc.id} style={{ display: 'flex', alignItems: 'center', gap: 12, background: '#0a0a0a', border: '1px solid #1a1a1a', borderLeft: '3px solid #2196f3', padding: 12, marginBottom: 4 }}>
+                    <div style={{ width: 36, height: 36, background: '#111', border: '1px solid #222', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18, flexShrink: 0 }}>
+                      {fileIcon(doc.type)}
+                    </div>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', marginBottom: 2 }}>
+                        <div style={{ fontSize: 15, fontWeight: 600 }}>{doc.name}</div>
+                        <span style={{ fontSize: 11, letterSpacing: 1, padding: '2px 7px', border: '1px solid #2196f3', color: '#2196f3', textTransform: 'uppercase', flexShrink: 0 }}>
+                          Comprovante de Orçamento
+                        </span>
+                      </div>
+                      <div style={{ fontSize: 13, color: '#aaa', letterSpacing: 1 }}>
+                        {(doc.fileName || '').replace(/^\d+_/, '')}
+                      </div>
+                    </div>
+                    {doc.url && (
+                      <a href={doc.url} target="_blank" rel="noopener noreferrer"
+                        style={{ fontSize: 13, letterSpacing: 1, padding: '5px 10px', border: '1px solid #2196f3', color: '#2196f3', fontFamily: 'Space Mono,monospace', textDecoration: 'none', display: 'inline-block', flexShrink: 0 }}>
+                        Ver
+                      </a>
+                    )}
+                  </div>
+                ))
+              )}
+            </Section>
+          )}
         </>
       )}
     </div>
