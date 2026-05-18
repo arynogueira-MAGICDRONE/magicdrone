@@ -91,12 +91,35 @@ export function AppProvider({ children }) {
   };
 
   const updateShow = async (id, show) => {
-    await supabase.from('shows').update({
-      data: show.date, status: show.status, cliente: show.client,
-      drones: show.drones, cidade: show.city, estado: show.state,
-      data_teste: show.test, valor: show.valor || null
-    }).eq('id', id);
-    setShows(prev => prev.map(s => s.id === id ? { ...s, ...show } : s));
+    const updateData = {
+      data:       show.date,
+      status:     show.status,
+      cliente:    show.client,
+      drones:     show.drones,
+      cidade:     show.city,
+      estado:     show.state,
+      data_teste: show.test || null,
+      valor:      show.valor || null,
+    };
+    console.log('Atualizando show:', id, updateData);
+    const { data, error } = await supabase
+      .from('shows')
+      .update(updateData)
+      .eq('id', id)
+      .select()
+      .single();
+    console.log('Erro update:', error);
+    if (error) {
+      alert('Erro ao salvar show: ' + error.message);
+      return;
+    }
+    if (data) {
+      setShows(prev => prev.map(s => s.id === id ? {
+        id: data.id, date: data.data, status: data.status, client: data.cliente,
+        drones: data.drones, city: data.cidade, state: data.estado,
+        test: data.data_teste, valor: data.valor,
+      } : s));
+    }
   };
 
   const dronesUsedOnDate = (date, excludeId = null) =>
