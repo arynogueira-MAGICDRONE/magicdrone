@@ -13,6 +13,17 @@ const DISTANCES = [
 ];
 
 const PER_MEMBER_PREFIXES = ['Diária - ', 'Meia Diária - ', 'Alimentação - '];
+
+function memberDefaults(name) {
+  const isWellington = name?.toLowerCase().includes('wellington');
+  return {
+    diaria:    isWellington ? '480'    : '315',
+    meia:      isWellington ? '240'    : '157.50',
+    cafe:      '30',
+    almoco:    '60',
+    jantar:    '60',
+  };
+}
 const isPerMemberCat = (cat) => cat && PER_MEMBER_PREFIXES.some(pfx => cat.startsWith(pfx));
 
 function fmt(v) { return 'R$ ' + (v||0).toFixed(2).replace('.', ',').replace(/\B(?=(\d{3})+(?!\d))/g, '.'); }
@@ -173,11 +184,16 @@ export function Orcamento() {
     if (!diariaAddSel || !show) return;
     const member = members.find(m => m.id === diariaAddSel);
     if (!member) return;
+    const def = memberDefaults(member.name);
     await Promise.all([
       addBudgetItem(show.id, { cat: `Diária - ${member.name}`,      prev: 0, real: 0 }),
       addBudgetItem(show.id, { cat: `Meia Diária - ${member.name}`, prev: 0, real: 0 }),
     ]);
-    setDiariaMembers(prev => [...prev, emptyDiaria(member.id, member.name)]);
+    setDiariaMembers(prev => [...prev, {
+      memberId: member.id, name: member.name,
+      diariaVal: def.diaria, diariaQty: '',
+      meiaVal:   def.meia,   meiaQty:   '',
+    }]);
     setDiariaAddSel('');
   };
 
@@ -210,8 +226,14 @@ export function Orcamento() {
     if (!alimAddSel || !show) return;
     const member = members.find(m => m.id === alimAddSel);
     if (!member) return;
+    const def = memberDefaults(member.name);
     await addBudgetItem(show.id, { cat: `Alimentação - ${member.name}`, prev: 0, real: 0 });
-    setAlimMembers(prev => [...prev, emptyAlim(member.id, member.name)]);
+    setAlimMembers(prev => [...prev, {
+      memberId: member.id, name: member.name,
+      cafeVal:   def.cafe,   cafeQty:   '',
+      almocoVal: def.almoco, almocoQty: '',
+      jantarVal: def.jantar, jantarQty: '',
+    }]);
     setAlimAddSel('');
   };
 

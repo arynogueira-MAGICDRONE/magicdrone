@@ -26,48 +26,14 @@ const EMPTY_FORM = {
   valor: '',
   cep: '', rua: '', numero: '', complemento: '', bairro: '', city: '', state: '',
 };
-const EMPTY_BUDGET = {
-  combustivel: '', pedagio: '',
-  hotels: [{ nome: '', valor: '' }],
-  diarias_qtd: '', diarias_val: '',
-  cafe_qtd: '', cafe_val: '',
-  almoco_qtd: '', almoco_val: '',
-  jantar_qtd: '', jantar_val: '',
-  fogos: '', imposto: '', comissao: '', design: '', autorizacoes: '',
-};
-
-// Mini-componentes para o formulário de orçamento
 const INP = { background: '#000', border: '1px solid #222', color: '#fff', padding: '9px 10px', fontFamily: 'Space Mono,monospace', fontSize: 16, outline: 'none', boxSizing: 'border-box' };
 const LBL = { fontSize: 14, letterSpacing: 2, color: '#aaa', textTransform: 'uppercase', display: 'block', marginBottom: 4 };
 const HDIV = { marginTop: 14, paddingTop: 12, borderTop: '1px solid #1a1a1a' };
 const SECTTITLE = { fontSize: 14, letterSpacing: 2, color: '#bbb', textTransform: 'uppercase', marginBottom: 10 };
 
-function BField({ label, value, onChange }) {
-  return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
-      <span style={{ fontSize: 14, color: '#aaa', flex: 1 }}>{label}</span>
-      <input type="number" value={value} onChange={e => onChange(e.target.value)} placeholder="0"
-        style={{ ...INP, width: 100, textAlign: 'right' }} />
-    </div>
-  );
-}
-
-function QVField({ label, qty, val, onQty, onVal }) {
-  return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 5 }}>
-      <span style={{ fontSize: 14, color: '#aaa', flex: 1 }}>{label}</span>
-      <input type="number" value={qty} onChange={e => onQty(e.target.value)} placeholder="Qtd"
-        style={{ ...INP, width: 52 }} />
-      <span style={{ fontSize: 14, color: '#aaa' }}>×</span>
-      <input type="number" value={val} onChange={e => onVal(e.target.value)} placeholder="R$"
-        style={{ ...INP, width: 80, textAlign: 'right' }} />
-    </div>
-  );
-}
-
 export default function Shows() {
   const { isMaster } = useAuth();
-  const { shows, addShow, updateShow, deleteShow, dronesUsedOnDate, members, scaleToShow, scaling, loadScaling, clearScalingForShow, addBudgetItem, loadBudget, clearBudgetForShow } = useApp();
+  const { shows, addShow, updateShow, deleteShow, dronesUsedOnDate, members, scaleToShow, scaling, loadScaling, clearScalingForShow } = useApp();
   const TOTAL_DRONES = 125;
 
   const today = new Date();
@@ -81,7 +47,6 @@ export default function Shows() {
   const [copied, setCopied] = useState(false);
   const [conflict, setConflict] = useState(null);
   const [form, setForm] = useState(EMPTY_FORM);
-  const [budget, setBudget] = useState(EMPTY_BUDGET);
   const [cepLoading, setCepLoading] = useState(false);
   const [selectedMembers, setSelectedMembers] = useState(new Set());
   const [memberRoles, setMemberRoles] = useState({});
@@ -133,35 +98,9 @@ export default function Shows() {
     setCepLoading(false);
   };
 
-  const saveBudgetItems = async (showId) => {
-    const p = v => parseFloat(String(v).replace(',', '.')) || 0;
-    const q = v => parseInt(v) || 0;
-    const items = [];
-    if (p(budget.combustivel) > 0) items.push({ cat: 'Combustível', prev: p(budget.combustivel), real: 0 });
-    if (p(budget.pedagio) > 0) items.push({ cat: 'Pedágio', prev: p(budget.pedagio), real: 0 });
-    for (const h of budget.hotels) {
-      if (h.nome.trim() && p(h.valor) > 0) items.push({ cat: `Hotel: ${h.nome}`, prev: p(h.valor), real: 0 });
-    }
-    const diarias = q(budget.diarias_qtd) * p(budget.diarias_val);
-    if (diarias > 0) items.push({ cat: 'Equipe: Diárias', prev: diarias, real: 0 });
-    const cafe = q(budget.cafe_qtd) * p(budget.cafe_val);
-    if (cafe > 0) items.push({ cat: 'Equipe: Café da Manhã', prev: cafe, real: 0 });
-    const almoco = q(budget.almoco_qtd) * p(budget.almoco_val);
-    if (almoco > 0) items.push({ cat: 'Equipe: Almoço', prev: almoco, real: 0 });
-    const jantar = q(budget.jantar_qtd) * p(budget.jantar_val);
-    if (jantar > 0) items.push({ cat: 'Equipe: Jantar', prev: jantar, real: 0 });
-    if (p(budget.fogos) > 0) items.push({ cat: 'Fogos de Artifício', prev: p(budget.fogos), real: 0 });
-    if (p(budget.imposto) > 0) items.push({ cat: 'Imposto', prev: p(budget.imposto), real: 0 });
-    if (p(budget.comissao) > 0) items.push({ cat: 'Comissão', prev: p(budget.comissao), real: 0 });
-    if (p(budget.design) > 0) items.push({ cat: 'Design', prev: p(budget.design), real: 0 });
-    if (p(budget.autorizacoes) > 0) items.push({ cat: 'Autorizações', prev: p(budget.autorizacoes), real: 0 });
-    for (const item of items) await addBudgetItem(showId, item);
-  };
-
   const openNew = () => {
     setEditingId(null);
     setForm(EMPTY_FORM);
-    setBudget(EMPTY_BUDGET);
     setSelectedMembers(new Set());
     setMemberRoles({});
     setConflict(null);
@@ -181,32 +120,6 @@ export default function Shows() {
     setConflict(null);
     setDetail(null);
 
-    const budgetItems = await loadBudget(show.id);
-    if (budgetItems.length > 0) {
-      const nb = { ...EMPTY_BUDGET };
-      const hotels = [];
-      for (const item of budgetItems) {
-        const cat = item.categoria;
-        const val = item.previsto;
-        if (cat === 'Combustível') nb.combustivel = val;
-        else if (cat === 'Pedágio') nb.pedagio = val;
-        else if (cat.startsWith('Hotel: ')) hotels.push({ nome: cat.slice(7), valor: val });
-        else if (cat === 'Equipe: Diárias') { nb.diarias_qtd = 1; nb.diarias_val = val; }
-        else if (cat === 'Equipe: Café da Manhã') { nb.cafe_qtd = 1; nb.cafe_val = val; }
-        else if (cat === 'Equipe: Almoço') { nb.almoco_qtd = 1; nb.almoco_val = val; }
-        else if (cat === 'Equipe: Jantar') { nb.jantar_qtd = 1; nb.jantar_val = val; }
-        else if (cat === 'Fogos de Artifício') nb.fogos = val;
-        else if (cat === 'Imposto') nb.imposto = val;
-        else if (cat === 'Comissão') nb.comissao = val;
-        else if (cat === 'Design') nb.design = val;
-        else if (cat === 'Autorizações') nb.autorizacoes = val;
-      }
-      nb.hotels = hotels.length ? hotels : [{ nome: '', valor: '' }];
-      setBudget(nb);
-    } else {
-      setBudget(EMPTY_BUDGET);
-    }
-
     const scalingItems = await loadScaling(show.id);
     if (scalingItems.length > 0) {
       setSelectedMembers(new Set(scalingItems.map(s => s.membro_id)));
@@ -225,7 +138,6 @@ export default function Shows() {
     setShowModal(false);
     setEditingId(null);
     setConflict(null);
-    setBudget(EMPTY_BUDGET);
     setSelectedMembers(new Set());
     setMemberRoles({});
   };
@@ -248,8 +160,6 @@ export default function Shows() {
     };
     if (editingId) {
       await updateShow(editingId, showData);
-      await clearBudgetForShow(editingId);
-      await saveBudgetItems(editingId);
       await clearScalingForShow(editingId);
       for (const memberId of selectedMembers)
         await scaleToShow(editingId, memberId, memberRoles[memberId] || '');
@@ -257,7 +167,6 @@ export default function Shows() {
     } else {
       const created = await addShow(showData);
       if (created?.id) {
-        await saveBudgetItems(created.id);
         for (const memberId of selectedMembers)
           await scaleToShow(created.id, memberId, memberRoles[memberId] || '');
         closeModal();
@@ -513,49 +422,6 @@ export default function Shows() {
               <Input label="UF" value={form.state} onChange={e => setForm({ ...form, state: e.target.value.toUpperCase() })} placeholder="SP" maxLength={2} />
             </div>
           </div>
-
-          {/* ── GRUPO 3: Orçamento ── */}
-          <div style={HDIV}>
-              <div style={SECTTITLE}>Orçamento de Despesas</div>
-
-              <BField label="Combustível (R$)" value={budget.combustivel} onChange={v => setBudget({ ...budget, combustivel: v })} />
-              <BField label="Pedágio (R$)" value={budget.pedagio} onChange={v => setBudget({ ...budget, pedagio: v })} />
-
-              {/* Hotels */}
-              <div style={{ marginBottom: 8 }}>
-                <label style={{ ...LBL, marginBottom: 6 }}>Hotel</label>
-                {budget.hotels.map((h, i) => (
-                  <div key={i} style={{ display: 'flex', gap: 6, marginBottom: 4 }}>
-                    <input value={h.nome} onChange={e => { const hs = [...budget.hotels]; hs[i] = { ...hs[i], nome: e.target.value }; setBudget({ ...budget, hotels: hs }); }}
-                      placeholder="Nome do hotel" style={{ ...INP, flex: 2 }}
-                      onFocus={e => e.target.style.borderColor='#fff'} onBlur={e => e.target.style.borderColor='#222'} />
-                    <input type="number" value={h.valor} onChange={e => { const hs = [...budget.hotels]; hs[i] = { ...hs[i], valor: e.target.value }; setBudget({ ...budget, hotels: hs }); }}
-                      placeholder="R$" style={{ ...INP, flex: 1, textAlign: 'right' }}
-                      onFocus={e => e.target.style.borderColor='#fff'} onBlur={e => e.target.style.borderColor='#222'} />
-                    {budget.hotels.length > 1 && (
-                      <button onClick={() => setBudget({ ...budget, hotels: budget.hotels.filter((_, j) => j !== i) })}
-                        style={{ background: 'transparent', border: '1px solid #333', color: '#f44336', padding: '0 8px', cursor: 'pointer' }}>✕</button>
-                    )}
-                  </div>
-                ))}
-                <button onClick={() => setBudget({ ...budget, hotels: [...budget.hotels, { nome: '', valor: '' }] })} style={ADDBTN}>+ Hotel</button>
-              </div>
-
-              {/* Equipe */}
-              <div style={{ marginTop: 8, marginBottom: 8 }}>
-                <label style={{ ...LBL, marginBottom: 6 }}>Equipe</label>
-                <QVField label="Diárias" qty={budget.diarias_qtd} val={budget.diarias_val} onQty={v => setBudget({ ...budget, diarias_qtd: v })} onVal={v => setBudget({ ...budget, diarias_val: v })} />
-                <QVField label="Café da Manhã" qty={budget.cafe_qtd} val={budget.cafe_val} onQty={v => setBudget({ ...budget, cafe_qtd: v })} onVal={v => setBudget({ ...budget, cafe_val: v })} />
-                <QVField label="Almoço" qty={budget.almoco_qtd} val={budget.almoco_val} onQty={v => setBudget({ ...budget, almoco_qtd: v })} onVal={v => setBudget({ ...budget, almoco_val: v })} />
-                <QVField label="Jantar" qty={budget.jantar_qtd} val={budget.jantar_val} onQty={v => setBudget({ ...budget, jantar_qtd: v })} onVal={v => setBudget({ ...budget, jantar_val: v })} />
-              </div>
-
-              <BField label="Fogos de Artifício (R$)" value={budget.fogos} onChange={v => setBudget({ ...budget, fogos: v })} />
-              <BField label="Imposto (R$)" value={budget.imposto} onChange={v => setBudget({ ...budget, imposto: v })} />
-              <BField label="Comissão (R$)" value={budget.comissao} onChange={v => setBudget({ ...budget, comissao: v })} />
-              <BField label="Design (R$)" value={budget.design} onChange={v => setBudget({ ...budget, design: v })} />
-              <BField label="Autorizações (R$)" value={budget.autorizacoes} onChange={v => setBudget({ ...budget, autorizacoes: v })} />
-            </div>
 
           {/* Escalar Equipe */}
           {members.length > 0 && (
