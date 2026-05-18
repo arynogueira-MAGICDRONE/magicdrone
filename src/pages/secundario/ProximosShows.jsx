@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
+import { supabase } from '../../supabase';
 import { useApp } from '../../context/AppContext';
 
 function pad(n) { return n < 10 ? '0' + n : n; }
@@ -13,16 +14,40 @@ function fmtDate(str) {
 }
 
 export default function ProximosShows() {
-  const { shows, members, scaling, loadScaling } = useApp();
+  const { members, scaling, loadScaling } = useApp();
 
-  const [detail, setDetail]     = useState(null);
-  const [shareText, setShareText] = useState('');
-  const [copied, setCopied]     = useState(false);
+  const [shows,      setShows]      = useState([]);
+  const [loading,    setLoading]    = useState(true);
+  const [detail,     setDetail]     = useState(null);
+  const [shareText,  setShareText]  = useState('');
+  const [copied,     setCopied]     = useState(false);
 
-  const today = todayStr();
-  const proximosShows = shows
-    .filter(s => s.status === 'conf' && s.date >= today)
-    .sort((a, b) => a.date.localeCompare(b.date));
+  const loadShows = useCallback(async () => {
+    setLoading(true);
+    const today = todayStr();
+    const { data, error } = await supabase
+      .from('shows')
+      .select('*')
+      .eq('status', 'conf')
+      .gte('data', today)
+      .order('data', { ascending: true });
+
+    if (!error && data) {
+      setShows(data.map(s => ({
+        id:     s.id,
+        client: s.cliente,
+        date:   s.data,
+        city:   s.cidade,
+        state:  s.estado,
+        drones: s.drones,
+        test:   s.data_teste,
+        valor:  s.valor,
+      })));
+    }
+    setLoading(false);
+  }, []);
+
+  useEffect(() => { loadShows(); }, [loadShows]);
 
   async function openDetail(show) {
     setDetail(show);
@@ -67,26 +92,41 @@ export default function ProximosShows() {
   return (
     <div>
       {/* Header */}
-      <div style={{ padding: '16px 16px 10px', borderBottom: '1px solid #111' }}>
-        <div style={{ fontSize: 12, letterSpacing: 3, color: '#bbb', textTransform: 'uppercase', marginBottom: 3 }}>
-          Módulo
+      <div style={{ padding: '16px 16px 10px', borderBottom: '1px solid #111', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <div>
+          <div style={{ fontSize: 12, letterSpacing: 3, color: '#bbb', textTransform: 'uppercase', marginBottom: 3 }}>
+            Módulo
+          </div>
+          <div style={{ fontSize: 26, fontWeight: 700, fontFamily: 'Bebas Neue, sans-serif', letterSpacing: 2 }}>
+            Próximos Shows
+          </div>
         </div>
-        <div style={{ fontSize: 26, fontWeight: 700, fontFamily: 'Bebas Neue, sans-serif', letterSpacing: 2 }}>
-          Próximos Shows
-        </div>
+        <button onClick={loadShows} disabled={loading} style={{
+          background: 'transparent', border: '1px solid #333', color: loading ? '#444' : '#aaa',
+          fontFamily: 'Space Mono, monospace', fontSize: 18,
+          width: 40, height: 40, cursor: loading ? 'wait' : 'pointer',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+        }}
+          title="Recarregar">
+          🔄
+        </button>
       </div>
 
       {/* Lista */}
       <div style={{ padding: '14px 16px 0' }}>
-        {proximosShows.length === 0 ? (
+        {loading ? (
+          <div style={{ textAlign: 'center', padding: '40px 0', color: '#aaa', fontSize: 13, letterSpacing: 3, textTransform: 'uppercase' }}>
+            Carregando...
+          </div>
+        ) : shows.length === 0 ? (
           <div style={{ textAlign: 'center', padding: '40px 0', color: '#333', fontSize: 14, letterSpacing: 3, textTransform: 'uppercase' }}>
             Nenhum show confirmado
           </div>
-        ) : proximosShows.map(show => (
+        ) : shows.map(show => (
           <div key={show.id} onClick={() => openDetail(show)} style={{
             background: '#0a0a0a', border: '1px solid #1a1a1a',
             borderLeft: '3px solid #4caf50', padding: '14px 16px',
-            marginBottom: 10, cursor: 'pointer', borderRadius: 0,
+            marginBottom: 10, cursor: 'pointer',
           }}>
             <div style={{ fontSize: 16, fontWeight: 700, marginBottom: 4 }}>{show.client}</div>
             <div style={{ fontSize: 14, color: '#4caf50', fontWeight: 600, marginBottom: 4 }}>
@@ -113,10 +153,9 @@ export default function ProximosShows() {
         }}>
           <div onClick={e => e.stopPropagation()} style={{
             background: '#111', border: '1px solid #333',
-            padding: 20, width: '100%', maxWidth: 440,
-            marginTop: 40,
+            padding: 20, width: '100%', maxWidth: 440, marginTop: 40,
           }}>
-            {/* Header */}
+            {/* Header modal */}
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 16 }}>
               <div>
                 <div style={{ fontSize: 18, fontWeight: 700, marginBottom: 4 }}>{detail.client}</div>
@@ -182,7 +221,8 @@ export default function ProximosShows() {
                     {shareText}
                   </div>
                   <button onClick={copyText} style={{
-                    padding: '12px', background: copied ? '#4caf50' : 'transparent',
+                    padding: '12px',
+                    background: copied ? '#4caf50' : 'transparent',
                     border: `1px solid ${copied ? '#4caf50' : '#aaa'}`,
                     color: copied ? '#000' : '#aaa',
                     fontFamily: 'Space Mono, monospace', fontSize: 13,
