@@ -1,11 +1,7 @@
-import React, { useState } from 'react';
-import { useApp } from '../../context/AppContext';
+import React, { useState, useEffect } from 'react';
+import { supabase } from '../../supabase';
 
 function pad(n) { return n < 10 ? '0' + n : n; }
-function todayStr() {
-  const d = new Date();
-  return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
-}
 function fmtDate(str) {
   if (!str) return '—';
   const [y, m, d] = str.split('-');
@@ -50,17 +46,27 @@ const INP = {
 };
 
 export default function ChecklistSecundario() {
-  const { shows } = useApp();
+  const [shows,        setShows]        = useState([]);
+  const [loadingShows, setLoadingShows] = useState(true);
 
-  const today = todayStr();
-  const confirmedShows = shows
-    .filter(s => s.status === 'conf' && s.date >= today)
-    .sort((a, b) => a.date.localeCompare(b.date));
-
-  const [sel, setSel]           = useState('');
-  const [type, setType]         = useState(110);
+  const [sel,       setSel]       = useState('');
+  const [type,      setType]      = useState(110);
   const [checklist, setChecklist] = useState(initChecklist(110));
-  const [open, setOpen]         = useState({});
+  const [open,      setOpen]      = useState({});
+
+  // Carrega shows confirmados diretamente do Supabase
+  useEffect(() => {
+    setLoadingShows(true);
+    supabase
+      .from('shows')
+      .select('id, cliente, data, drones, cidade, estado')
+      .eq('status', 'conf')
+      .order('data', { ascending: true })
+      .then(({ data, error }) => {
+        if (!error && data) setShows(data);
+        setLoadingShows(false);
+      });
+  }, []);
 
   const show = sel ? shows.find(s => String(s.id) === sel) : null;
 
@@ -90,11 +96,9 @@ export default function ChecklistSecundario() {
     if (!item.who || !item.time) { alert('Informe quem conferiu e o horário.'); return; }
 
     if (item.isBat) {
-      const t = TEMPLATES[type];
-      const seanQty  = parseInt(checklist.batSean.qty) || 0;
-      const magicQty = parseInt(checklist.batMagic.qty) || 0;
-      const thisQty  = parseInt(item.qty) || 0;
+      const t        = TEMPLATES[type];
       const otherKey = key === 'batSean' ? 'batMagic' : 'batSean';
+      const thisQty  = parseInt(item.qty) || 0;
       const otherQty = parseInt(checklist[otherKey].qty) || 0;
       if (thisQty + otherQty !== t.batTotal) {
         alert(`Sean + Magic deve totalizar ${t.batTotal}. Atual: ${thisQty + otherQty}`);
@@ -110,27 +114,27 @@ export default function ChecklistSecundario() {
     <div>
       {/* Header */}
       <div style={{ padding: '16px 16px 10px', borderBottom: '1px solid #111' }}>
-        <div style={{ fontSize: 12, letterSpacing: 3, color: '#bbb', textTransform: 'uppercase', marginBottom: 3 }}>
-          Módulo
-        </div>
-        <div style={{ fontSize: 26, fontWeight: 700, fontFamily: 'Bebas Neue, sans-serif', letterSpacing: 2 }}>
-          Checklist
-        </div>
+        <div style={{ fontSize: 12, letterSpacing: 3, color: '#bbb', textTransform: 'uppercase', marginBottom: 3 }}>Módulo</div>
+        <div style={{ fontSize: 26, fontWeight: 700, fontFamily: 'Bebas Neue, sans-serif', letterSpacing: 2 }}>Checklist</div>
       </div>
 
-      {/* Seletor de show */}
       <div style={{ padding: '14px 16px 0' }}>
-        <div style={{ fontSize: 12, letterSpacing: 2, color: '#aaa', textTransform: 'uppercase', marginBottom: 6 }}>
-          Selecionar Show
-        </div>
-        <select value={sel} onChange={e => handleShowSelect(e.target.value)} style={{ ...INP, marginBottom: 12 }}>
-          <option value="">Selecione um show...</option>
-          {confirmedShows.map(s => (
-            <option key={s.id} value={s.id}>{s.client} — {fmtDate(s.date)}</option>
-          ))}
-        </select>
+        {/* Seletor de show */}
+        <div style={{ fontSize: 12, letterSpacing: 2, color: '#aaa', textTransform: 'uppercase', marginBottom: 6 }}>Selecionar Show</div>
+        {loadingShows ? (
+          <div style={{ padding: '10px 0', color: '#555', fontSize: 13, letterSpacing: 2, textTransform: 'uppercase' }}>Carregando shows...</div>
+        ) : (
+          <select value={sel} onChange={e => handleShowSelect(e.target.value)} style={{ ...INP, marginBottom: 12 }}>
+            <option value="">Selecione um show...</option>
+            {shows.map(s => (
+              <option key={s.id} value={String(s.id)}>
+                {s.cliente} — {fmtDate(s.data)}
+              </option>
+            ))}
+          </select>
+        )}
 
-        {!show && (
+        {!show && !loadingShows && (
           <div style={{ textAlign: 'center', padding: '30px 0', color: '#333', fontSize: 14, letterSpacing: 3, textTransform: 'uppercase' }}>
             Selecione um show
           </div>
@@ -148,9 +152,7 @@ export default function ChecklistSecundario() {
                   border: `1px solid ${type === t ? '#fff' : '#222'}`,
                   background: type === t ? '#111' : 'transparent',
                   color: type === t ? '#fff' : '#444',
-                }}>
-                  {t} Drones
-                </div>
+                }}>{t} Drones</div>
               ))}
             </div>
 
@@ -216,38 +218,32 @@ export default function ChecklistSecundario() {
                         </div>
                       ) : (
                         <div style={{ marginBottom: 10 }}>
-                          <label style={{ fontSize: 12, letterSpacing: 2, color: '#aaa', textTransform: 'uppercase', display: 'block', marginBottom: 6 }}>
-                            Quantidade
-                          </label>
+                          <label style={{ fontSize: 12, letterSpacing: 2, color: '#aaa', textTransform: 'uppercase', display: 'block', marginBottom: 6 }}>Quantidade</label>
                           <input type="number" value={item.qty}
                             onChange={e => update(key, 'qty', e.target.value)}
                             placeholder="0" style={INP}
                             onFocus={e => e.target.style.borderColor='#fff'}
-                            onBlur={e => e.target.style.borderColor='#333'}
+                            onBlur={e  => e.target.style.borderColor='#333'}
                           />
                         </div>
                       )}
 
                       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: 10 }}>
                         <div>
-                          <label style={{ fontSize: 12, letterSpacing: 2, color: '#aaa', textTransform: 'uppercase', display: 'block', marginBottom: 6 }}>
-                            Conferido por
-                          </label>
+                          <label style={{ fontSize: 12, letterSpacing: 2, color: '#aaa', textTransform: 'uppercase', display: 'block', marginBottom: 6 }}>Conferido por</label>
                           <input value={item.who} onChange={e => update(key, 'who', e.target.value)}
                             placeholder="Nome" style={INP}
                             onFocus={e => e.target.style.borderColor='#fff'}
-                            onBlur={e => e.target.style.borderColor='#333'}
+                            onBlur={e  => e.target.style.borderColor='#333'}
                           />
                         </div>
                         <div>
-                          <label style={{ fontSize: 12, letterSpacing: 2, color: '#aaa', textTransform: 'uppercase', display: 'block', marginBottom: 6 }}>
-                            Horário
-                          </label>
+                          <label style={{ fontSize: 12, letterSpacing: 2, color: '#aaa', textTransform: 'uppercase', display: 'block', marginBottom: 6 }}>Horário</label>
                           <input type="time" value={item.time || nowTime()}
                             onChange={e => update(key, 'time', e.target.value)}
                             style={INP}
                             onFocus={e => e.target.style.borderColor='#fff'}
-                            onBlur={e => e.target.style.borderColor='#333'}
+                            onBlur={e  => e.target.style.borderColor='#333'}
                           />
                         </div>
                       </div>
@@ -256,9 +252,7 @@ export default function ChecklistSecundario() {
                         width: '100%', padding: '12px', background: '#fff', color: '#000',
                         border: 'none', fontFamily: 'Space Mono, monospace', fontSize: 13,
                         letterSpacing: 2, textTransform: 'uppercase', cursor: 'pointer', fontWeight: 700,
-                      }}>
-                        ✓ Confirmar Item
-                      </button>
+                      }}>✓ Confirmar Item</button>
                     </div>
                   )}
                 </div>
@@ -267,9 +261,7 @@ export default function ChecklistSecundario() {
 
             {pct === 100 && (
               <div style={{ margin: '16px 0', padding: '16px', background: '#0a1a0a', border: '1px solid #4caf50', textAlign: 'center' }}>
-                <div style={{ fontSize: 16, color: '#4caf50', fontWeight: 700, letterSpacing: 2 }}>
-                  ✓ Checklist Completo!
-                </div>
+                <div style={{ fontSize: 16, color: '#4caf50', fontWeight: 700, letterSpacing: 2 }}>✓ Checklist Completo!</div>
               </div>
             )}
           </>

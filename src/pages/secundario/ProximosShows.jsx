@@ -13,14 +13,25 @@ function fmtDate(str) {
   return `${d}/${m}/${y}`;
 }
 
+function fmtEndereco(show) {
+  const parts = [
+    show.rua && show.numero ? `${show.rua}, Nº ${show.numero}` : show.rua,
+    show.complemento,
+    show.bairro,
+    show.cidade && show.estado ? `${show.cidade} — ${show.estado}` : (show.cidade || show.estado),
+    show.cep ? `CEP ${show.cep}` : null,
+  ].filter(Boolean);
+  return parts.join(', ') || null;
+}
+
 export default function ProximosShows() {
   const { members, scaling, loadScaling } = useApp();
 
-  const [shows,      setShows]      = useState([]);
-  const [loading,    setLoading]    = useState(true);
-  const [detail,     setDetail]     = useState(null);
-  const [shareText,  setShareText]  = useState('');
-  const [copied,     setCopied]     = useState(false);
+  const [shows,     setShows]     = useState([]);
+  const [loading,   setLoading]   = useState(true);
+  const [detail,    setDetail]    = useState(null);
+  const [shareText, setShareText] = useState('');
+  const [copied,    setCopied]    = useState(false);
 
   const loadShows = useCallback(async () => {
     setLoading(true);
@@ -36,14 +47,20 @@ export default function ProximosShows() {
 
     if (!error && data) {
       setShows(data.map(s => ({
-        id:     s.id,
-        client: s.cliente,
-        date:   s.data,
-        city:   s.cidade,
-        state:  s.estado,
-        drones: s.drones,
-        test:   s.data_teste,
-        valor:  s.valor,
+        id:          s.id,
+        client:      s.cliente,
+        date:        s.data,
+        city:        s.cidade,
+        state:       s.estado,
+        drones:      s.drones,
+        test:        s.data_teste,
+        valor:       s.valor,
+        // endereço
+        cep:         s.cep         || '',
+        rua:         s.rua         || '',
+        numero:      s.numero      || '',
+        complemento: s.complemento || '',
+        bairro:      s.bairro      || '',
       })));
     }
     setLoading(false);
@@ -63,7 +80,9 @@ export default function ProximosShows() {
     let text = `MAGICDRONE — Equipe Escalada\n`;
     text += `Show: ${show.client}\n`;
     text += `Data: ${fmtDate(show.date)}\n`;
-    if (show.city || show.state) text += `Local: ${[show.city, show.state].filter(Boolean).join(', ')}\n`;
+    const end = fmtEndereco(show);
+    if (end) text += `Local: ${end}\n`;
+    else if (show.city || show.state) text += `Local: ${[show.city, show.state].filter(Boolean).join(', ')}\n`;
     text += `Drones: ${show.drones}\n`;
     text += `─────────────────────\n`;
     scaled.forEach((sc, i) => {
@@ -90,63 +109,47 @@ export default function ProximosShows() {
   }
 
   const scaledTeam = detail ? (scaling[detail.id] || []) : [];
+  const endereco   = detail ? fmtEndereco(detail) : null;
 
   return (
     <div>
       {/* Header */}
       <div style={{ padding: '16px 16px 10px', borderBottom: '1px solid #111', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <div>
-          <div style={{ fontSize: 12, letterSpacing: 3, color: '#bbb', textTransform: 'uppercase', marginBottom: 3 }}>
-            Módulo
-          </div>
-          <div style={{ fontSize: 26, fontWeight: 700, fontFamily: 'Bebas Neue, sans-serif', letterSpacing: 2 }}>
-            Próximos Shows
-          </div>
+          <div style={{ fontSize: 12, letterSpacing: 3, color: '#bbb', textTransform: 'uppercase', marginBottom: 3 }}>Módulo</div>
+          <div style={{ fontSize: 26, fontWeight: 700, fontFamily: 'Bebas Neue, sans-serif', letterSpacing: 2 }}>Próximos Shows</div>
         </div>
-        <button onClick={loadShows} disabled={loading} style={{
+        <button onClick={loadShows} disabled={loading} title="Recarregar" style={{
           background: 'transparent', border: '1px solid #333', color: loading ? '#444' : '#aaa',
-          fontFamily: 'Space Mono, monospace', fontSize: 18,
-          width: 40, height: 40, cursor: loading ? 'wait' : 'pointer',
+          width: 40, height: 40, fontSize: 18, cursor: loading ? 'wait' : 'pointer',
           display: 'flex', alignItems: 'center', justifyContent: 'center',
-        }}
-          title="Recarregar">
-          🔄
-        </button>
+        }}>🔄</button>
       </div>
 
       {/* Lista */}
       <div style={{ padding: '14px 16px 0' }}>
         {loading ? (
-          <div style={{ textAlign: 'center', padding: '40px 0', color: '#aaa', fontSize: 13, letterSpacing: 3, textTransform: 'uppercase' }}>
-            Carregando...
-          </div>
+          <div style={{ textAlign: 'center', padding: '40px 0', color: '#aaa', fontSize: 13, letterSpacing: 3, textTransform: 'uppercase' }}>Carregando...</div>
         ) : shows.length === 0 ? (
-          <div style={{ textAlign: 'center', padding: '40px 0', color: '#333', fontSize: 14, letterSpacing: 3, textTransform: 'uppercase' }}>
-            Nenhum show confirmado
-          </div>
+          <div style={{ textAlign: 'center', padding: '40px 0', color: '#333', fontSize: 14, letterSpacing: 3, textTransform: 'uppercase' }}>Nenhum show confirmado</div>
         ) : shows.map(show => (
           <div key={show.id} onClick={() => openDetail(show)} style={{
-            background: '#0a0a0a', border: '1px solid #1a1a1a',
-            borderLeft: '3px solid #4caf50', padding: '14px 16px',
-            marginBottom: 10, cursor: 'pointer',
+            background: '#0a0a0a', border: '1px solid #1a1a1a', borderLeft: '3px solid #4caf50',
+            padding: '14px 16px', marginBottom: 10, cursor: 'pointer',
           }}>
             <div style={{ fontSize: 16, fontWeight: 700, marginBottom: 4 }}>{show.client}</div>
-            <div style={{ fontSize: 14, color: '#4caf50', fontWeight: 600, marginBottom: 4 }}>
-              {fmtDate(show.date)}
-            </div>
+            <div style={{ fontSize: 14, color: '#4caf50', fontWeight: 600, marginBottom: 4 }}>{fmtDate(show.date)}</div>
             {(show.city || show.state) && (
               <div style={{ fontSize: 13, color: '#aaa', marginBottom: 4 }}>
                 📍 {[show.city, show.state].filter(Boolean).join(', ')}
               </div>
             )}
-            <div style={{ fontSize: 13, color: '#888' }}>
-              🚁 {show.drones} drones
-            </div>
+            <div style={{ fontSize: 13, color: '#888' }}>🚁 {show.drones} drones</div>
           </div>
         ))}
       </div>
 
-      {/* Modal de Detalhes */}
+      {/* Modal */}
       {detail && (
         <div style={{
           position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.95)',
@@ -154,8 +157,8 @@ export default function ProximosShows() {
           display: 'flex', alignItems: 'flex-start', justifyContent: 'center',
         }}>
           <div onClick={e => e.stopPropagation()} style={{
-            background: '#111', border: '1px solid #333',
-            padding: 20, width: '100%', maxWidth: 440, marginTop: 40,
+            background: '#111', border: '1px solid #333', padding: 20,
+            width: '100%', maxWidth: 440, marginTop: 40,
           }}>
             {/* Header modal */}
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 16 }}>
@@ -173,22 +176,21 @@ export default function ProximosShows() {
 
             {/* Informações */}
             {[
-              ['Data',   fmtDate(detail.date)],
-              ['Local',  [detail.city, detail.state].filter(Boolean).join(', ') || '—'],
-              ['Drones', detail.drones],
-            ].map(([l, v]) => (
-              <div key={l} style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 0', borderBottom: '1px solid #1a1a1a', fontSize: 14 }}>
-                <span style={{ color: '#aaa' }}>{l}</span>
-                <span style={{ fontWeight: 600 }}>{v}</span>
+              ['Data',     fmtDate(detail.date)],
+              ['Drones',   detail.drones],
+              endereco ? ['Endereço', endereco]
+                       : (detail.city || detail.state) ? ['Local', [detail.city, detail.state].filter(Boolean).join(', ')] : null,
+            ].filter(Boolean).map(([l, v]) => (
+              <div key={l} style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 0', borderBottom: '1px solid #1a1a1a', fontSize: 14, gap: 10 }}>
+                <span style={{ color: '#aaa', flexShrink: 0 }}>{l}</span>
+                <span style={{ fontWeight: 600, textAlign: 'right', wordBreak: 'break-word' }}>{v}</span>
               </div>
             ))}
 
             {/* Equipe escalada */}
             {scaledTeam.length > 0 && (
               <div style={{ marginTop: 14 }}>
-                <div style={{ fontSize: 12, letterSpacing: 2, color: '#bbb', textTransform: 'uppercase', marginBottom: 8 }}>
-                  Equipe Escalada
-                </div>
+                <div style={{ fontSize: 12, letterSpacing: 2, color: '#bbb', textTransform: 'uppercase', marginBottom: 8 }}>Equipe Escalada</div>
                 {scaledTeam.map((sc, i) => {
                   const m = members.find(m => m.id === sc.memberId);
                   if (!m) return null;
@@ -196,7 +198,7 @@ export default function ProximosShows() {
                     <div key={i} style={{ background: '#0a0a0a', border: '1px solid #1a1a1a', padding: '10px 12px', marginBottom: 6 }}>
                       <div style={{ fontSize: 14, fontWeight: 600 }}>{m.name}</div>
                       {sc.role && <div style={{ fontSize: 12, color: '#aaa', marginTop: 2 }}>{sc.role}</div>}
-                      {m.tel && <div style={{ fontSize: 12, color: '#888', marginTop: 2 }}>📱 {m.tel}</div>}
+                      {m.tel  && <div style={{ fontSize: 12, color: '#888', marginTop: 2 }}>📱 {m.tel}</div>}
                     </div>
                   );
                 })}
@@ -209,9 +211,7 @@ export default function ProximosShows() {
                 padding: '12px', background: 'transparent', border: '1px solid #fff',
                 color: '#fff', fontFamily: 'Space Mono, monospace', fontSize: 13,
                 cursor: 'pointer', letterSpacing: 1, textTransform: 'uppercase',
-              }}>
-                📋 Gerar Texto para Compartilhar
-              </button>
+              }}>📋 Gerar Texto para Compartilhar</button>
 
               {shareText && (
                 <>
@@ -219,9 +219,7 @@ export default function ProximosShows() {
                     background: '#000', border: '1px solid #222', padding: 12,
                     fontSize: 13, lineHeight: 1.8, whiteSpace: 'pre-wrap', color: '#ccc',
                     maxHeight: 200, overflowY: 'auto',
-                  }}>
-                    {shareText}
-                  </div>
+                  }}>{shareText}</div>
                   <button onClick={copyText} style={{
                     padding: '12px',
                     background: copied ? '#4caf50' : 'transparent',
@@ -230,9 +228,7 @@ export default function ProximosShows() {
                     fontFamily: 'Space Mono, monospace', fontSize: 13,
                     cursor: 'pointer', letterSpacing: 1, textTransform: 'uppercase',
                     transition: 'all 0.2s',
-                  }}>
-                    {copied ? '✓ Copiado!' : 'Copiar Texto'}
-                  </button>
+                  }}>{copied ? '✓ Copiado!' : 'Copiar Texto'}</button>
                 </>
               )}
 
@@ -240,9 +236,7 @@ export default function ProximosShows() {
                 padding: '10px', background: 'transparent', border: '1px solid #333',
                 color: '#888', fontFamily: 'Space Mono, monospace', fontSize: 12,
                 cursor: 'pointer', letterSpacing: 1, textTransform: 'uppercase',
-              }}>
-                Fechar
-              </button>
+              }}>Fechar</button>
             </div>
           </div>
         </div>
