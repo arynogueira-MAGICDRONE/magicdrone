@@ -31,6 +31,15 @@ function fmtDate(str) { if (!str) return '—'; const [y,m,d] = str.split('-'); 
 const pf = v => parseFloat(String(v || 0).replace(',', '.')) || 0;
 const qi = v => parseInt(v) || 0;
 
+function haversine(lat1, lon1, lat2, lon2) {
+  const R = 6371;
+  const dLat = (lat2 - lat1) * Math.PI / 180;
+  const dLon = (lon2 - lon1) * Math.PI / 180;
+  const a = Math.sin(dLat / 2) ** 2 +
+    Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * Math.sin(dLon / 2) ** 2;
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+}
+
 const INP = {
   background: '#000', border: '1px solid #222', color: '#fff',
   padding: '8px 10px', fontFamily: 'Space Mono,monospace', fontSize: 16,
@@ -117,6 +126,14 @@ export function Orcamento() {
   const alimRef = useRef([]);
   useEffect(() => { alimRef.current = alimMembers; }, [alimMembers]);
 
+  // ── Combustível calc state ───────────────────────────────────────
+  const [showFuelCalc, setShowFuelCalc] = useState(false);
+  const [fuelCalc, setFuelCalc] = useState({
+    origem: 'São José dos Campos, SP', destino: '',
+    consumo: '10', preco: '6.50', nveiculos: '1',
+    distancia: null, calculando: false, erro: null,
+  });
+
   // ── Adiantamento state ───────────────────────────────────────────
   const [adiantMap, setAdiantMap]     = useState({});  // { [itemId]: {valor, status, numero} }
   const [adiantEdits, setAdiantEdits] = useState({});  // { [itemId]: string }
@@ -160,6 +177,8 @@ export function Orcamento() {
     setAlimAddSel('');
     setAdiantMap({});
     setAdiantEdits({});
+    setShowFuelCalc(false);
+    setFuelCalc(f => ({ ...f, distancia: null, erro: null, destino: '' }));
     Promise.all([loadBudget(sel), loadScaling(sel)])
       .then(([rawItems]) => {
         if (rawItems.length > 0) {
@@ -367,6 +386,67 @@ export function Orcamento() {
     await addComprovante(item.id, file, show.id, item.cat);
     setUploadingFor(prev => ({ ...prev, [item.id]: false }));
   };
+
+  // ── Combustível helpers ──────────────────────────────────────────
+  async function calcularDistancia() {
+    const { origem, destino } = fuelCalc;
+    if (!origem.trim() || !destino.trim()) {
+      setFuelCalc(f => ({ ...f, erro: 'Informe origem e destino.' }));
+      return;
+    }
+    setFuelCalc(f => ({ ...f, calculando: true, erro: null, distancia: null }));
+    let distKm = null;
+
+    // Tenta OpenRouteService se houver chave configurada
+    const orsKey = import.meta.env.VITE_ORS_KEY;
+    if (orsKey) {
+      try {
+        const [gO, gD] = await Promise.all([
+          fetch(`https://api.openrouteservice.org/geocode/search?api_key=${orsKey}&text=${encodeURIComponent(origem)}&size=1`).then(r => r.json()),
+          fetch(`https://api.openrouteservice.org/geocode/search?api_key=${orsKey}&text=${encodeURIComponent(destino)}&size=1`).then(r => r.json()),
+        ]);
+        if (gO.features?.length && gD.features?.length) {
+          const [lonO, latO] = gO.features[0].geometry.coordinates;
+          const [lonD, latD] = gD.features[0].geometry.coordinates;
+          const route = await fetch('https://api.openrouteservice.org/v2/directions/driving-car', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Authorization': orsKey },
+            body: JSON.stringify({ coordinates: [[lonO, latO], [lonD, latD]] }),
+          }).then(r => r.json());
+          if (route.routes?.[0]?.summary?.distance) distKm = route.routes[0].summary.distance / 1000;
+        }
+      } catch { /* cai no fallback */ }
+    }
+
+    // Fallback: Nominatim + Haversine + 30%
+    if (!distKm) {
+      try {
+        const geocode = async (q) => {
+          const data = await fetch(
+            `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(q)}&format=json&limit=1`,
+            { headers: { 'User-Agent': 'MagicDrone/1.0' } }
+          ).then(r => r.json());
+          if (!data.length) throw new Error(`"${q}" não encontrado. Tente com cidade e estado.`);
+          return { lat: parseFloat(data[0].lat), lon: parseFloat(data[0].lon) };
+        };
+        const [orig, dest] = await Promise.all([geocode(origem), geocode(destino)]);
+        distKm = haversine(orig.lat, orig.lon, dest.lat, dest.lon) * 1.30;
+      } catch (e) {
+        setFuelCalc(f => ({ ...f, calculando: false, erro: e.message || 'Não foi possível calcular.' }));
+        return;
+      }
+    }
+
+    setFuelCalc(f => ({ ...f, distancia: Math.round(distKm), calculando: false }));
+  }
+
+  async function usarValorCombustivel(valor) {
+    if (!show || !valor) return;
+    const cur  = budgets[show.id] || [];
+    const item = cur.find(i => i.cat === 'Combustível');
+    if (item) await updateBudgetItem(show.id, item.id, { prev: valor, real: item.real || 0 });
+    else      await addBudgetItem(show.id, { cat: 'Combustível', prev: valor, real: 0 });
+  }
 
   // ── Report helpers ──────────────────────────────────────────────
   // Merge pending realEdits into items so reports always have latest values
@@ -625,6 +705,11 @@ export function Orcamento() {
       const groupReal = catItems.reduce((a, i) => a + (i.real || 0), 0);
       const groupOver = groupReal > groupPrev && groupPrev > 0;
 
+      // Fuel total for Combustível preview
+      const fuelDistTotal = (cat === 'Combustível' && fuelCalc.distancia)
+        ? fuelCalc.distancia * 2 * 1.15 / (pf(fuelCalc.consumo) || 10) * (pf(fuelCalc.preco) || 6.50) * (qi(fuelCalc.nveiculos) || 1)
+        : 0;
+
       return (
         <div key={cat} style={{ background: '#0a0a0a', border: '1px solid #1a1a1a', marginBottom: 8 }}>
           {/* Category header */}
@@ -640,6 +725,111 @@ export function Orcamento() {
               )}
             </div>
           </div>
+
+          {/* ── Combustível: cálculo automático ── */}
+          {cat === 'Combustível' && !isSecondary && (
+            <div style={{ borderBottom: '1px solid #111', background: '#050505' }}>
+              <button onClick={() => setShowFuelCalc(v => !v)} style={{
+                width: '100%', padding: '8px 12px', display: 'flex', alignItems: 'center', gap: 8,
+                background: 'transparent', border: 'none', color: '#aaa', cursor: 'pointer',
+                fontFamily: 'Space Mono,monospace', fontSize: 13, textTransform: 'uppercase', letterSpacing: 1,
+              }}>
+                <span>⛽</span>
+                <span>Calcular combustível automaticamente</span>
+                <span style={{ marginLeft: 'auto' }}>{showFuelCalc ? '▲' : '▼'}</span>
+              </button>
+
+              {showFuelCalc && (
+                <div style={{ padding: '0 12px 12px' }}>
+                  {/* Origem / Destino */}
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 6, marginBottom: 8 }}>
+                    {[['Origem', 'origem', 'São José dos Campos, SP'], ['Destino', 'destino', 'São Paulo, SP']].map(([lbl, fld, ph]) => (
+                      <div key={fld}>
+                        <div style={{ fontSize: 12, color: '#888', marginBottom: 3, textTransform: 'uppercase', letterSpacing: 1 }}>{lbl}</div>
+                        <input value={fuelCalc[fld]}
+                          onChange={e => setFuelCalc(f => ({ ...f, [fld]: e.target.value }))}
+                          placeholder={ph}
+                          style={{ ...INP, fontSize: 13 }}
+                          onFocus={e => e.target.style.borderColor = '#fff'}
+                          onBlur={e => e.target.style.borderColor = '#222'}
+                        />
+                      </div>
+                    ))}
+                  </div>
+
+                  <button onClick={calcularDistancia} disabled={fuelCalc.calculando} style={{
+                    width: '100%', padding: '8px', marginBottom: 8, background: 'transparent',
+                    border: `1px solid ${fuelCalc.calculando ? '#444' : '#fff'}`,
+                    color: fuelCalc.calculando ? '#555' : '#fff',
+                    fontFamily: 'Space Mono,monospace', fontSize: 13, letterSpacing: 1,
+                    textTransform: 'uppercase', cursor: fuelCalc.calculando ? 'wait' : 'pointer',
+                  }}>
+                    {fuelCalc.calculando ? 'Calculando...' : '📍 Calcular Distância'}
+                  </button>
+
+                  {fuelCalc.erro && (
+                    <div style={{ fontSize: 13, color: '#f44336', marginBottom: 8 }}>{fuelCalc.erro}</div>
+                  )}
+                  {fuelCalc.distancia && (
+                    <div style={{ fontSize: 13, color: '#4caf50', marginBottom: 10, padding: '6px 10px', border: '1px solid #1a2a1a', background: '#050f05' }}>
+                      Distância calculada: <b>{fuelCalc.distancia} km</b>
+                      <span style={{ color: '#888', marginLeft: 8 }}>(rota estimada)</span>
+                    </div>
+                  )}
+
+                  {/* Consumo / Preço / Veículos */}
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 6, marginBottom: 8 }}>
+                    {[['Consumo (km/l)', 'consumo'], ['Preço (R$/L)', 'preco'], ['Nº Veículos', 'nveiculos']].map(([lbl, fld]) => (
+                      <div key={fld}>
+                        <div style={{ fontSize: 12, color: '#888', marginBottom: 3, textTransform: 'uppercase', letterSpacing: 1 }}>{lbl}</div>
+                        <input type="number" value={fuelCalc[fld]}
+                          onChange={e => setFuelCalc(f => ({ ...f, [fld]: e.target.value }))}
+                          style={{ ...INP, fontSize: 13 }}
+                          onFocus={e => e.target.style.borderColor = '#fff'}
+                          onBlur={e => e.target.style.borderColor = '#222'}
+                        />
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Resultado */}
+                  {fuelCalc.distancia ? (
+                    <div style={{ background: '#0a0a0a', border: '1px solid #222', padding: '10px 12px' }}>
+                      <div style={{ fontSize: 12, color: '#666', marginBottom: 6 }}>
+                        {fuelCalc.distancia} km × 2 (ida+volta) × 1,15 (margem) ÷ {fuelCalc.consumo} km/l × R$ {fuelCalc.preco}/L × {fuelCalc.nveiculos} veíc.
+                      </div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <span style={{ fontSize: 18, fontWeight: 700, color: '#fff' }}>{fmt(fuelDistTotal)}</span>
+                        <button
+                          onClick={() => usarValorCombustivel(Math.round(fuelDistTotal * 100) / 100)}
+                          style={{ padding: '7px 14px', background: '#fff', color: '#000', border: 'none', fontFamily: 'Space Mono,monospace', fontSize: 12, cursor: 'pointer', letterSpacing: 1, textTransform: 'uppercase', fontWeight: 700 }}>
+                          Usar Este Valor
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    <div style={{ fontSize: 13, color: '#555', textAlign: 'center', padding: '6px 0' }}>
+                      Calcule a distância para ver o valor estimado
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* ── Pedágio: link Mapeia ── */}
+          {cat === 'Pedágio' && !isSecondary && (
+            <div style={{ padding: '10px 12px', borderBottom: '1px solid #111', background: '#050505', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, flexWrap: 'wrap' }}>
+              <span style={{ fontSize: 13, color: '#888' }}>
+                Consulte o valor dos pedágios no site e informe o valor abaixo
+              </span>
+              <button
+                onClick={() => window.open('https://www.mapeia.com.br/', '_blank')}
+                style={{ padding: '7px 12px', background: 'transparent', border: '1px solid #ff9800', color: '#ff9800', fontFamily: 'Space Mono,monospace', fontSize: 13, cursor: 'pointer', letterSpacing: 1, textTransform: 'uppercase', whiteSpace: 'nowrap', flexShrink: 0 }}>
+                🛣️ Consultar Pedágios
+              </button>
+            </div>
+          )}
 
           {/* Items */}
           <div style={{ padding: '8px 12px' }}>
