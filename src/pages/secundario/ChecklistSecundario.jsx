@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../../supabase';
+import { useAuth } from '../../context/AuthContext';
 
 function pad(n) { return n < 10 ? '0' + n : n; }
 function fmtDate(str) {
@@ -46,6 +47,9 @@ const INP = {
 };
 
 export default function ChecklistSecundario() {
+  const { user } = useAuth();
+  const userName = user?.nome || user?.name || '';
+
   const [shows,        setShows]        = useState([]);
   const [loadingShows, setLoadingShows] = useState(true);
 
@@ -78,7 +82,12 @@ export default function ChecklistSecundario() {
     const n = parseInt(s.drones) || 0;
     const t = n <= 110 ? 110 : n <= 200 ? 200 : 300;
     setType(t);
-    setChecklist(initChecklist(t));
+    // Pré-preenche o campo "who" com o nome do usuário logado
+    const base = initChecklist(t);
+    if (userName) {
+      Object.keys(base).forEach(k => { base[k].who = userName; });
+    }
+    setChecklist(base);
     setOpen({});
   }
 

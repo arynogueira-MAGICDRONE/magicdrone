@@ -195,19 +195,30 @@ export function Orcamento() {
     if (!itemIds.length) return;
     const { data } = await supabase
       .from('orcamento')
-      .select('id, adiantamento, status_adiantamento, numero_lancamento')
+      .select('id, adiantamento, status_adiantamento, numero_lancamento, visivel_secundario')
       .in('id', itemIds);
     if (data) {
       const map = {};
       data.forEach(i => {
         map[i.id] = {
-          valor:  i.adiantamento       || 0,
-          status: i.status_adiantamento || null,
-          numero: i.numero_lancamento   || null,
+          valor:    i.adiantamento         || 0,
+          status:   i.status_adiantamento  || null,
+          numero:   i.numero_lancamento    || null,
+          visivel:  i.visivel_secundario   !== false, // null/true → visível
         };
       });
       setAdiantMap(map);
     }
+  }
+
+  async function toggleVisibilidade(itemId) {
+    if (!canApprove) return;
+    const current = adiantMap[itemId]?.visivel !== false;
+    const next    = !current;
+    const { error } = await supabase.from('orcamento')
+      .update({ visivel_secundario: next })
+      .eq('id', itemId);
+    if (!error) setAdiantMap(prev => ({ ...prev, [itemId]: { ...prev[itemId], visivel: next } }));
   }
 
   async function requestAdiantamento(itemId) {
@@ -865,6 +876,28 @@ export function Orcamento() {
                       <button onClick={() => deleteBudgetItem(show.id, item.id)} style={{ background: 'transparent', border: 'none', color: '#aaa', cursor: 'pointer', fontSize: 14, lineHeight: 1, padding: 0, flexShrink: 0 }}>🗑️</button>
                     )}
                   </div>
+
+                  {/* Visível para equipe toggle */}
+                  {canApprove && (
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 6, paddingLeft: 26 }}>
+                      <span style={{ fontSize: 12, color: '#555', minWidth: 90, flexShrink: 0 }}>Visível equipe</span>
+                      <div onClick={() => toggleVisibilidade(item.id)} style={{
+                        width: 32, height: 18, borderRadius: 9,
+                        background: adiantMap[item.id]?.visivel !== false ? '#4caf50' : '#222',
+                        position: 'relative', cursor: 'pointer', transition: 'background 0.2s', flexShrink: 0,
+                      }}>
+                        <div style={{
+                          position: 'absolute', width: 14, height: 14, background: '#fff',
+                          borderRadius: '50%', top: 2,
+                          left: adiantMap[item.id]?.visivel !== false ? 16 : 2,
+                          transition: 'left 0.2s',
+                        }}/>
+                      </div>
+                      <span style={{ fontSize: 12, color: adiantMap[item.id]?.visivel !== false ? '#4caf50' : '#555' }}>
+                        {adiantMap[item.id]?.visivel !== false ? 'Sim' : 'Não'}
+                      </span>
+                    </div>
+                  )}
 
                   {/* Adiantamento row */}
                   {!isSecondary && (

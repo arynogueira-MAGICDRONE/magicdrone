@@ -154,9 +154,19 @@ export default function Shows() {
     if (!form.client || !form.date || !form.drones) return;
     const testStr = form.testDates.filter(Boolean).join(',');
     const showData = {
-      client: form.client, date: form.date, drones: parseInt(form.drones),
-      status: form.status, city: form.city || '', state: form.state || '',
-      test: testStr, valor: parseFloat(form.valor) || null,
+      client:      form.client,
+      date:        form.date,
+      drones:      parseInt(form.drones),
+      status:      form.status,
+      city:        form.city        || '',
+      state:       form.state       || '',
+      test:        testStr,
+      valor:       parseFloat(form.valor) || null,
+      cep:         form.cep         || '',
+      rua:         form.rua         || '',
+      numero:      form.numero      || '',
+      complemento: form.complemento || '',
+      bairro:      form.bairro      || '',
     };
     if (editingId) {
       await updateShow(editingId, showData);

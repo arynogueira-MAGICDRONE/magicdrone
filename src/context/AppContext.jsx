@@ -51,37 +51,50 @@ export function AppProvider({ children }) {
   };
 
   // ─── SHOWS ───────────────────────────────────────
+  const mapShow = (s) => ({
+    id:          s.id,
+    date:        s.data,
+    status:      s.status,
+    client:      s.cliente,
+    drones:      s.drones,
+    city:        s.cidade,
+    state:       s.estado,
+    test:        s.data_teste,
+    valor:       s.valor || null,
+    cep:         s.cep         || '',
+    rua:         s.rua         || '',
+    numero:      s.numero      || '',
+    complemento: s.complemento || '',
+    bairro:      s.bairro      || '',
+  });
+
   const loadShows = async () => {
     const { data } = await supabase.from('shows').select('*').order('data');
-    if (data) setShows(data.map(s => ({
-      id: s.id, date: s.data, status: s.status, client: s.cliente,
-      drones: s.drones, city: s.cidade, state: s.estado, test: s.data_teste, valor: s.valor || null
-    })));
+    if (data) setShows(data.map(mapShow));
   };
 
   const addShow = async (show) => {
     const insertData = {
-      data: show.date,
-      status: show.status,
-      cliente: show.client,
-      drones: parseInt(show.drones) || 0,
-      cidade: show.city || '',
-      estado: show.state || '',
-      data_teste: show.test || null,
-      valor: show.valor || null,
+      data:        show.date,
+      status:      show.status,
+      cliente:     show.client,
+      drones:      parseInt(show.drones) || 0,
+      cidade:      show.city        || '',
+      estado:      show.state       || '',
+      data_teste:  show.test        || null,
+      valor:       show.valor       || null,
+      cep:         show.cep         || null,
+      rua:         show.rua         || null,
+      numero:      show.numero      || null,
+      complemento: show.complemento || null,
+      bairro:      show.bairro      || null,
     };
     const { data, error } = await supabase.from('shows').insert(insertData).select().single();
     if (error) {
       alert('Erro Supabase: ' + error.message + ' | Código: ' + error.code);
       return null;
     }
-    if (data) {
-      setShows(prev => [...prev, {
-        id: data.id, date: data.data, status: data.status, client: data.cliente,
-        drones: data.drones, city: data.cidade, state: data.estado, test: data.data_teste, valor: data.valor
-      }]);
-      return data;
-    }
+    if (data) { setShows(prev => [...prev, mapShow(data)]); return data; }
     return null;
   };
 
@@ -98,14 +111,19 @@ export function AppProvider({ children }) {
       return String(v).match(/^\d{4}-\d{2}-\d{2}/) ? String(v).slice(0, 10) : null;
     };
     const updateData = {
-      data:       toDateStr(show.date),
-      status:     String(show.status || ''),
-      cliente:    String(show.client || ''),
-      drones:     parseInt(show.drones) || 0,
-      cidade:     String(show.city  || ''),
-      estado:     String(show.state || ''),
-      data_teste: toDateStr(show.test),
-      valor:      show.valor ? parseFloat(show.valor) : null,
+      data:        toDateStr(show.date),
+      status:      String(show.status || ''),
+      cliente:     String(show.client || ''),
+      drones:      parseInt(show.drones) || 0,
+      cidade:      String(show.city        || ''),
+      estado:      String(show.state       || ''),
+      data_teste:  toDateStr(show.test),
+      valor:       show.valor ? parseFloat(show.valor) : null,
+      cep:         show.cep         || null,
+      rua:         show.rua         || null,
+      numero:      show.numero      || null,
+      complemento: show.complemento || null,
+      bairro:      show.bairro      || null,
     };
     console.log('Atualizando show:', id, updateData);
     const { data, error } = await supabase
@@ -120,17 +138,7 @@ export function AppProvider({ children }) {
       return;
     }
     if (data) {
-      setShows(prev => prev.map(s => s.id === id ? {
-        id:     data.id,
-        date:   data.data,
-        status: data.status,
-        client: data.cliente,
-        drones: data.drones,
-        city:   data.cidade,
-        state:  data.estado,
-        test:   data.data_teste,
-        valor:  data.valor,
-      } : s));
+      setShows(prev => prev.map(s => s.id === id ? mapShow(data) : s));
     }
   };
 
