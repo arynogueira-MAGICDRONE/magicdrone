@@ -248,18 +248,18 @@ export function Orcamento() {
     const diariaResult = [];
     const seenD = new Set();
     for (const item of rawItems) {
-      if (!item.cat?.startsWith('Diária - ')) continue;
-      const name = item.cat.slice(9);
+      if (!item.categoria?.startsWith('Diária - ')) continue;
+      const name = item.categoria.slice(9);
       if (seenD.has(name)) continue;
       seenD.add(name);
       const member   = members.find(m => m.name === name);
-      const meiaItem = rawItems.find(i => i.cat === `Meia Diária - ${name}`);
+      const meiaItem = rawItems.find(i => i.categoria === `Meia Diária - ${name}`);
       diariaResult.push({
         memberId: member?.id || name, name,
-        diariaVal: item.prev > 0 ? String(item.prev) : '',
-        diariaQty: item.prev > 0 ? '1' : '',
-        meiaVal:   meiaItem?.prev > 0 ? String(meiaItem.prev) : '',
-        meiaQty:   meiaItem?.prev > 0 ? '1' : '',
+        diariaVal: item.previsto > 0 ? String(item.previsto) : '',
+        diariaQty: item.previsto > 0 ? '1' : '',
+        meiaVal:   meiaItem?.previsto > 0 ? String(meiaItem.previsto) : '',
+        meiaQty:   meiaItem?.previsto > 0 ? '1' : '',
       });
     }
     setDiariaMembers(diariaResult);
@@ -267,8 +267,8 @@ export function Orcamento() {
     const alimResult = [];
     const seenA = new Set();
     for (const item of rawItems) {
-      if (!item.cat?.startsWith('Alimentação - ')) continue;
-      const name = item.cat.slice(14);
+      if (!item.categoria?.startsWith('Alimentação - ')) continue;
+      const name = item.categoria.slice(14);
       if (seenA.has(name)) continue;
       seenA.add(name);
       const member = members.find(m => m.name === name);

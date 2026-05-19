@@ -51,7 +51,10 @@ export default function OrcamentoSecundario() {
       .eq('show_id', sel)
       .eq('visivel_secundario', true)
       .then(({ data }) => {
-        const visible = data || [];
+        const PER_MEMBER_PREFIXES = ['Diária - ', 'Meia Diária - ', 'Alimentação - '];
+        const visible = (data || []).filter(i =>
+          !PER_MEMBER_PREFIXES.some(pfx => i.categoria?.startsWith(pfx))
+        );
         console.log('[OrcamentoSecundario] despesas visíveis:', visible.length, visible.map(i => ({ id: i.id, categoria: i.categoria, visivel_secundario: i.visivel_secundario })));
 
         // Agrupa por categoria
