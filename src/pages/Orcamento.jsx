@@ -141,6 +141,10 @@ export function Orcamento() {
   // ── Report state ─────────────────────────────────────────────────
   const [reportModal, setReportModal] = useState(false);
 
+  // ── Diária/Alimentação save state ────────────────────────────────
+  const [savingDiariaAlim, setSavingDiariaAlim] = useState(false);
+  const [savedDiariaAlim,  setSavedDiariaAlim]  = useState(false);
+
   // ── Derived ──────────────────────────────────────────────────────
   const show  = sel ? shows.find(s => String(s.id) === sel) : null;
   const items = show ? (budgets[show.id] || []) : [];
@@ -180,12 +184,12 @@ export function Orcamento() {
     setShowFuelCalc(false);
     setFuelCalc(f => ({ ...f, distancia: null, erro: null, destino: '' }));
     Promise.all([loadBudget(sel), loadScaling(sel)])
-      .then(([rawItems]) => {
+      .then(([rawItems, rawScaling]) => {
         if (rawItems.length > 0) {
           loadComprovantesForShow(rawItems.map(i => i.id));
           loadAdiantamentos(rawItems.map(i => i.id));
         }
-        populatePerMemberState(rawItems);
+        populatePerMemberState(rawItems, rawScaling);
       })
       .finally(() => setLoadingBudget(false));
   }, [sel]); // eslint-disable-line react-hooks/exhaustive-deps
@@ -244,7 +248,9 @@ export function Orcamento() {
   }
 
   // ── Per-member helpers ────────────────────────────────────────────
-  function populatePerMemberState(rawItems) {
+  function populatePerMemberState(rawItems, rawScaling) {
+    const scaledIds = new Set((rawScaling || []).map(s => s.membro_id));
+
     const diariaResult = [];
     const seenD = new Set();
     for (const item of rawItems) {
@@ -252,13 +258,15 @@ export function Orcamento() {
       const name = item.categoria.slice(9);
       if (seenD.has(name)) continue;
       seenD.add(name);
-      const member   = members.find(m => m.name === name);
+      const member = members.find(m => m.name === name);
+      if (member && !scaledIds.has(member.id)) continue;
       const meiaItem = rawItems.find(i => i.categoria === `Meia Diária - ${name}`);
+      const def = memberDefaults(name);
       diariaResult.push({
         memberId: member?.id || name, name,
-        diariaVal: item.previsto > 0 ? String(item.previsto) : '',
+        diariaVal: item.previsto > 0 ? String(item.previsto) : def.diaria,
         diariaQty: item.previsto > 0 ? '1' : '',
-        meiaVal:   meiaItem?.previsto > 0 ? String(meiaItem.previsto) : '',
+        meiaVal:   meiaItem?.previsto > 0 ? String(meiaItem.previsto) : def.meia,
         meiaQty:   meiaItem?.previsto > 0 ? '1' : '',
       });
     }
@@ -272,7 +280,12 @@ export function Orcamento() {
       if (seenA.has(name)) continue;
       seenA.add(name);
       const member = members.find(m => m.name === name);
-      alimResult.push(emptyAlim(member?.id || name, name));
+      if (member && !scaledIds.has(member.id)) continue;
+      const def = memberDefaults(name);
+      alimResult.push({
+        memberId: member?.id || name, name,
+        cafeVal: def.cafe, cafeQty: '', almocoVal: def.almoco, almocoQty: '', jantarVal: def.jantar, jantarQty: '',
+      });
     }
     setAlimMembers(alimResult);
   }
@@ -295,7 +308,7 @@ export function Orcamento() {
 
   const addDiariaMember = async () => {
     if (!diariaAddSel || !show) return;
-    const member = members.find(m => m.id === diariaAddSel);
+    const member = scaledMembers.find(m => m.id === diariaAddSel);
     if (!member) return;
     const def = memberDefaults(member.name);
     await Promise.all([
@@ -336,7 +349,7 @@ export function Orcamento() {
 
   const addAlimMember = async () => {
     if (!alimAddSel || !show) return;
-    const member = members.find(m => m.id === alimAddSel);
+    const member = scaledMembers.find(m => m.id === alimAddSel);
     if (!member) return;
     const def = memberDefaults(member.name);
     await addBudgetItem(show.id, { cat: `Alimentação - ${member.name}`, prev: 0, real: 0 });
@@ -354,6 +367,18 @@ export function Orcamento() {
     const ai = (budgets[show.id] || []).find(i => i.cat === `Alimentação - ${m.name}`);
     if (ai) await deleteBudgetItem(show.id, ai.id);
     setAlimMembers(prev => prev.filter(x => x.memberId !== memberId));
+  };
+
+  const saveAllDiariaAlim = async () => {
+    if (!show) return;
+    setSavingDiariaAlim(true);
+    await Promise.all([
+      ...diariaRef.current.map(m => saveDiariaLine(m)),
+      ...alimRef.current.map(m => saveAlimLine(m)),
+    ]);
+    setSavingDiariaAlim(false);
+    setSavedDiariaAlim(true);
+    setTimeout(() => setSavedDiariaAlim(false), 2500);
   };
 
   const availDiariaMembers = scaledMembers.filter(m => !diariaMembers.some(d => d.memberId === m.id));
@@ -1164,6 +1189,27 @@ export function Orcamento() {
               </div>
             )}
           </Section>
+        )}
+
+        {/* ── BOTÃO SALVAR DIÁRIAS E ALIMENTAÇÃO ── */}
+        {!isSecondary && (diariaMembers.length > 0 || alimMembers.length > 0) && (
+          <div style={{ padding: '0 16px 14px' }}>
+            <button
+              onClick={saveAllDiariaAlim}
+              disabled={savingDiariaAlim}
+              style={{
+                width: '100%', padding: '14px 0',
+                background: savedDiariaAlim ? '#4caf50' : '#fff',
+                color: '#000', border: 'none',
+                fontFamily: 'Space Mono,monospace', fontSize: 14,
+                cursor: savingDiariaAlim ? 'wait' : 'pointer',
+                letterSpacing: 2, textTransform: 'uppercase', fontWeight: 700,
+                transition: 'all 0.3s',
+              }}
+            >
+              {savingDiariaAlim ? 'Salvando...' : savedDiariaAlim ? '✓ Salvo com sucesso!' : '💾 Salvar Diárias e Alimentação'}
+            </button>
+          </div>
         )}
 
         {/* ── DESPESAS ── */}
