@@ -52,6 +52,7 @@ export default function OrcamentoSecundario() {
       .eq('visivel_secundario', true)
       .then(({ data }) => {
         const visible = data || [];
+        console.log('[OrcamentoSecundario] despesas visíveis:', visible.length, visible.map(i => ({ id: i.id, categoria: i.categoria, visivel_secundario: i.visivel_secundario })));
 
         // Agrupa por categoria
         const catMap = {};

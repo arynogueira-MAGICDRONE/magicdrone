@@ -1048,6 +1048,8 @@ export function Orcamento() {
             {diariaMembers.length === 0 ? <EmptyMemberSection scaledCount={scaledMembers.length} />
               : diariaMembers.map((m, idx) => {
                 const dt = pf(m.diariaVal)*qi(m.diariaQty), mt = pf(m.meiaVal)*qi(m.meiaQty), total = dt + mt;
+                const diItem = (budgets[show.id] || []).find(i => i.cat === `Diária - ${m.name}`);
+                const miItem = (budgets[show.id] || []).find(i => i.cat === `Meia Diária - ${m.name}`);
                 return (
                   <div key={m.memberId} style={{ background: '#0a0a0a', border: '1px solid #1a1a1a', padding: '12px 14px', marginBottom: 8 }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
@@ -1067,6 +1069,28 @@ export function Orcamento() {
                       <span style={{ fontSize: 13, color: '#aaa', textTransform: 'uppercase', letterSpacing: 1 }}>Total</span>
                       <span style={{ fontSize: 15, fontWeight: 700, color: total > 0 ? '#fff' : '#555' }}>{fmt(total)}</span>
                     </div>
+                    {canApprove && [diItem, miItem].filter(Boolean).map(itm => (
+                      <div key={itm.id} style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 8, paddingTop: 6, borderTop: '1px solid #111' }}>
+                        <span style={{ fontSize: 12, color: '#555', minWidth: 90, flexShrink: 0 }}>
+                          {itm.cat.replace(` - ${m.name}`, '')} visível
+                        </span>
+                        <div onClick={() => toggleVisibilidade(itm.id)} style={{
+                          width: 32, height: 18, borderRadius: 9,
+                          background: adiantMap[itm.id]?.visivel === true ? '#4caf50' : '#222',
+                          position: 'relative', cursor: 'pointer', transition: 'background 0.2s', flexShrink: 0,
+                        }}>
+                          <div style={{
+                            position: 'absolute', width: 14, height: 14, background: '#fff',
+                            borderRadius: '50%', top: 2,
+                            left: adiantMap[itm.id]?.visivel === true ? 16 : 2,
+                            transition: 'left 0.2s',
+                          }}/>
+                        </div>
+                        <span style={{ fontSize: 12, color: adiantMap[itm.id]?.visivel === true ? '#4caf50' : '#555' }}>
+                          {adiantMap[itm.id]?.visivel === true ? 'Sim' : 'Não'}
+                        </span>
+                      </div>
+                    ))}
                   </div>
                 );
               })
@@ -1089,6 +1113,7 @@ export function Orcamento() {
             {alimMembers.length === 0 ? <EmptyMemberSection scaledCount={scaledMembers.length} />
               : alimMembers.map((m, idx) => {
                 const ct = pf(m.cafeVal)*qi(m.cafeQty), at = pf(m.almocoVal)*qi(m.almocoQty), jt = pf(m.jantarVal)*qi(m.jantarQty), total = ct + at + jt;
+                const aiItem = (budgets[show.id] || []).find(i => i.cat === `Alimentação - ${m.name}`);
                 return (
                   <div key={m.memberId} style={{ background: '#0a0a0a', border: '1px solid #1a1a1a', padding: '12px 14px', marginBottom: 8 }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
@@ -1108,6 +1133,26 @@ export function Orcamento() {
                       <span style={{ fontSize: 13, color: '#aaa', textTransform: 'uppercase', letterSpacing: 1 }}>Total</span>
                       <span style={{ fontSize: 15, fontWeight: 700, color: total > 0 ? '#fff' : '#555' }}>{fmt(total)}</span>
                     </div>
+                    {canApprove && aiItem && (
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 8, paddingTop: 6, borderTop: '1px solid #111' }}>
+                        <span style={{ fontSize: 12, color: '#555', minWidth: 90, flexShrink: 0 }}>Alimentação visível</span>
+                        <div onClick={() => toggleVisibilidade(aiItem.id)} style={{
+                          width: 32, height: 18, borderRadius: 9,
+                          background: adiantMap[aiItem.id]?.visivel === true ? '#4caf50' : '#222',
+                          position: 'relative', cursor: 'pointer', transition: 'background 0.2s', flexShrink: 0,
+                        }}>
+                          <div style={{
+                            position: 'absolute', width: 14, height: 14, background: '#fff',
+                            borderRadius: '50%', top: 2,
+                            left: adiantMap[aiItem.id]?.visivel === true ? 16 : 2,
+                            transition: 'left 0.2s',
+                          }}/>
+                        </div>
+                        <span style={{ fontSize: 12, color: adiantMap[aiItem.id]?.visivel === true ? '#4caf50' : '#555' }}>
+                          {adiantMap[aiItem.id]?.visivel === true ? 'Sim' : 'Não'}
+                        </span>
+                      </div>
+                    )}
                   </div>
                 );
               })
