@@ -316,7 +316,7 @@ const deleteMember = async (id) => {
   };
 
   const addBudgetItem = async (showId, item) => {
-    const { data } = await supabase.from('orcamento').insert({ show_id: showId, categoria: item.cat, previsto: item.prev, realizado: item.real }).select().single();
+    const { data } = await supabase.from('orcamento').insert({ show_id: showId, categoria: item.cat, previsto: item.prev, realizado: item.real, visivel_secundario: false }).select().single();
     if (data) setBudgets(prev => ({ ...prev, [showId]: [...(prev[showId] || []), { id: data.id, cat: data.categoria, prev: data.previsto, real: data.realizado }] }));
   };
 

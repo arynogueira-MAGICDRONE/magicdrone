@@ -204,7 +204,7 @@ export function Orcamento() {
           valor:    i.adiantamento         || 0,
           status:   i.status_adiantamento  || null,
           numero:   i.numero_lancamento    || null,
-          visivel:  i.visivel_secundario   !== false, // null/true → visível
+          visivel:  i.visivel_secundario   === true,
         };
       });
       setAdiantMap(map);
@@ -213,7 +213,7 @@ export function Orcamento() {
 
   async function toggleVisibilidade(itemId) {
     if (!canApprove) return;
-    const current = adiantMap[itemId]?.visivel !== false;
+    const current = adiantMap[itemId]?.visivel === true;
     const next    = !current;
     const { error } = await supabase.from('orcamento')
       .update({ visivel_secundario: next })
@@ -883,18 +883,18 @@ export function Orcamento() {
                       <span style={{ fontSize: 12, color: '#555', minWidth: 90, flexShrink: 0 }}>Visível equipe</span>
                       <div onClick={() => toggleVisibilidade(item.id)} style={{
                         width: 32, height: 18, borderRadius: 9,
-                        background: adiantMap[item.id]?.visivel !== false ? '#4caf50' : '#222',
+                        background: adiantMap[item.id]?.visivel === true ? '#4caf50' : '#222',
                         position: 'relative', cursor: 'pointer', transition: 'background 0.2s', flexShrink: 0,
                       }}>
                         <div style={{
                           position: 'absolute', width: 14, height: 14, background: '#fff',
                           borderRadius: '50%', top: 2,
-                          left: adiantMap[item.id]?.visivel !== false ? 16 : 2,
+                          left: adiantMap[item.id]?.visivel === true ? 16 : 2,
                           transition: 'left 0.2s',
                         }}/>
                       </div>
-                      <span style={{ fontSize: 12, color: adiantMap[item.id]?.visivel !== false ? '#4caf50' : '#555' }}>
-                        {adiantMap[item.id]?.visivel !== false ? 'Sim' : 'Não'}
+                      <span style={{ fontSize: 12, color: adiantMap[item.id]?.visivel === true ? '#4caf50' : '#555' }}>
+                        {adiantMap[item.id]?.visivel === true ? 'Sim' : 'Não'}
                       </span>
                     </div>
                   )}

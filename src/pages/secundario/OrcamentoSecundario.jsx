@@ -47,11 +47,11 @@ export default function OrcamentoSecundario() {
     setLoading(true);
     supabase
       .from('orcamento')
-      .select('id, categoria, realizado, visivel_secundario')
+      .select('*')
       .eq('show_id', sel)
+      .eq('visivel_secundario', true)
       .then(({ data }) => {
-        // Filtra itens visíveis para o secundário (visivel_secundario = true OU null)
-        const visible = (data || []).filter(i => i.visivel_secundario !== false);
+        const visible = data || [];
 
         // Agrupa por categoria
         const catMap = {};
@@ -168,7 +168,7 @@ export default function OrcamentoSecundario() {
 
             {groups.length === 0 ? (
               <div style={{ textAlign: 'center', padding: '24px 0', color: '#555', fontSize: 13, letterSpacing: 2, textTransform: 'uppercase' }}>
-                Nenhuma despesa disponível para este show
+                Nenhuma despesa liberada para lançamento
               </div>
             ) : groups.map(({ cat, items }) => (
               <div key={cat} style={{ background: '#0a0a0a', border: '1px solid #1a1a1a', marginBottom: 14 }}>
